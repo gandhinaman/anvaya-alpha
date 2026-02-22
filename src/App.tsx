@@ -3,7 +3,11 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
+import ProtectedRoute from "@/components/shared/ProtectedRoute";
+import Login from "./pages/Login";
+import ParentApp from "./pages/ParentApp";
+import ChildApp from "./pages/ChildApp";
+import RoleRedirect from "./pages/RoleRedirect";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -15,8 +19,10 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<ProtectedRoute><RoleRedirect /></ProtectedRoute>} />
+          <Route path="/sathi" element={<ProtectedRoute><ParentApp /></ProtectedRoute>} />
+          <Route path="/guardian" element={<ProtectedRoute><ChildApp /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
