@@ -21,21 +21,15 @@ export default function Login() {
 
     try {
       if (mode === "signup") {
-        const { data, error: signupErr } = await supabase.auth.signUp({
+        const { error: signupErr } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.origin },
+          options: {
+            emailRedirectTo: window.location.origin,
+            data: { full_name: fullName, role },
+          },
         });
         if (signupErr) throw signupErr;
-
-        if (data.user) {
-          const { error: profileErr } = await supabase.from("profiles").insert({
-            id: data.user.id,
-            full_name: fullName,
-            role,
-          });
-          if (profileErr) throw profileErr;
-        }
 
         setSignupSuccess(true);
       } else {
