@@ -1,12 +1,52 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { Mic, Square, Check, X, Loader } from "lucide-react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { Mic, Square, Check, X, Loader, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+
+const PROMPTS_EN = [
+  "What's your happiest childhood memory?",
+  "Tell us about a meal your mother used to make.",
+  "What's the best advice someone gave you?",
+  "Describe a place you loved visiting as a child.",
+  "What's a family tradition you cherish?",
+  "Tell us about the day you got married.",
+  "What song always makes you smile?",
+  "Who was your closest friend growing up?",
+  "What's something you're really proud of?",
+  "Tell us about a festival you'll never forget.",
+];
+
+const PROMPTS_HI = [
+  "आपकी सबसे खुशी की बचपन की याद क्या है?",
+  "अपनी माँ के हाथ का कोई खाना बताइए।",
+  "किसी ने आपको सबसे अच्छी सलाह क्या दी?",
+  "बचपन में आप कहाँ जाना सबसे ज़्यादा पसंद करते थे?",
+  "कोई पारिवारिक परंपरा बताइए जो आपको प्रिय है।",
+  "अपनी शादी के दिन के बारे में बताइए।",
+  "कौन सा गाना सुनकर आप हमेशा मुस्कुराते हैं?",
+  "बड़े होते हुए आपका सबसे करीबी दोस्त कौन था?",
+  "किस बात पर आपको सबसे ज़्यादा गर्व है?",
+  "कोई त्योहार बताइए जो आप कभी नहीं भूलेंगे।",
+];
 
 export default function MemoryRecorder({ open, onClose, lang = "en", userId }) {
   const [phase, setPhase] = useState("idle"); // idle | recording | processing | success | error
   const [seconds, setSeconds] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
   const [savedTitle, setSavedTitle] = useState("");
+  const [promptIndex, setPromptIndex] = useState(() => Math.floor(Math.random() * PROMPTS_EN.length));
+  const mediaRecorder = useRef(null);
+  const chunks = useRef([]);
+  const timerRef = useRef(null);
+  const streamRef = useRef(null);
+
+  const currentPrompt = useMemo(() => {
+    const prompts = lang === "hi" ? PROMPTS_HI : PROMPTS_EN;
+    return prompts[promptIndex % prompts.length];
+  }, [lang, promptIndex]);
+
+  const shufflePrompt = () => {
+    setPromptIndex((i) => (i + 1) % PROMPTS_EN.length);
+  };
   const mediaRecorder = useRef(null);
   const chunks = useRef([]);
   const timerRef = useRef(null);
@@ -237,12 +277,55 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId }) {
               marginBottom: 6,
             }}
           >
-            {lang === "hi" ? "यादें रिकॉर्ड करें" : "Record a Memory"}
+           {lang === "hi" ? "यादें रिकॉर्ड करें" : "Record a Memory"}
           </div>
-          <p style={{ color: "rgba(249,249,247,.45)", fontSize: 13, lineHeight: 1.6, marginBottom: 24 }}>
+
+          {/* Prompt question */}
+          <div style={{
+            background: "rgba(217,119,6,.08)",
+            border: "1px solid rgba(217,119,6,.2)",
+            borderRadius: 16,
+            padding: "14px 18px",
+            marginBottom: 8,
+            position: "relative",
+          }}>
+            <p style={{
+              color: "#F9F9F7",
+              fontSize: 15,
+              fontWeight: 500,
+              lineHeight: 1.5,
+              fontStyle: "italic",
+              fontFamily: "'Cormorant Garamond',serif",
+              margin: 0,
+            }}>
+              "{currentPrompt}"
+            </p>
+            <button
+              onClick={shufflePrompt}
+              style={{
+                position: "absolute",
+                top: 10,
+                right: 10,
+                background: "rgba(217,119,6,.15)",
+                border: "1px solid rgba(217,119,6,.25)",
+                borderRadius: 8,
+                width: 28,
+                height: 28,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              title={lang === "hi" ? "अगला सवाल" : "Next question"}
+            >
+              <RefreshCw size={13} color="#d97706" />
+            </button>
+          </div>
+
+          <p style={{ color: "rgba(249,249,247,.4)", fontSize: 12, lineHeight: 1.6, marginBottom: 20 }}>
             {lang === "hi"
-              ? "अपनी कहानी, याद, या कुछ भी बोलें। साथी सुन रहा है।"
-              : "Share a story, a memory, or anything on your mind. Sathi is listening."}
+              ? "इस सवाल का जवाब दें, या कुछ भी बोलें। साथी सुन रहा है।"
+              : "Answer this prompt, or share anything on your mind. Sathi is listening."}
           </p>
           <button
             onClick={startRecording}
@@ -261,6 +344,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId }) {
             }}
           >
             {lang === "hi" ? "🎙 रिकॉर्डिंग शुरू करें" : "🎙 Start Recording"}
+          </button>
           </button>
         </div>
       )}
