@@ -370,7 +370,7 @@ function SathiScreen({inPanel=false, userId=null, linkedUserId=null, fullName=nu
         : <div style={{height:"env(safe-area-inset-top,20px)"}}/>
       }
 
-      <div style={{display:"flex",justifyContent:"center",marginTop:14}}>
+      <div style={{display:"flex",justifyContent:"center",alignItems:"center",marginTop:14,gap:10,padding:"0 18px"}}>
         <div style={{background:"rgba(249,249,247,.1)",borderRadius:100,border:"1px solid rgba(255,255,255,.15)",padding:3,display:"flex",gap:2}}>
           {["en","hi"].map(l=>(
             <button key={l} onClick={()=>switchLang(l)} style={{
@@ -380,6 +380,14 @@ function SathiScreen({inPanel=false, userId=null, linkedUserId=null, fullName=nu
             }}>{l==="en"?"English":"हिंदी"}</button>
           ))}
         </div>
+        {!inPanel && (
+          <button onClick={async()=>{await supabase.auth.signOut();window.location.href="/login";}} style={{
+            width:32,height:32,borderRadius:10,border:"1px solid rgba(255,255,255,.12)",
+            background:"rgba(249,249,247,.06)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0
+          }} title="Sign out">
+            <LogOut size={14} color="rgba(249,249,247,.5)"/>
+          </button>
+        )}
       </div>
 
       <div style={{textAlign:"center",marginTop:16}}>
