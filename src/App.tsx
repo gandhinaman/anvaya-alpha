@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ProtectedRoute from "@/components/shared/ProtectedRoute";
 import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
+import Onboarding from "./pages/Onboarding";
 import ParentApp from "./pages/ParentApp";
 import ChildApp from "./pages/ChildApp";
 import RoleRedirect from "./pages/RoleRedirect";
@@ -22,6 +23,7 @@ const App = () => (
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
           <Route path="/" element={<ProtectedRoute><RoleRedirect /></ProtectedRoute>} />
           <Route path="/sathi" element={<ProtectedRoute><ParentApp /></ProtectedRoute>} />
           <Route path="/guardian" element={<ProtectedRoute><ChildApp /></ProtectedRoute>} />
