@@ -34,24 +34,85 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId }) {
   const [errorMsg, setErrorMsg] = useState("");
   const [savedTitle, setSavedTitle] = useState("");
   const [promptIndex, setPromptIndex] = useState(() => Math.floor(Math.random() * PROMPTS_EN.length));
+  const [isSpeakingPrompt, setIsSpeakingPrompt] = useState(false);
   const mediaRecorder = useRef(null);
   const chunks = useRef([]);
   const timerRef = useRef(null);
   const streamRef = useRef(null);
+  const promptAudioRef = useRef(null);
 
   const currentPrompt = useMemo(() => {
     const prompts = lang === "hi" ? PROMPTS_HI : PROMPTS_EN;
     return prompts[promptIndex % prompts.length];
   }, [lang, promptIndex]);
 
+  const speakPrompt = useCallback(async (text) => {
+    try {
+      setIsSpeakingPrompt(true);
+      // Stop any previous prompt audio
+      if (promptAudioRef.current) {
+        promptAudioRef.current.pause();
+        promptAudioRef.current = null;
+      }
+
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/elevenlabs-tts`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: anonKey,
+            Authorization: `Bearer ${anonKey}`,
+          },
+          body: JSON.stringify({ text }),
+        }
+      );
+
+      if (!response.ok) {
+        console.error("TTS failed:", response.status);
+        setIsSpeakingPrompt(false);
+        return;
+      }
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      promptAudioRef.current = audio;
+      audio.onended = () => setIsSpeakingPrompt(false);
+      audio.onerror = () => setIsSpeakingPrompt(false);
+      await audio.play();
+    } catch (err) {
+      console.error("Prompt TTS error:", err);
+      setIsSpeakingPrompt(false);
+    }
+  }, []);
+
+  // Read prompt aloud when component opens
+  useEffect(() => {
+    if (open && phase === "idle") {
+      speakPrompt(currentPrompt);
+    }
+  }, [open]);
+
   const shufflePrompt = () => {
-    setPromptIndex((i) => (i + 1) % PROMPTS_EN.length);
+    const newIndex = (promptIndex + 1) % PROMPTS_EN.length;
+    setPromptIndex(newIndex);
+    const prompts = lang === "hi" ? PROMPTS_HI : PROMPTS_EN;
+    speakPrompt(prompts[newIndex]);
   };
 
   // Cleanup on unmount or close
   useEffect(() => {
     if (!open) {
       stopEverything();
+      if (promptAudioRef.current) {
+        promptAudioRef.current.pause();
+        promptAudioRef.current = null;
+      }
+      setIsSpeakingPrompt(false);
       setPhase("idle");
       setSeconds(0);
       setErrorMsg("");
