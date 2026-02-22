@@ -47,10 +47,6 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId }) {
   const shufflePrompt = () => {
     setPromptIndex((i) => (i + 1) % PROMPTS_EN.length);
   };
-  const mediaRecorder = useRef(null);
-  const chunks = useRef([]);
-  const timerRef = useRef(null);
-  const streamRef = useRef(null);
 
   // Cleanup on unmount or close
   useEffect(() => {
@@ -344,8 +340,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId }) {
             }}
           >
             {lang === "hi" ? "🎙 रिकॉर्डिंग शुरू करें" : "🎙 Start Recording"}
-          </button>
-          </button>
+           </button>
         </div>
       )}
 
