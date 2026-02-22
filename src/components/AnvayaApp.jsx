@@ -1088,8 +1088,8 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
     }}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"0 20px 18px",borderBottom:"1px solid rgba(6,78,59,0.07)"}}>
         <div>
-          <div className="gtxt" style={{fontFamily:"'Cormorant Garamond',serif",fontSize:24,fontWeight:600}}>Anvaya</div>
-          <div style={{fontSize:9,color:"#9CA3AF",letterSpacing:"0.14em",marginTop:1}}>GUARDIAN</div>
+          <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:11,color:"rgba(6,78,59,0.35)",letterSpacing:"0.3em",fontWeight:300}}>ANVAYA</div>
+          <div className="gtxt" style={{fontFamily:"'Cormorant Garamond',serif",fontSize:24,fontWeight:600}}>Guardian</div>
         </div>
         {mobile&&<button onClick={()=>setDrawer(false)} style={{background:"transparent",border:"none",cursor:"pointer"}}><X size={18} color="#9CA3AF"/></button>}
       </div>

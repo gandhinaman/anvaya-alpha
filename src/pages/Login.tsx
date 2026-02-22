@@ -190,7 +190,7 @@ export default function Login() {
                         fontSize: 13, fontWeight: role === r ? 600 : 400, cursor: "pointer",
                         fontFamily: "'DM Sans', sans-serif", textTransform: "capitalize", transition: "all .2s",
                       }}>
-                        {r === "parent" ? "🙏 Parent" : "👤 Child"}
+                        {r === "parent" ? "🙏 Caregiver" : "👤 Child"}
                       </button>
                     ))}
                   </div>
