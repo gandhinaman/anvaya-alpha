@@ -632,7 +632,7 @@ function SathiScreen({inPanel=false, userId=null, linkedUserId=null, fullName=nu
       <div style={{padding:"12px 18px 0"}}>
         <div style={{background:"rgba(249,249,247,.08)",border:"1px solid rgba(255,255,255,.12)",borderRadius:14,padding:"10px 14px"}}>
           <input value={inp} onChange={e=>{setInp(e.target.value);if(checkTrigger(e.target.value)){setOverlay(true);setOverlayPhase("ask");}}}
-            placeholder={lang==="en"?"Type anything… (try 'help')":"कुछ भी लिखें…"}
+            placeholder={lang==="en"?"Type anything… if you're in trouble, type or say 'help' to Sathi":"कुछ भी लिखें… मुश्किल में 'help' बोलें"}
             style={{width:"100%",background:"transparent",border:"none",outline:"none",color:"#F9F9F7",fontSize:13}}/>
         </div>
       </div>
@@ -1659,7 +1659,7 @@ export default function App() {
                   <div style={{fontSize:10,color:"rgba(249,249,247,.28)",letterSpacing:"0.15em",fontWeight:600}}>SATHI — MOBILE PREVIEW</div>
                   <SathiScreen inPanel/>
                   <div style={{padding:"6px 14px",borderRadius:100,background:"rgba(6,78,59,.2)",border:"1px solid rgba(6,78,59,.3)"}}>
-                    <span style={{fontSize:11,color:"#34D399"}}>Tip: type "help" in the input field</span>
+                    <span style={{fontSize:11,color:"#34D399"}}>If you're in trouble, type or say "help" to Sathi</span>
                   </div>
                 </div>
               </div>
@@ -1690,7 +1690,7 @@ export default function App() {
               <div style={{fontSize:10,color:"rgba(249,249,247,.28)",letterSpacing:"0.14em",marginBottom:14,fontWeight:600}}>SATHI — PARENT COMPANION</div>
               <SathiScreen inPanel/>
               <div style={{marginTop:14,padding:"6px 13px",borderRadius:100,background:"rgba(6,78,59,.2)",border:"1px solid rgba(6,78,59,.3)"}}>
-                <span style={{fontSize:11,color:"#34D399"}}>Tip: type "help" in the input</span>
+                <span style={{fontSize:11,color:"#34D399"}}>If you're in trouble, type or say "help" to Sathi</span>
               </div>
             </div>
             <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
