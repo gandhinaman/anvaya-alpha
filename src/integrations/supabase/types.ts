@@ -162,27 +162,36 @@ export type Database = {
       }
       profiles: {
         Row: {
+          age: number | null
           created_at: string | null
           full_name: string | null
+          health_issues: string[] | null
           id: string
           language: string | null
           linked_user_id: string | null
+          onboarding_completed: boolean | null
           role: string
         }
         Insert: {
+          age?: number | null
           created_at?: string | null
           full_name?: string | null
+          health_issues?: string[] | null
           id: string
           language?: string | null
           linked_user_id?: string | null
+          onboarding_completed?: boolean | null
           role: string
         }
         Update: {
+          age?: number | null
           created_at?: string | null
           full_name?: string | null
+          health_issues?: string[] | null
           id?: string
           language?: string | null
           linked_user_id?: string | null
+          onboarding_completed?: boolean | null
           role?: string
         }
         Relationships: [

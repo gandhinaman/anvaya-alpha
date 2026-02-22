@@ -24,5 +24,10 @@ export default function RoleRedirect() {
     return <Navigate to="/login" replace />;
   }
 
+  // Redirect parent users who haven't completed onboarding
+  if (profile.role === "parent" && !profile.onboarding_completed) {
+    return <Navigate to="/onboarding" replace />;
+  }
+
   return <Navigate to={profile.role === "child" ? "/guardian" : "/sathi"} replace />;
 }

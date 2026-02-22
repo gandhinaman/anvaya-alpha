@@ -66,10 +66,14 @@ export default function Login() {
         if (session) {
           const { data: profile } = await supabase
             .from("profiles")
-            .select("role")
+            .select("role, onboarding_completed")
             .eq("id", session.user.id)
             .single();
-          navigate(profile?.role === "child" ? "/guardian" : "/sathi", { replace: true });
+          if (profile?.role === "parent" && !profile?.onboarding_completed) {
+            navigate("/onboarding", { replace: true });
+          } else {
+            navigate(profile?.role === "child" ? "/guardian" : "/sathi", { replace: true });
+          }
         }
       }
     } catch (err: any) {

@@ -8,6 +8,9 @@ interface Profile {
   language: string | null;
   linked_user_id: string | null;
   created_at: string | null;
+  age: number | null;
+  health_issues: string[] | null;
+  onboarding_completed: boolean | null;
 }
 
 export function useProfile() {
