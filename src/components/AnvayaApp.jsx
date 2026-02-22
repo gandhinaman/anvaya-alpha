@@ -8,6 +8,7 @@ import {
 import SathiChat from "./sathi/SathiChat";
 import MemoryRecorder from "./sathi/MemoryRecorder";
 import { supabase } from "@/integrations/supabase/client";
+import { useParentData } from "@/hooks/useParentData";
 
 // ─── RESPONSIVE HOOK ──────────────────────────────────────────────────────────
 function useWindowSize() {
@@ -122,27 +123,61 @@ function Waveform() {
   );
 }
 
-function AudioPlayer({color="#4F46E5"}) {
+function AudioPlayer({color="#4F46E5", audioUrl=null}) {
   const [playing,setPlaying]=useState(false);
-  const [progress,setProgress]=useState(32);
+  const [progress,setProgress]=useState(0);
+  const [duration,setDuration]=useState(0);
+  const audioRef=useRef(null);
+
   useEffect(()=>{
-    if(!playing) return;
+    if(!audioUrl) return;
+    const a=new Audio(audioUrl);
+    audioRef.current=a;
+    a.addEventListener("loadedmetadata",()=>setDuration(a.duration));
+    a.addEventListener("timeupdate",()=>{if(a.duration)setProgress((a.currentTime/a.duration)*100);});
+    a.addEventListener("ended",()=>{setPlaying(false);setProgress(0);});
+    return()=>{a.pause();a.src="";};
+  },[audioUrl]);
+
+  const toggle=()=>{
+    if(!audioRef.current&&!audioUrl){
+      // fallback mock behavior
+      setPlaying(p=>!p);
+      return;
+    }
+    if(!audioRef.current) return;
+    if(playing){audioRef.current.pause();}else{audioRef.current.play();}
+    setPlaying(p=>!p);
+  };
+
+  // Mock fallback for no audio
+  useEffect(()=>{
+    if(audioUrl||!playing) return;
     const t=setInterval(()=>setProgress(p=>p>=100?(setPlaying(false),0):p+.5),80);
     return()=>clearInterval(t);
-  },[playing]);
+  },[playing,audioUrl]);
+
+  const seek=(e)=>{
+    const r=e.currentTarget.getBoundingClientRect();
+    const pct=((e.clientX-r.left)/r.width)*100;
+    setProgress(pct);
+    if(audioRef.current&&audioRef.current.duration){audioRef.current.currentTime=(pct/100)*audioRef.current.duration;}
+  };
+
+  const fmt=(s)=>{const m=Math.floor(s/60);return`${m}:${String(Math.floor(s%60)).padStart(2,"0")}`;};
+
   return (
     <div style={{display:"flex",alignItems:"center",gap:10}}>
-      <button onClick={()=>setPlaying(p=>!p)} style={{
+      <button onClick={toggle} style={{
         width:36,height:36,borderRadius:"50%",background:color,
         border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0
       }}>
         {playing?<Pause size={13} color="#fff" fill="#fff"/>:<Play size={13} color="#fff" fill="#fff"/>}
       </button>
-      <div style={{flex:1,height:4,background:"#E5E7EB",borderRadius:4,cursor:"pointer"}}
-        onClick={e=>{const r=e.currentTarget.getBoundingClientRect();setProgress(((e.clientX-r.left)/r.width)*100);}}>
+      <div style={{flex:1,height:4,background:"#E5E7EB",borderRadius:4,cursor:"pointer"}} onClick={seek}>
         <div style={{height:"100%",width:`${progress}%`,background:color,borderRadius:4,transition:"width .1s"}}/>
       </div>
-      <span style={{fontSize:11,color:"#6b6b6b",flexShrink:0}}>1:24</span>
+      <span style={{fontSize:11,color:"#6b6b6b",flexShrink:0}}>{duration?fmt(duration):"—"}</span>
     </div>
   );
 }
@@ -524,7 +559,10 @@ function WeeklyTrendChart() {
 }
 
 // Memory Card
-function MemoryCard({title, summary, duration, date, index=0}) {
+function MemoryCard({title, summary, duration, date, index=0, audioUrl=null, emotionalTone=null}) {
+  const toneColors = {joyful:"#059669",nostalgic:"#B45309",peaceful:"#064E3B",concerned:"#DC2626"};
+  const tone = emotionalTone || "positive";
+  const toneColor = toneColors[tone.toLowerCase()] || "#059669";
   return (
     <div className="gcard" style={{
       padding:18,
@@ -532,25 +570,25 @@ function MemoryCard({title, summary, duration, date, index=0}) {
     }}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}>
         <div style={{flex:1,minWidth:0}}>
-          <div style={{fontSize:13,fontWeight:700,color:"#064E3B",marginBottom:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{title}</div>
+          <div style={{fontSize:13,fontWeight:700,color:"#064E3B",marginBottom:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{title||"Untitled Memory"}</div>
           <div style={{display:"flex",gap:6}}>
             <span style={{fontSize:10,fontWeight:600,color:"#6b6b6b",background:"rgba(6,78,59,0.07)",padding:"2px 8px",borderRadius:100}}>{date}</span>
             <span style={{fontSize:10,fontWeight:600,color:"#6b6b6b",background:"rgba(6,78,59,0.07)",padding:"2px 8px",borderRadius:100}}>{duration}</span>
           </div>
         </div>
       </div>
-      <AudioPlayer color="#064E3B"/>
-      <p style={{
+      <AudioPlayer color="#064E3B" audioUrl={audioUrl}/>
+      {summary && <p style={{
         marginTop:10,fontStyle:"italic",
         fontFamily:"'Cormorant Garamond',serif",fontSize:14,
         color:"#6b6b6b",lineHeight:1.65,
         borderLeft:"2px solid rgba(6,78,59,0.2)",paddingLeft:10
       }}>
         "{summary}"
-      </p>
+      </p>}
       <div style={{marginTop:10,display:"flex",alignItems:"center",gap:5}}>
-        <div style={{width:6,height:6,borderRadius:"50%",background:"#059669"}}/>
-        <span style={{fontSize:10,color:"#059669",fontWeight:600}}>Emotional tone: Positive</span>
+        <div style={{width:6,height:6,borderRadius:"50%",background:toneColor}}/>
+        <span style={{fontSize:10,color:toneColor,fontWeight:600}}>Emotional tone: {tone.charAt(0).toUpperCase()+tone.slice(1)}</span>
       </div>
     </div>
   );
@@ -563,6 +601,9 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
   const [nav,setNav]=useState("home");
   const [drawer,setDrawer]=useState(false);
   const [incomingCall, setIncomingCall] = useState(null);
+
+  // Real data hook
+  const { parentProfile, memories: realMemories, medications, healthEvents, stats: derivedStats, loading: dataLoading, lastUpdated, toggleMedication } = useParentData(profileId);
 
   // Listen for incoming_call events via Realtime
   useEffect(() => {
@@ -587,26 +628,47 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
   ];
 
   const stats=[
-    {label:"Vocal Energy",  value:"High",    icon:Mic,        color:"#064E3B", trend:"+12%"},
-    {label:"Cognitive Clarity",value:"94%", icon:TrendingUp,  color:"#0d7a5f", trend:"Stable"},
-    {label:"Emotional Tone",value:"Positive",icon:Heart,      color:"#B45309", trend:"+8%"},
-    {label:"Activity Level",value:"Active", icon:Zap,         color:"#d97706", trend:"Normal"},
+    {label:"Vocal Energy",  value:derivedStats.vocalEnergy.value,    icon:Mic,        color:"#064E3B", trend:derivedStats.vocalEnergy.trend},
+    {label:"Cognitive Clarity",value:derivedStats.cognitiveClarity.value, icon:TrendingUp,  color:"#0d7a5f", trend:derivedStats.cognitiveClarity.trend},
+    {label:"Emotional Tone",value:derivedStats.emotionalTone.value,icon:Heart,      color:"#B45309", trend:derivedStats.emotionalTone.trend},
+    {label:"Activity Level",value:derivedStats.activityLevel.value, icon:Zap,         color:"#d97706", trend:derivedStats.activityLevel.trend},
   ];
 
-  const alerts=[
-    {text:"Vocal energy spike detected at 3 PM",  type:"info"},
-    {text:"Medication reminder acknowledged",       type:"success"},
-    {text:"Sleep pattern stable this week",         type:"success"},
-  ];
+  // Derive alerts from recent health events
+  const alerts = healthEvents.slice(0,3).map(e => ({
+    text: e.event_type === "medication_taken"
+      ? `Medication taken: ${e.value?.medication_name || "Unknown"}`
+      : `${e.event_type.replace(/_/g," ")} recorded`,
+    type: e.event_type === "medication_taken" ? "success" : "info"
+  }));
+  if (alerts.length === 0) {
+    alerts.push({text:"No recent events", type:"info"});
+  }
 
-  const memories=[
-    {title:"Childhood in Jaipur",   date:"Today",       duration:"12 min",
-     summary:"A vivid recollection of running through marigold fields with siblings during Diwali, describing the amber glow of diyas and laughter echoing through the courtyard."},
-    {title:"First Train Journey",   date:"Yesterday",   duration:"8 min",
-     summary:"The wonder of seeing mountains for the first time through a rain-streaked window, the sound of chai wallahs, and the gentle rocking that still brings peace."},
-    {title:"Mother's Kitchen",      date:"2 days ago",  duration:"15 min",
-     summary:"The aroma of fresh rotis on a cast-iron tawa, the rhythmic sound of the mortar and pestle, and the secret ingredient that made everything taste like home."},
-  ];
+  // Format memories for display
+  const fmtDate = (d) => {
+    if (!d) return "—";
+    const date = new Date(d);
+    const now = new Date();
+    const diff = Math.floor((now - date) / 86400000);
+    if (diff === 0) return "Today";
+    if (diff === 1) return "Yesterday";
+    return `${diff} days ago`;
+  };
+  const fmtDuration = (s) => s ? (s >= 60 ? `${Math.round(s/60)} min` : `${s}s`) : "—";
+
+  const memories = realMemories.length > 0
+    ? realMemories.map(m => ({
+        title: m.title || "Untitled",
+        date: fmtDate(m.created_at),
+        duration: fmtDuration(m.duration_seconds),
+        summary: m.ai_summary || m.transcript || "",
+        audioUrl: m.audio_url || null,
+        emotionalTone: m.emotional_tone || null,
+      }))
+    : [
+        {title:"No memories yet", date:"—", duration:"—", summary:"Memories recorded by your parent will appear here.", audioUrl:null, emotionalTone:null},
+      ];
 
   const Sidebar = ({mobile=false}) => (
     <div style={{
@@ -631,10 +693,10 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
             <User size={15} color="#fff"/>
           </div>
           <div>
-            <div style={{fontSize:12,fontWeight:700,color:"#064E3B"}}>Meera Sharma</div>
+            <div style={{fontSize:12,fontWeight:700,color:"#064E3B"}}>{parentProfile?.full_name || "Parent"}</div>
             <div style={{fontSize:10,color:"#059669",display:"flex",alignItems:"center",gap:4}}>
               <span style={{width:5,height:5,borderRadius:"50%",background:"#059669",display:"inline-block"}}/>
-              Active · Jaipur
+              {dataLoading ? "Loading…" : "Active"}
             </div>
           </div>
         </div>
@@ -691,7 +753,12 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
               <h1 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:isMobile?24:30,fontWeight:700,color:"#064E3B",lineHeight:1.2}}>
                 Guardian Dashboard
               </h1>
-              <p style={{color:"#6b6b6b",fontSize:12,marginTop:3}}>Monitoring Amma's wellbeing</p>
+              <p style={{color:"#6b6b6b",fontSize:12,marginTop:3}}>
+                Monitoring {parentProfile?.full_name || "Amma"}'s wellbeing
+                <span style={{color:"#9CA3AF",fontSize:10,marginLeft:8}}>
+                  Updated {lastUpdated.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}
+                </span>
+              </p>
             </div>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:8}}>
@@ -819,7 +886,47 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
           </div>
         </div>
 
-        {/* Memory Archive */}
+        {/* Medication Tracker */}
+        <div className="gcard s6" style={{padding:20,marginBottom:14}}>
+          <div style={{marginBottom:14}}>
+            <div style={{fontSize:13,fontWeight:700,color:"#1a1a1a"}}>Medication Tracker</div>
+            <div style={{fontSize:11,color:"#6b6b6b",marginTop:2}}>Today's medications</div>
+          </div>
+          {medications.length === 0 ? (
+            <p style={{fontSize:12,color:"#9CA3AF",fontStyle:"italic"}}>No medications configured</p>
+          ) : (
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {medications.map(med => (
+                <div key={med.id} style={{
+                  display:"flex",alignItems:"center",gap:10,padding:"10px 12px",
+                  background:med.taken_today?"rgba(5,150,105,0.06)":"rgba(255,255,255,0.6)",
+                  borderRadius:12,border:`1px solid ${med.taken_today?"rgba(5,150,105,0.15)":"rgba(6,78,59,0.08)"}`,
+                  cursor:"pointer",transition:"all .2s"
+                }} onClick={() => toggleMedication(med.id, !med.taken_today)}>
+                  <div style={{
+                    width:22,height:22,borderRadius:6,flexShrink:0,
+                    border:med.taken_today?"none":"2px solid rgba(6,78,59,0.25)",
+                    background:med.taken_today?"#059669":"transparent",
+                    display:"flex",alignItems:"center",justifyContent:"center"
+                  }}>
+                    {med.taken_today && <Check size={13} color="#fff"/>}
+                  </div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:12,fontWeight:600,color:med.taken_today?"#059669":"#1a1a1a",
+                      textDecoration:med.taken_today?"line-through":"none"}}>{med.name}</div>
+                    <div style={{fontSize:10,color:"#9CA3AF"}}>{med.dose||""}{med.scheduled_time?` · ${med.scheduled_time}`:""}</div>
+                  </div>
+                  {med.taken_today && med.last_taken && (
+                    <span style={{fontSize:9,color:"#059669",fontWeight:500}}>
+                      {new Date(med.last_taken).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         <div className="s7">
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
             <div>
