@@ -3,10 +3,11 @@ import {
   Phone, Mic, MessageCircle, Heart, Activity, Pill,
   Home, Bell, Settings, ChevronRight, Play, Pause,
   Circle, User, LogOut, Headphones, Brain, Check, Menu, X,
-  TrendingUp, Zap, BarChart2
+  TrendingUp, Zap, BarChart2, PhoneOff
 } from "lucide-react";
 import SathiChat from "./sathi/SathiChat";
 import MemoryRecorder from "./sathi/MemoryRecorder";
+import { supabase } from "@/integrations/supabase/client";
 
 // ─── RESPONSIVE HOOK ──────────────────────────────────────────────────────────
 function useWindowSize() {
@@ -55,6 +56,15 @@ const fontStyle = `
   @keyframes chartGrow {
     from { transform: scaleY(0); }
     to   { transform: scaleY(1); }
+  }
+  @keyframes callPulse {
+    0%   { transform:scale(1); box-shadow:0 0 0 0 rgba(5,150,105,.5); }
+    70%  { transform:scale(1.05); box-shadow:0 0 0 30px rgba(5,150,105,0); }
+    100% { transform:scale(1); box-shadow:0 0 0 0 rgba(5,150,105,0); }
+  }
+  @keyframes dotBounce {
+    0%,80%,100% { transform:translateY(0); }
+    40% { transform:translateY(-6px); }
   }
 
   .orb       { animation: breathe 4s ease-in-out infinite; }
@@ -137,13 +147,110 @@ function AudioPlayer({color="#4F46E5"}) {
   );
 }
 
-function SathiScreen({inPanel=false, userId=null}) {
+// ─── CALL OVERLAY ─────────────────────────────────────────────────────────────
+function CallOverlay({ open, onClose, lang, userId, linkedUserId, fromName }) {
+  const [phase, setPhase] = useState("calling"); // calling | connected
+  const [timer, setTimer] = useState(0);
+  const channelRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) { setPhase("calling"); setTimer(0); return; }
+    // Broadcast incoming_call via Realtime
+    if (linkedUserId) {
+      const ch = supabase.channel(`user:${linkedUserId}`);
+      ch.subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          ch.send({ type: "broadcast", event: "incoming_call", payload: { from_name: fromName || "Parent", from_id: userId } });
+        }
+      });
+      channelRef.current = ch;
+    }
+    // After 3s transition to connected
+    const t = setTimeout(() => setPhase("connected"), 3000);
+    return () => { clearTimeout(t); if (channelRef.current) { supabase.removeChannel(channelRef.current); channelRef.current = null; } };
+  }, [open, linkedUserId]);
+
+  useEffect(() => {
+    if (phase !== "connected") return;
+    const t = setInterval(() => setTimer(s => s + 1), 1000);
+    return () => clearInterval(t);
+  }, [phase]);
+
+  const endCall = () => {
+    if (linkedUserId && channelRef.current) {
+      channelRef.current.send({ type: "broadcast", event: "call_ended", payload: { from_id: userId } });
+    }
+    onClose();
+  };
+
+  const fmt = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+
+  if (!open) return null;
+  return (
+    <div className="fadein" style={{
+      position: "absolute", inset: 0, zIndex: 50,
+      background: "linear-gradient(160deg,#022c22 0%,#064E3B 50%,#065f46 100%)",
+      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 24
+    }}>
+      {/* Pulsing circle */}
+      <div style={{
+        width: 120, height: 120, borderRadius: "50%",
+        background: "linear-gradient(135deg,#059669,#065f46)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        animation: phase === "calling" ? "callPulse 1.5s ease-in-out infinite" : "none",
+        boxShadow: phase === "connected" ? "0 0 40px rgba(5,150,105,.4)" : undefined,
+        transition: "box-shadow .5s"
+      }}>
+        <Phone size={40} color="#F9F9F7" />
+      </div>
+
+      {/* Status text */}
+      <div style={{ textAlign: "center" }}>
+        <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 28, color: "#F9F9F7", fontWeight: 600 }}>
+          {phase === "calling"
+            ? (lang === "en" ? "Calling Rohan…" : "रोहन को कॉल कर रहे हैं…")
+            : (lang === "en" ? "Connected" : "कनेक्टेड")}
+        </div>
+        {phase === "calling" ? (
+          <div style={{ display: "flex", justifyContent: "center", gap: 4, marginTop: 10 }}>
+            {[0, 1, 2].map(i => (
+              <div key={i} style={{
+                width: 8, height: 8, borderRadius: "50%", background: "rgba(249,249,247,.5)",
+                animation: `dotBounce 1.2s ease-in-out ${i * 0.2}s infinite`
+              }} />
+            ))}
+          </div>
+        ) : (
+          <div style={{ color: "rgba(249,249,247,.6)", fontSize: 18, marginTop: 8, fontFamily: "'DM Sans',sans-serif", fontWeight: 500 }}>
+            {fmt(timer)}
+          </div>
+        )}
+      </div>
+
+      {/* End Call button */}
+      <button onClick={endCall} style={{
+        width: 64, height: 64, borderRadius: "50%",
+        background: "#DC2626", border: "none", cursor: "pointer",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        boxShadow: "0 8px 24px rgba(220,38,38,.4)", marginTop: 20
+      }}>
+        <PhoneOff size={26} color="#fff" />
+      </button>
+      <span style={{ color: "rgba(249,249,247,.4)", fontSize: 12 }}>
+        {lang === "en" ? "End Call" : "कॉल समाप्त करें"}
+      </span>
+    </div>
+  );
+}
+
+function SathiScreen({inPanel=false, userId=null, linkedUserId=null, fullName=null}) {
   const {w}=useWindowSize();
   const [lang,setLang]=useState("en");
   const [rec,setRec]=useState(false);
   const [overlay,setOverlay]=useState(false);
   const [chatOpen,setChatOpen]=useState(false);
   const [memoryOpen,setMemoryOpen]=useState(false);
+  const [callOpen,setCallOpen]=useState(false);
   const [inp,setInp]=useState("");
   const isMock = inPanel;
 
@@ -220,7 +327,7 @@ function SathiScreen({inPanel=false, userId=null}) {
 
       <div style={{padding:"14px 16px",display:"flex",flexDirection:"column",gap:10,flex:1,justifyContent:"flex-end"}}>
         {[
-          {icon:<Phone size={19} color="#F9F9F7"/>,label:lang==="en"?"Call Son / Daughter":"बेटे को कॉल करें",sub:lang==="en"?"Rohan · Last called 2h ago":"रोहन · 2 घंटे पहले",acc:"#059669"},
+          {icon:<Phone size={19} color="#F9F9F7"/>,label:lang==="en"?"Call Son / Daughter":"बेटे को कॉल करें",sub:lang==="en"?"Rohan · Last called 2h ago":"रोहन · 2 घंटे पहले",acc:"#059669",fn:()=>setCallOpen(true)},
           {icon:<Mic size={19} color="#F9F9F7"/>,label:lang==="en"?"Record a Memory":"यादें रिकॉर्ड करें",sub:lang==="en"?"Your voice, preserved forever":"आपकी आवाज़, सदा के लिए",acc:"#d97706",fn:()=>setMemoryOpen(true)},
           {icon:<MessageCircle size={19} color="#F9F9F7"/>,label:lang==="en"?"Ask Sathi":"साथी से पूछें",sub:lang==="en"?"Health · Reminders · Stories":"स्वास्थ्य · याद · कहानियाँ",acc:"#4F46E5",fn:()=>setChatOpen(true)},
         ].map((c,i)=>(
@@ -274,6 +381,7 @@ function SathiScreen({inPanel=false, userId=null}) {
 
       <SathiChat open={chatOpen} onClose={()=>setChatOpen(false)} lang={lang} userId={userId}/>
       <MemoryRecorder open={memoryOpen} onClose={()=>setMemoryOpen(false)} lang={lang} userId={userId}/>
+      <CallOverlay open={callOpen} onClose={()=>setCallOpen(false)} lang={lang} userId={userId} linkedUserId={linkedUserId} fromName={fullName}/>
     </div>
   );
 }
@@ -449,11 +557,26 @@ function MemoryCard({title, summary, duration, date, index=0}) {
 }
 
 // ─── GUARDIAN DASHBOARD ───────────────────────────────────────────────────────
-function GuardianDashboard({inPanel=false}) {
+function GuardianDashboard({inPanel=false, profileId=null}) {
   const {w}=useWindowSize();
   const isMobile = !inPanel && w < 768;
   const [nav,setNav]=useState("home");
   const [drawer,setDrawer]=useState(false);
+  const [incomingCall, setIncomingCall] = useState(null);
+
+  // Listen for incoming_call events via Realtime
+  useEffect(() => {
+    if (!profileId) return;
+    const ch = supabase.channel(`user:${profileId}`)
+      .on("broadcast", { event: "incoming_call" }, ({ payload }) => {
+        setIncomingCall(payload);
+      })
+      .on("broadcast", { event: "call_ended" }, () => {
+        setIncomingCall(null);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [profileId]);
 
   const navItems=[
     {id:"home",   icon:<Home size={17}/>,      label:"Overview"},
@@ -738,6 +861,41 @@ function GuardianDashboard({inPanel=false}) {
               <span style={{fontSize:9,fontWeight:nav===item.id?700:400}}>{item.label}</span>
             </button>
           ))}
+        </div>
+      )}
+
+      {/* Incoming call toast */}
+      {incomingCall && (
+        <div className="fadein" style={{
+          position: "absolute", top: 16, right: 16, zIndex: 60,
+          background: "linear-gradient(135deg,#064E3B,#065f46)",
+          borderRadius: 16, padding: "16px 20px", minWidth: 260,
+          boxShadow: "0 8px 32px rgba(6,78,59,0.3)", border: "1px solid rgba(5,150,105,0.3)"
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: "50%",
+              background: "rgba(5,150,105,0.3)", display: "flex", alignItems: "center", justifyContent: "center"
+            }}>
+              <Phone size={18} color="#34D399" />
+            </div>
+            <div>
+              <div style={{ color: "#F9F9F7", fontSize: 14, fontWeight: 600 }}>
+                📞 {incomingCall.from_name || "Amma"} is calling
+              </div>
+              <div style={{ color: "rgba(249,249,247,.5)", fontSize: 11, marginTop: 2 }}>Incoming call</div>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={() => setIncomingCall(null)} style={{
+              flex: 1, padding: "9px 0", borderRadius: 10, border: "none", cursor: "pointer",
+              background: "#059669", color: "#fff", fontSize: 13, fontWeight: 600
+            }}>Answer</button>
+            <button onClick={() => setIncomingCall(null)} style={{
+              flex: 1, padding: "9px 0", borderRadius: 10, border: "none", cursor: "pointer",
+              background: "rgba(255,255,255,0.12)", color: "rgba(249,249,247,.7)", fontSize: 13, fontWeight: 600
+            }}>Decline</button>
+          </div>
         </div>
       )}
     </div>
