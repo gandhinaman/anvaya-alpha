@@ -740,6 +740,8 @@ function GuardianDashboard({inPanel=false}) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // ROOT APP
 // ═══════════════════════════════════════════════════════════════════════════════
+export { SathiScreen, GuardianDashboard, fontStyle };
+
 export default function App() {
   const {w}=useWindowSize();
   const isMobile=w<768;
