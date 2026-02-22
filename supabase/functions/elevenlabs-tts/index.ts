@@ -28,8 +28,8 @@ serve(async (req) => {
     });
   }
 
-  // Default to "Jessica" - warm, friendly female voice
-  const selectedVoice = voiceId || "cgSgspJ2msm6clMCkdW9";
+  // Default to "Lily" - gentle, warm, kind female voice
+  const selectedVoice = voiceId || "pFZP5JQG7iQjIQuC4Bku";
 
   try {
     const response = await fetch(
@@ -44,11 +44,11 @@ serve(async (req) => {
           text,
           model_id: "eleven_multilingual_v2",
           voice_settings: {
-            stability: 0.4,
-            similarity_boost: 0.75,
-            style: 0.45,
+            stability: 0.3,
+            similarity_boost: 0.8,
+            style: 0.6,
             use_speaker_boost: true,
-            speed: 0.95,
+            speed: 0.9,
           },
         }),
       }
