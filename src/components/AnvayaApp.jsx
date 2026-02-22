@@ -5,6 +5,7 @@ import {
   Circle, User, LogOut, Headphones, Brain, Check, Menu, X,
   TrendingUp, Zap, BarChart2
 } from "lucide-react";
+import SathiChat from "./sathi/SathiChat";
 
 // ─── RESPONSIVE HOOK ──────────────────────────────────────────────────────────
 function useWindowSize() {
@@ -135,11 +136,12 @@ function AudioPlayer({color="#4F46E5"}) {
   );
 }
 
-function SathiScreen({inPanel=false}) {
+function SathiScreen({inPanel=false, userId=null}) {
   const {w}=useWindowSize();
   const [lang,setLang]=useState("en");
   const [rec,setRec]=useState(false);
   const [overlay,setOverlay]=useState(false);
+  const [chatOpen,setChatOpen]=useState(false);
   const [inp,setInp]=useState("");
   const isMock = inPanel;
 
@@ -218,7 +220,7 @@ function SathiScreen({inPanel=false}) {
         {[
           {icon:<Phone size={19} color="#F9F9F7"/>,label:lang==="en"?"Call Son / Daughter":"बेटे को कॉल करें",sub:lang==="en"?"Rohan · Last called 2h ago":"रोहन · 2 घंटे पहले",acc:"#059669"},
           {icon:<Mic size={19} color="#F9F9F7"/>,label:lang==="en"?"Record a Memory":"यादें रिकॉर्ड करें",sub:lang==="en"?"Your voice, preserved forever":"आपकी आवाज़, सदा के लिए",acc:"#d97706",fn:()=>setRec(r=>!r)},
-          {icon:<MessageCircle size={19} color="#F9F9F7"/>,label:lang==="en"?"Ask Sathi":"साथी से पूछें",sub:lang==="en"?"Health · Reminders · Stories":"स्वास्थ्य · याद · कहानियाँ",acc:"#4F46E5"},
+          {icon:<MessageCircle size={19} color="#F9F9F7"/>,label:lang==="en"?"Ask Sathi":"साथी से पूछें",sub:lang==="en"?"Health · Reminders · Stories":"स्वास्थ्य · याद · कहानियाँ",acc:"#4F46E5",fn:()=>setChatOpen(true)},
         ].map((c,i)=>(
           <button key={i} onClick={c.fn} className="glass" style={{
             display:"flex",alignItems:"center",gap:12,padding:"12px 14px",
@@ -267,6 +269,8 @@ function SathiScreen({inPanel=false}) {
           }}>Not now</button>
         </div>
       )}
+
+      <SathiChat open={chatOpen} onClose={()=>setChatOpen(false)} lang={lang} userId={userId}/>
     </div>
   );
 }
