@@ -3,7 +3,7 @@ import {
   Phone, Mic, MessageCircle, Heart, Activity, Pill,
   Home, Bell, Settings, ChevronRight, Play, Pause,
   Circle, User, LogOut, Headphones, Brain, Check, Menu, X,
-  TrendingUp, Zap, BarChart2, PhoneOff
+  TrendingUp, Zap, BarChart2, PhoneOff, AlertTriangle, ShieldCheck
 } from "lucide-react";
 import SathiChat from "./sathi/SathiChat";
 import MemoryRecorder from "./sathi/MemoryRecorder";
@@ -283,11 +283,48 @@ function SathiScreen({inPanel=false, userId=null, linkedUserId=null, fullName=nu
   const [lang,setLang]=useState("en");
   const [rec,setRec]=useState(false);
   const [overlay,setOverlay]=useState(false);
+  const [overlayPhase,setOverlayPhase]=useState("ask"); // ask | alerting | confirmed
   const [chatOpen,setChatOpen]=useState(false);
   const [memoryOpen,setMemoryOpen]=useState(false);
   const [callOpen,setCallOpen]=useState(false);
   const [inp,setInp]=useState("");
   const isMock = inPanel;
+
+  const TRIGGER_WORDS = ["help","pain","fall","scared","emergency","chest","dizzy"];
+  const checkTrigger = (text) => {
+    const lower = text.toLowerCase();
+    return TRIGGER_WORDS.some(w => lower.includes(w));
+  };
+
+  const handleEmergencyCall = async () => {
+    setOverlayPhase("alerting");
+    // Broadcast emergency to linked user
+    if (linkedUserId) {
+      const ch = supabase.channel(`user:${linkedUserId}`);
+      ch.subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          ch.send({ type: "broadcast", event: "emergency", payload: { from: fullName || "Parent", from_id: userId, timestamp: new Date().toISOString() } });
+          setTimeout(() => supabase.removeChannel(ch), 1000);
+        }
+      });
+    }
+    // Log health event
+    if (userId) {
+      await supabase.from("health_events").insert({
+        user_id: userId,
+        event_type: "emergency_triggered",
+        value: { timestamp: new Date().toISOString() },
+      });
+    }
+    // Transition to confirmed after a moment
+    setTimeout(() => setOverlayPhase("confirmed"), 1500);
+  };
+
+  const closeOverlay = () => {
+    setOverlay(false);
+    setOverlayPhase("ask");
+    setInp("");
+  };
 
   const wrap = isMock
     ? {width:360,height:760,position:"relative",overflow:"hidden",
@@ -354,7 +391,7 @@ function SathiScreen({inPanel=false, userId=null, linkedUserId=null, fullName=nu
 
       <div style={{padding:"12px 18px 0"}}>
         <div style={{background:"rgba(249,249,247,.08)",border:"1px solid rgba(255,255,255,.12)",borderRadius:14,padding:"10px 14px"}}>
-          <input value={inp} onChange={e=>{setInp(e.target.value);if(e.target.value.toLowerCase().includes("help"))setOverlay(true);}}
+          <input value={inp} onChange={e=>{setInp(e.target.value);if(checkTrigger(e.target.value)){setOverlay(true);setOverlayPhase("ask");}}}
             placeholder={lang==="en"?"Type anything… (try 'help')":"कुछ भी लिखें…"}
             style={{width:"100%",background:"transparent",border:"none",outline:"none",color:"#F9F9F7",fontSize:13}}/>
         </div>
@@ -388,29 +425,63 @@ function SathiScreen({inPanel=false, userId=null, linkedUserId=null, fullName=nu
       {overlay&&(
         <div className="fadein" style={{
           position:"absolute",inset:0,borderRadius:isMock?36:0,
-          background:"rgba(2,18,14,.88)",backdropFilter:"blur(20px)",
+          background:overlayPhase==="confirmed"?"rgba(2,44,34,.95)":"rgba(2,18,14,.88)",backdropFilter:"blur(20px)",
           display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
-          padding:32,gap:20,zIndex:10
+          padding:32,gap:20,zIndex:10,transition:"background .5s"
         }}>
-          <div style={{width:60,height:60,borderRadius:"50%",background:"rgba(249,249,247,.1)",display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <Heart size={26} color="#F9F9F7"/>
-          </div>
-          <div style={{textAlign:"center"}}>
-            <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:28,color:"#F9F9F7",fontWeight:400,lineHeight:1.3}}>I heard you.</div>
-            <div style={{color:"rgba(249,249,247,.6)",fontSize:14,marginTop:7,lineHeight:1.6}}>
-              Should I call <strong style={{color:"#F9F9F7"}}>Rohan</strong>?
+          {overlayPhase==="ask"&&(<>
+            <div style={{width:60,height:60,borderRadius:"50%",background:"rgba(249,249,247,.1)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+              <Heart size={26} color="#F9F9F7"/>
             </div>
-          </div>
-          <button onClick={()=>setOverlay(false)} style={{
-            width:"100%",padding:"17px",borderRadius:18,border:"none",cursor:"pointer",
-            background:"linear-gradient(135deg,#059669,#065f46)",
-            color:"#F9F9F7",fontSize:18,fontWeight:700,
-            boxShadow:"0 8px 28px rgba(5,150,105,.45)",letterSpacing:"0.02em"
-          }}>✓ Yes, Call Now</button>
-          <button onClick={()=>setOverlay(false)} style={{
-            background:"transparent",border:"1px solid rgba(255,255,255,.15)",
-            color:"rgba(249,249,247,.48)",padding:"10px 28px",borderRadius:100,cursor:"pointer",fontSize:13
-          }}>Not now</button>
+            <div style={{textAlign:"center"}}>
+              <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:28,color:"#F9F9F7",fontWeight:400,lineHeight:1.3}}>
+                {lang==="en"?"I heard you.":"मैंने सुना।"}
+              </div>
+              <div style={{color:"rgba(249,249,247,.6)",fontSize:14,marginTop:7,lineHeight:1.6}}>
+                {lang==="en"?<>Should I call <strong style={{color:"#F9F9F7"}}>Rohan</strong>?</>:<>क्या मैं <strong style={{color:"#F9F9F7"}}>रोहन</strong> को बुलाऊँ?</>}
+              </div>
+            </div>
+            <button onClick={handleEmergencyCall} style={{
+              width:"100%",padding:"17px",borderRadius:18,border:"none",cursor:"pointer",
+              background:"linear-gradient(135deg,#059669,#065f46)",
+              color:"#F9F9F7",fontSize:18,fontWeight:700,
+              boxShadow:"0 8px 28px rgba(5,150,105,.45)",letterSpacing:"0.02em"
+            }}>✓ {lang==="en"?"Yes, Call Now":"हाँ, अभी कॉल करें"}</button>
+            <button onClick={closeOverlay} style={{
+              background:"transparent",border:"1px solid rgba(255,255,255,.15)",
+              color:"rgba(249,249,247,.48)",padding:"10px 28px",borderRadius:100,cursor:"pointer",fontSize:13
+            }}>{lang==="en"?"Not now":"अभी नहीं"}</button>
+          </>)}
+
+          {overlayPhase==="alerting"&&(<>
+            <div style={{width:70,height:70,borderRadius:"50%",background:"rgba(5,150,105,.2)",display:"flex",alignItems:"center",justifyContent:"center",animation:"callPulse 1.5s ease-in-out infinite"}}>
+              <Phone size={30} color="#34D399"/>
+            </div>
+            <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:22,color:"#F9F9F7",fontWeight:400,textAlign:"center"}}>
+              {lang==="en"?"Alerting Rohan…":"रोहन को सूचित कर रहे हैं…"}
+            </div>
+            <div style={{display:"flex",gap:4}}>
+              {[0,1,2].map(i=>(<div key={i} style={{width:8,height:8,borderRadius:"50%",background:"rgba(249,249,247,.5)",animation:`dotBounce 1.2s ease-in-out ${i*.2}s infinite`}}/>))}
+            </div>
+          </>)}
+
+          {overlayPhase==="confirmed"&&(<>
+            <div style={{width:80,height:80,borderRadius:"50%",background:"rgba(5,150,105,.25)",display:"flex",alignItems:"center",justifyContent:"center",animation:"callPulse 2s ease-in-out infinite"}}>
+              <Check size={36} color="#34D399"/>
+            </div>
+            <div style={{textAlign:"center"}}>
+              <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:24,color:"#F9F9F7",fontWeight:400,lineHeight:1.4}}>
+                {lang==="en"?"Rohan has been alerted.":"रोहन को सूचित कर दिया गया।"}
+              </div>
+              <div style={{color:"rgba(52,211,153,.8)",fontSize:14,marginTop:8}}>
+                {lang==="en"?"Help is coming.":"मदद आ रही है।"}
+              </div>
+            </div>
+            <button onClick={closeOverlay} style={{
+              marginTop:16,background:"transparent",border:"1px solid rgba(255,255,255,.2)",
+              color:"rgba(249,249,247,.6)",padding:"12px 32px",borderRadius:100,cursor:"pointer",fontSize:13
+            }}>{lang==="en"?"Close":"बंद करें"}</button>
+          </>)}
         </div>
       )}
 
@@ -601,11 +672,41 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
   const [nav,setNav]=useState("home");
   const [drawer,setDrawer]=useState(false);
   const [incomingCall, setIncomingCall] = useState(null);
+  const [emergency, setEmergency] = useState(null); // { from, timestamp }
+  const [callOpen, setCallOpen] = useState(false);
 
   // Real data hook
   const { parentProfile, memories: realMemories, medications, healthEvents, stats: derivedStats, loading: dataLoading, lastUpdated, toggleMedication } = useParentData(profileId);
 
-  // Listen for incoming_call events via Realtime
+  // Request notification permission on mount
+  useEffect(() => {
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  // Play alert sound
+  const playAlertSound = () => {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 880;
+      osc.type = "sine";
+      gain.gain.value = 0.3;
+      osc.start();
+      // Beep pattern
+      setTimeout(() => { gain.gain.value = 0; }, 200);
+      setTimeout(() => { gain.gain.value = 0.3; }, 400);
+      setTimeout(() => { gain.gain.value = 0; }, 600);
+      setTimeout(() => { gain.gain.value = 0.3; }, 800);
+      setTimeout(() => { osc.stop(); ctx.close(); }, 1000);
+    } catch (e) { /* ignore audio errors */ }
+  };
+
+  // Listen for incoming_call + emergency events via Realtime
   useEffect(() => {
     if (!profileId) return;
     const ch = supabase.channel(`user:${profileId}`)
@@ -615,9 +716,32 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
       .on("broadcast", { event: "call_ended" }, () => {
         setIncomingCall(null);
       })
+      .on("broadcast", { event: "emergency" }, ({ payload }) => {
+        setEmergency(payload);
+        playAlertSound();
+        // Send browser notification if tab is in background
+        if (document.hidden && "Notification" in window && Notification.permission === "granted") {
+          new Notification("⚠️ Emergency Alert", {
+            body: `${payload.from || "Amma"} needs help!`,
+            icon: "/favicon.ico",
+            requireInteraction: true,
+          });
+        }
+      })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [profileId]);
+
+  const handleMarkSafe = async () => {
+    if (profileId && parentProfile) {
+      await supabase.from("health_events").insert({
+        user_id: parentProfile.id,
+        event_type: "emergency_resolved",
+        value: { resolved_by: profileId, timestamp: new Date().toISOString() },
+      });
+    }
+    setEmergency(null);
+  };
 
   const navItems=[
     {id:"home",   icon:<Home size={17}/>,      label:"Overview"},
@@ -1002,6 +1126,50 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
               flex: 1, padding: "9px 0", borderRadius: 10, border: "none", cursor: "pointer",
               background: "rgba(255,255,255,0.12)", color: "rgba(249,249,247,.7)", fontSize: 13, fontWeight: 600
             }}>Decline</button>
+          </div>
+        </div>
+      )}
+
+      {/* Emergency overlay — cannot be accidentally dismissed */}
+      {emergency && (
+        <div style={{
+          position: "absolute", inset: 0, zIndex: 100,
+          background: "linear-gradient(160deg,#7F1D1D 0%,#991B1B 40%,#B91C1C 70%,#DC2626 100%)",
+          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+          padding: 32, gap: 20
+        }}>
+          <div style={{
+            width: 90, height: 90, borderRadius: "50%",
+            background: "rgba(255,255,255,0.15)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            animation: "callPulse 1.5s ease-in-out infinite"
+          }}>
+            <AlertTriangle size={42} color="#fff" />
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 32, color: "#fff", fontWeight: 700, lineHeight: 1.3 }}>
+              ⚠️ {parentProfile?.full_name || "Amma"} needs help
+            </div>
+            <div style={{ color: "rgba(255,255,255,.7)", fontSize: 14, marginTop: 10 }}>
+              {emergency.timestamp ? new Date(emergency.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "Just now"}
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 12, marginTop: 16, width: "100%", maxWidth: 320 }}>
+            <button onClick={() => { setEmergency(null); setCallOpen(true); }} style={{
+              flex: 1, padding: "16px 0", borderRadius: 16, border: "none", cursor: "pointer",
+              background: "#fff", color: "#991B1B", fontSize: 16, fontWeight: 700,
+              boxShadow: "0 4px 20px rgba(0,0,0,.2)"
+            }}>
+              <Phone size={16} style={{ verticalAlign: "middle", marginRight: 6 }} />
+              Call Now
+            </button>
+            <button onClick={handleMarkSafe} style={{
+              flex: 1, padding: "16px 0", borderRadius: 16, border: "2px solid rgba(255,255,255,.3)", cursor: "pointer",
+              background: "transparent", color: "#fff", fontSize: 16, fontWeight: 700
+            }}>
+              <ShieldCheck size={16} style={{ verticalAlign: "middle", marginRight: 6 }} />
+              Mark as Safe
+            </button>
           </div>
         </div>
       )}
