@@ -15,39 +15,38 @@ Deno.serve(async (req) => {
 
   try {
     const { messages, system, userId } = await req.json();
-    const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
+    const apiKey = Deno.env.get("LOVABLE_API_KEY");
 
     if (!apiKey) {
-      throw new Error("ANTHROPIC_API_KEY not configured");
+      throw new Error("LOVABLE_API_KEY not configured");
     }
 
     const systemPrompt = system || SATHI_SYSTEM;
 
     const body = {
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 1024,
-      system: systemPrompt,
-      messages,
+      model: "google/gemini-2.5-flash",
+      messages: [
+        { role: "system", content: systemPrompt },
+        ...messages,
+      ],
       stream: true,
     };
 
-    const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
+    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
+        "Authorization": `Bearer ${apiKey}`,
       },
       body: JSON.stringify(body),
     });
 
-    if (!anthropicRes.ok) {
-      const errData = await anthropicRes.json();
-      throw new Error(errData.error?.message || "Anthropic API error");
+    if (!aiRes.ok) {
+      const errData = await aiRes.text();
+      throw new Error(`AI Gateway error: ${errData}`);
     }
 
-    // Stream the response using a TransformStream that collects full text
-    const reader = anthropicRes.body!.getReader();
+    const reader = aiRes.body!.getReader();
     const decoder = new TextDecoder();
     let fullText = "";
 
@@ -72,11 +71,11 @@ Deno.serve(async (req) => {
 
               try {
                 const parsed = JSON.parse(data);
-                if (parsed.type === "content_block_delta" && parsed.delta?.text) {
-                  fullText += parsed.delta.text;
-                  // Send each chunk as an SSE event
+                const delta = parsed.choices?.[0]?.delta?.content;
+                if (delta) {
+                  fullText += delta;
                   controller.enqueue(
-                    encoder.encode(`data: ${JSON.stringify({ text: parsed.delta.text })}\n\n`)
+                    encoder.encode(`data: ${JSON.stringify({ text: delta })}\n\n`)
                   );
                 }
               } catch {
@@ -85,7 +84,6 @@ Deno.serve(async (req) => {
             }
           }
 
-          // Send done event
           controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
           controller.close();
 
@@ -101,7 +99,6 @@ Deno.serve(async (req) => {
                 { role: "assistant", content: fullText },
               ];
 
-              // Try to find existing conversation for today
               const today = new Date().toISOString().split("T")[0];
               const { data: existing } = await supabase
                 .from("conversations")
