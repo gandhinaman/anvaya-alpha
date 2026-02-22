@@ -298,6 +298,181 @@ function SathiScreen({inPanel=false, userId=null, linkedUserId=null, fullName=nu
   const [codeCopied,setCodeCopied]=useState(false);
   const isMock = inPanel;
 
+  // ─── VOICE CONVERSATION STATE ──────────────────────────────────────────
+  const [voicePhase, setVoicePhase] = useState("idle"); // idle | listening | thinking | speaking
+  const [voiceText, setVoiceText] = useState("");
+  const [voiceResponse, setVoiceResponse] = useState("");
+  const recognitionRef = useRef(null);
+  const synthRef = useRef(null);
+  const voiceHistoryRef = useRef([]); // conversation history for context
+
+  const startVoiceConversation = () => {
+    if (voicePhase !== "idle") {
+      stopVoiceConversation();
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setVoiceText(lang === "hi" ? "आपका ब्राउज़र वॉइस को सपोर्ट नहीं करता" : "Your browser doesn't support voice input");
+      setVoicePhase("idle");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = lang === "hi" ? "hi-IN" : "en-US";
+    recognition.interimResults = true;
+    recognition.continuous = false;
+    recognition.maxAlternatives = 1;
+    recognitionRef.current = recognition;
+
+    setVoicePhase("listening");
+    setVoiceText("");
+    setVoiceResponse("");
+    setRec(true);
+
+    let finalTranscript = "";
+
+    recognition.onresult = (event) => {
+      let interim = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        } else {
+          interim += event.results[i][0].transcript;
+        }
+      }
+      setVoiceText(finalTranscript || interim);
+    };
+
+    recognition.onend = () => {
+      setRec(false);
+      if (finalTranscript.trim()) {
+        sendVoiceToLLM(finalTranscript.trim());
+      } else {
+        setVoicePhase("idle");
+        setVoiceText("");
+      }
+    };
+
+    recognition.onerror = (e) => {
+      console.error("Speech recognition error:", e.error);
+      setRec(false);
+      if (e.error === "no-speech") {
+        setVoicePhase("idle");
+        setVoiceText("");
+      } else {
+        setVoiceText(lang === "hi" ? "माइक्रोफ़ोन में समस्या हुई" : "Microphone error. Please try again.");
+        setTimeout(() => { setVoicePhase("idle"); setVoiceText(""); }, 2000);
+      }
+    };
+
+    recognition.start();
+  };
+
+  const sendVoiceToLLM = async (text) => {
+    setVoicePhase("thinking");
+    setVoiceText(text);
+
+    const userMsg = { role: "user", content: text };
+    const history = [...voiceHistoryRef.current, userMsg];
+
+    try {
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/chat`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: anonKey,
+            Authorization: `Bearer ${anonKey}`,
+          },
+          body: JSON.stringify({
+            messages: history.map(m => ({ role: m.role, content: m.content })),
+            userId,
+          }),
+        }
+      );
+
+      if (!res.ok) throw new Error("Failed to get response");
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let fullResponse = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const data = line.slice(6).trim();
+          if (data === "[DONE]") continue;
+          try {
+            const parsed = JSON.parse(data);
+            if (parsed.text) {
+              fullResponse += parsed.text;
+              setVoiceResponse(fullResponse);
+            }
+          } catch {}
+        }
+      }
+
+      // Save to conversation history
+      voiceHistoryRef.current = [...history, { role: "assistant", content: fullResponse }];
+
+      // Speak the response
+      if (fullResponse) {
+        speakResponse(fullResponse);
+      } else {
+        setVoicePhase("idle");
+      }
+    } catch (err) {
+      console.error("Voice LLM error:", err);
+      const errorText = lang === "hi" ? "क्षमा करें, कुछ गड़बड़ हो गई।" : "Sorry, something went wrong.";
+      setVoiceResponse(errorText);
+      speakResponse(errorText);
+    }
+  };
+
+  const speakResponse = (text) => {
+    setVoicePhase("speaking");
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = lang === "hi" ? "hi-IN" : "en-US";
+    utterance.rate = 0.95;
+    utterance.pitch = 1;
+    synthRef.current = utterance;
+
+    utterance.onend = () => {
+      setVoicePhase("idle");
+    };
+    utterance.onerror = () => {
+      setVoicePhase("idle");
+    };
+
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const stopVoiceConversation = () => {
+    if (recognitionRef.current) {
+      try { recognitionRef.current.abort(); } catch {}
+      recognitionRef.current = null;
+    }
+    window.speechSynthesis.cancel();
+    setRec(false);
+    setVoicePhase("idle");
+    setVoiceText("");
+    setVoiceResponse("");
+  };
+
   // Load linking code
   useEffect(()=>{
     if(!userId||inPanel) return;
@@ -400,25 +575,58 @@ function SathiScreen({inPanel=false, userId=null, linkedUserId=null, fullName=nu
         </div>
       </div>
 
-      <div style={{display:"flex",justifyContent:"center",marginTop:rec?24:isMock?36:48,transition:"margin .5s ease",flexShrink:0}}>
+      <div style={{display:"flex",justifyContent:"center",marginTop:voicePhase!=="idle"?24:isMock?36:48,transition:"margin .5s ease",flexShrink:0}}>
         <div style={{position:"relative"}} className="pring">
-          <div className={rec?"orb-rec":"orb"} style={{
-            width:isMock?148:160,height:isMock?148:160,borderRadius:"50%",
-            background:"conic-gradient(from 180deg at 50% 50%,#064E3B 0deg,#059669 90deg,#d97706 180deg,#065f46 270deg,#064E3B 360deg)",
-            position:"relative",cursor:"pointer",transition:"transform .5s"
-          }}>
+          <div
+            onClick={startVoiceConversation}
+            className={voicePhase==="listening"?"orb-rec":voicePhase==="speaking"?"orb-rec":"orb"}
+            style={{
+              width:isMock?148:160,height:isMock?148:160,borderRadius:"50%",
+              background: voicePhase==="listening"
+                ? "conic-gradient(from 180deg at 50% 50%,#4F46E5 0deg,#6366F1 90deg,#818CF8 180deg,#4F46E5 270deg,#4F46E5 360deg)"
+                : voicePhase==="thinking"
+                ? "conic-gradient(from 180deg at 50% 50%,#d97706 0deg,#f59e0b 90deg,#fbbf24 180deg,#d97706 270deg,#d97706 360deg)"
+                : voicePhase==="speaking"
+                ? "conic-gradient(from 180deg at 50% 50%,#059669 0deg,#10b981 90deg,#34d399 180deg,#059669 270deg,#059669 360deg)"
+                : "conic-gradient(from 180deg at 50% 50%,#064E3B 0deg,#059669 90deg,#d97706 180deg,#065f46 270deg,#064E3B 360deg)",
+              position:"relative",cursor:"pointer",transition:"background .5s, transform .5s"
+            }}
+          >
             <div style={{position:"absolute",inset:8,borderRadius:"50%",
               background:"radial-gradient(circle at 35% 35%,rgba(255,255,255,.12) 0%,transparent 65%)",
               border:"1px solid rgba(255,255,255,.15)"}}/>
-            {rec&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}><Waveform/></div>}
+            {voicePhase==="listening"&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}><Waveform/></div>}
+            {voicePhase==="thinking"&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+              <Loader2 size={36} color="rgba(249,249,247,.8)" style={{animation:"spin 1.2s linear infinite"}}/>
+            </div>}
+            {voicePhase==="speaking"&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+              <Headphones size={36} color="rgba(249,249,247,.8)"/>
+            </div>}
           </div>
         </div>
       </div>
 
-      <div style={{textAlign:"center",marginTop:18,padding:"0 36px"}}>
-        <p style={{color:"rgba(249,249,247,.5)",fontSize:13,lineHeight:1.5}}>
-          {rec?(lang==="en"?"Listening… share your memory":"सुन रहा हूँ…"):(lang==="en"?"Tap a card or type below":"बोलने के लिए टैप करें")}
-        </p>
+      <div style={{textAlign:"center",marginTop:18,padding:"0 36px",minHeight:48}}>
+        {voicePhase==="listening"&&(
+          <p style={{color:"rgba(249,249,247,.7)",fontSize:13,lineHeight:1.5,animation:"fadeUp .3s ease both"}}>
+            {voiceText||(lang==="en"?"Listening…":"सुन रहा हूँ…")}
+          </p>
+        )}
+        {voicePhase==="thinking"&&(
+          <p style={{color:"rgba(249,249,247,.5)",fontSize:13,lineHeight:1.5,animation:"fadeUp .3s ease both"}}>
+            {lang==="en"?`"${voiceText}" — thinking…`:`"${voiceText}" — सोच रहा हूँ…`}
+          </p>
+        )}
+        {voicePhase==="speaking"&&(
+          <p className="scr" style={{color:"rgba(249,249,247,.7)",fontSize:13,lineHeight:1.6,animation:"fadeUp .3s ease both",maxHeight:80,overflowY:"auto"}}>
+            {voiceResponse}
+          </p>
+        )}
+        {voicePhase==="idle"&&(
+          <p style={{color:"rgba(249,249,247,.5)",fontSize:13,lineHeight:1.5}}>
+            {lang==="en"?"Tap the orb to talk to Sathi":"साथी से बात करने के लिए ऑर्ब टैप करें"}
+          </p>
+        )}
       </div>
 
       <div style={{padding:"12px 18px 0"}}>
