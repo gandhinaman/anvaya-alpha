@@ -1,0 +1,2 @@
+// Store barrel file
+export {};
