@@ -442,29 +442,76 @@ function SathiScreen({inPanel=false, userId=null, linkedUserId=null, fullName=nu
     }
   };
 
-  const speakResponse = (text) => {
+  const ttsAudioRef = useRef(null);
+
+  const speakResponse = async (text) => {
     setVoicePhase("speaking");
+
+    // Stop any previous audio
+    if (ttsAudioRef.current) {
+      ttsAudioRef.current.pause();
+      ttsAudioRef.current = null;
+    }
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = lang === "hi" ? "hi-IN" : "en-US";
-    utterance.rate = 0.95;
-    utterance.pitch = 1;
-    synthRef.current = utterance;
 
-    utterance.onend = () => {
-      setVoicePhase("idle");
-    };
-    utterance.onerror = () => {
-      setVoicePhase("idle");
-    };
+    try {
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-    window.speechSynthesis.speak(utterance);
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/elevenlabs-tts`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: anonKey,
+            Authorization: `Bearer ${anonKey}`,
+          },
+          body: JSON.stringify({ text }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`TTS failed: ${response.status}`);
+      }
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      ttsAudioRef.current = audio;
+
+      audio.onended = () => {
+        setVoicePhase("idle");
+        ttsAudioRef.current = null;
+      };
+      audio.onerror = () => {
+        setVoicePhase("idle");
+        ttsAudioRef.current = null;
+      };
+
+      await audio.play();
+    } catch (err) {
+      console.error("ElevenLabs TTS error, falling back to browser:", err);
+      // Fallback to browser speech
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = lang === "hi" ? "hi-IN" : "en-US";
+      utterance.rate = 0.95;
+      utterance.pitch = 1;
+      synthRef.current = utterance;
+      utterance.onend = () => setVoicePhase("idle");
+      utterance.onerror = () => setVoicePhase("idle");
+      window.speechSynthesis.speak(utterance);
+    }
   };
 
   const stopVoiceConversation = () => {
     if (recognitionRef.current) {
       try { recognitionRef.current.abort(); } catch {}
       recognitionRef.current = null;
+    }
+    if (ttsAudioRef.current) {
+      ttsAudioRef.current.pause();
+      ttsAudioRef.current = null;
     }
     window.speechSynthesis.cancel();
     setRec(false);
