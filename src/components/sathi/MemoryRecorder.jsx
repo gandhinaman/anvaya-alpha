@@ -46,6 +46,17 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId }) {
     return prompts[promptIndex % prompts.length];
   }, [lang, promptIndex]);
 
+  const speakWithBrowserFallback = useCallback((text) => {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = lang === "hi" ? "hi-IN" : "en-US";
+    utterance.rate = 0.95;
+    utterance.pitch = 1;
+    utterance.onend = () => setIsSpeakingPrompt(false);
+    utterance.onerror = () => setIsSpeakingPrompt(false);
+    window.speechSynthesis.speak(utterance);
+  }, [lang]);
+
   const speakPrompt = useCallback(async (text) => {
     try {
       setIsSpeakingPrompt(true);
@@ -54,6 +65,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId }) {
         promptAudioRef.current.pause();
         promptAudioRef.current = null;
       }
+      window.speechSynthesis.cancel();
 
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -72,8 +84,8 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId }) {
       );
 
       if (!response.ok) {
-        console.error("TTS failed:", response.status);
-        setIsSpeakingPrompt(false);
+        console.error("TTS failed, using browser voice:", response.status);
+        speakWithBrowserFallback(text);
         return;
       }
 
@@ -82,13 +94,16 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId }) {
       const audio = new Audio(audioUrl);
       promptAudioRef.current = audio;
       audio.onended = () => setIsSpeakingPrompt(false);
-      audio.onerror = () => setIsSpeakingPrompt(false);
+      audio.onerror = () => {
+        setIsSpeakingPrompt(false);
+        speakWithBrowserFallback(text);
+      };
       await audio.play();
     } catch (err) {
-      console.error("Prompt TTS error:", err);
-      setIsSpeakingPrompt(false);
+      console.error("Prompt TTS error, falling back to browser:", err);
+      speakWithBrowserFallback(text);
     }
-  }, []);
+  }, [speakWithBrowserFallback]);
 
   // Read prompt aloud when component opens
   useEffect(() => {
