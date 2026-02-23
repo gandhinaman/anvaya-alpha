@@ -28,7 +28,7 @@ const PROMPTS_HI = [
   "कोई त्योहार बताइए जो आप कभी नहीं भूलेंगे।",
 ];
 
-export default function MemoryRecorder({ open, onClose, lang = "en", userId }) {
+export default function MemoryRecorder({ open, onClose, lang = "en", userId, linkedName }) {
   const [phase, setPhase] = useState("idle"); // idle | recording | processing | success | error
   const [seconds, setSeconds] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
@@ -580,8 +580,8 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId }) {
           )}
           <p style={{ color: "rgba(249,249,247,.5)", fontSize: 13, lineHeight: 1.6, marginTop: 6 }}>
             {lang === "hi"
-              ? "रोहन इसे सुन सकेगा।"
-              : "Rohan will be able to hear this."}
+              ? `${linkedName||"Guardian"} इसे सुन सकेगा।`
+              : `${linkedName||"Your guardian"} will be able to hear this.`}
           </p>
           <button
             onClick={onClose}
