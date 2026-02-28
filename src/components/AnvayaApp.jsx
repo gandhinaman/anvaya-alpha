@@ -878,7 +878,8 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
         : <div style={{height:"env(safe-area-inset-top,20px)"}}/>
       }
 
-      <div style={{display:"flex",justifyContent:"center",alignItems:"center",marginTop:14,gap:12,padding:"0 18px"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:14,padding:"0 18px"}}>
+        <div style={{width:48}}/>
         <div style={{background:"rgba(255,248,240,.1)",borderRadius:100,border:"1px solid rgba(255,248,240,.15)",padding:4,display:"flex",gap:3}}>
           {["en","hi"].map(l=>(
             <button key={l} onClick={()=>switchLang(l)} style={{
@@ -888,14 +889,22 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
             }}>{l==="en"?"English":"हिंदी"}</button>
           ))}
         </div>
-        {!inPanel && (
-          <button onClick={async()=>{await supabase.auth.signOut();window.location.href="/login";}} style={{
+        <div style={{display:"flex",gap:8}}>
+          <button onClick={()=>setProfileOpen(true)} style={{
             width:48,height:48,borderRadius:14,border:"1.5px solid rgba(255,248,240,.18)",
             background:"rgba(255,248,240,.08)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0
-          }} title="Sign out">
-            <LogOut size={20} color="rgba(255,248,240,.6)"/>
+          }} title={lang==="en"?"My Profile":"मेरी प्रोफ़ाइल"}>
+            <User size={20} color="rgba(255,248,240,.6)"/>
           </button>
-        )}
+          {!inPanel && (
+            <button onClick={async()=>{await supabase.auth.signOut();window.location.href="/login";}} style={{
+              width:48,height:48,borderRadius:14,border:"1.5px solid rgba(255,248,240,.18)",
+              background:"rgba(255,248,240,.08)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0
+            }} title="Sign out">
+              <LogOut size={20} color="rgba(255,248,240,.6)"/>
+            </button>
+          )}
+        </div>
       </div>
 
       <div style={{textAlign:"center",marginTop:16}}>
@@ -1093,7 +1102,6 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
 
       <div style={{padding:"16px 16px",display:"flex",flexDirection:"column",gap:14,flex:1,justifyContent:"flex-end"}}>
         {[
-          {icon:<User size={24} color="#FFF8F0"/>,label:lang==="en"?"My Profile":"मेरी प्रोफ़ाइल",sub:lang==="en"?"Health · Medicines · Preferences":"स्वास्थ्य · दवाइयाँ · पसंद",acc:"#8D6E63",fn:()=>setProfileOpen(true)},
           {icon:<Mic size={24} color="#FFF8F0"/>,label:lang==="en"?"Record a Memory":"यादें रिकॉर्ड करें",sub:lang==="en"?"Your voice, preserved forever":"आपकी आवाज़, सदा के लिए",acc:"#C68B59",fn:()=>setMemoryOpen(true)},
           {icon:<BookOpen size={24} color="#FFF8F0"/>,label:lang==="en"?"Memory Log":"यादों की डायरी",sub:lang==="en"?"Your memories & family comments":"आपकी यादें और परिवार की टिप्पणियाँ",acc:"#C68B59",fn:()=>setMemoryLogOpen(true)},
           {icon:<MessageCircle size={24} color="#FFF8F0"/>,label:lang==="en"?"Ask Sathi":"साथी से पूछें",sub:lang==="en"?"Health · Reminders · Stories":"स्वास्थ्य · याद · कहानियाँ",acc:"#C68B59",fn:()=>setChatOpen(true)},
