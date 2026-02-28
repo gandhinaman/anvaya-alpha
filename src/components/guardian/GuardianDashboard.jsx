@@ -469,7 +469,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
        how: "Derived from transcript analysis — vocabulary richness, logical flow, and self-corrections.",
        meaning: { high: "80%+ = sharp, fluent recall", mid: "50–80% = normal age-related variation", low: "Below 50% = may warrant a check-in" }
      },
-     { label: "Emotional Tone", value: derivedStats.emotionalTone.value, icon: Heart, color: "#C68B59", trend: derivedStats.emotionalTone.trend,
+     { label: "Emotional Wellbeing", value: derivedStats.emotionalTone.value, icon: Heart, color: "#C68B59", trend: derivedStats.emotionalTone.trend,
        what: "Emotional quality detected from voice — joy, calm, sadness, or distress.",
        how: "Measured from audio tone, breathing patterns, and vocal trembling.",
        meaning: { high: "Joyful / Peaceful = positive wellbeing", mid: "Calm / Nostalgic = stable", low: "Concerned / Distressed = may need support" }
