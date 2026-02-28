@@ -527,8 +527,10 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
 
     // New memories (recordings)
     realMemories.slice(0, 5).forEach(m => {
+      const isVideo = m.audio_url?.includes("/video_");
+      const icon = isVideo ? "🎥" : "🎤";
       items.push({
-        text: `🎤 New memory: "${m.title || "Untitled"}"${m.emotional_tone ? ` · ${m.emotional_tone}` : ""}`,
+        text: `${icon} New memory: "${m.title || "Untitled"}"${m.emotional_tone ? ` · ${m.emotional_tone}` : ""}`,
         type: "info", category: "activity", time: fmtAgo(m.created_at), priority: 3
       });
     });
