@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
       }),
     });
 
-    let title = promptQuestion || "Untitled Memory";
+    const title = promptQuestion || "Share a memory";
     let summary = transcript;
     let emotional_tone = "peaceful";
 
@@ -106,7 +106,7 @@ Deno.serve(async (req) => {
         const jsonMatch = rawText.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0]);
-          title = parsed.title || title;
+          // title stays as promptQuestion, don't override
           summary = parsed.summary || summary;
           emotional_tone = parsed.emotional_tone || emotional_tone;
         }
