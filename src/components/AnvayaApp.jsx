@@ -1026,18 +1026,17 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
     ? {width:360,height:760,position:"relative",overflow:"hidden",
        background:"linear-gradient(160deg,#1A0F0A 0%,#2C1810 40%,#3E2723 70%,#2A1B14 100%)",
        borderRadius:36,boxShadow:"0 32px 64px rgba(0,0,0,.5)",flexShrink:0,display:"flex",flexDirection:"column"}
-    : {width:"100%",minHeight:"100vh",position:"relative",overflow:"hidden",
+    : {width:"100%",height:"100dvh",maxHeight:"100dvh",position:"relative",overflow:"hidden",
        background:"linear-gradient(160deg,#1A0F0A 0%,#2C1810 40%,#3E2723 70%,#2A1B14 100%)",
-       display:"flex",flexDirection:"column"};
+       display:"flex",flexDirection:"column",
+       paddingTop:"env(safe-area-inset-top, 0px)",paddingBottom:"env(safe-area-inset-bottom, 0px)"};
 
   return (
     <div style={wrap}>
       <div style={{position:"absolute",inset:0,pointerEvents:"none",
         background:"radial-gradient(ellipse at 20% 20%,rgba(198,139,89,.06) 0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(141,110,99,.06) 0%,transparent 60%)"}}/>
 
-      {/* Safe area top spacing is now handled globally by #root padding-top */}
-
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:14,padding:"0 18px"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:8,padding:"0 18px"}}>
         <div style={{width:48}}/>
         <div style={{background:"rgba(255,248,240,.1)",borderRadius:100,border:"1px solid rgba(255,248,240,.15)",padding:4,display:"flex",gap:3}}>
           {["en","hi"].map(l=>(

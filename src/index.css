@@ -95,7 +95,7 @@
   }
 }
 
-/* Capacitor native safe area support */
+/* Safe-area CSS variables */
 html {
   --sat: env(safe-area-inset-top, 0px);
   --sab: env(safe-area-inset-bottom, 0px);
@@ -103,8 +103,18 @@ html {
   --sar: env(safe-area-inset-right, 0px);
 }
 
+/* iOS resets */
+html, body {
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+
 #root {
   min-height: 100dvh;
-  padding-top: env(safe-area-inset-top, 0px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  /* No safe-area padding here – each screen handles its own */
 }
+
+/* Utility classes for safe areas */
+.safe-top    { padding-top: env(safe-area-inset-top, 0px); }
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }

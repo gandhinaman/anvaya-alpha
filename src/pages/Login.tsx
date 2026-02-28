@@ -118,7 +118,9 @@ export default function Login() {
       justifyContent: "center",
       background: "linear-gradient(160deg,#1A0F0A 0%,#2C1810 40%,#3E2723 70%,#2A1B14 100%)",
       fontFamily: "'DM Sans', sans-serif",
-      padding: 20,
+      padding: "20px",
+      paddingTop: "calc(20px + env(safe-area-inset-top, 0px))",
+      paddingBottom: "calc(20px + env(safe-area-inset-bottom, 0px))",
     }}>
       <style>{fontStyle}</style>
 
