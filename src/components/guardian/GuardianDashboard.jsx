@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useParentData } from "@/hooks/useParentData";
+import { filterCities } from "@/lib/cities";
 
 // ─── STYLES (shared with AnvayaApp) ────────────────────────────────────────────
 export const guardianStyles = `
@@ -434,6 +435,9 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
   const [guardianProfile, setGuardianProfile] = useState({ full_name: "", phone: "", location: "" });
   const [guardianProfileLoading, setGuardianProfileLoading] = useState(false);
   const [guardianProfileSaved, setGuardianProfileSaved] = useState(false);
+  const [citySuggestions, setCitySuggestions] = useState([]);
+  const [showCitySuggestions, setShowCitySuggestions] = useState(false);
+  const cityRef = useRef(null);
 
   useEffect(() => {
     if (!profileId) return;
@@ -749,11 +753,54 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                     style={{ width: "100%", padding: "11px 14px", borderRadius: 12, border: "1px solid rgba(93,64,55,0.15)", fontSize: 14, outline: "none", color: "#3E2723", fontFamily: "'DM Sans',sans-serif" }} />
                   <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 3 }}>Your parent can use this to call you directly</div>
                 </div>
-                <div>
+                <div style={{ position: "relative" }} ref={cityRef}>
                   <label style={{ fontSize: 11, fontWeight: 600, color: "#6b6b6b", marginBottom: 4, display: "block" }}>Location</label>
-                  <input value={guardianProfile.location} onChange={e => setGuardianProfile(p => ({ ...p, location: e.target.value }))}
-                    placeholder="City, Country"
-                    style={{ width: "100%", padding: "11px 14px", borderRadius: 12, border: "1px solid rgba(93,64,55,0.15)", fontSize: 14, outline: "none", color: "#3E2723", fontFamily: "'DM Sans',sans-serif" }} />
+                  <input
+                    value={guardianProfile.location}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setGuardianProfile(p => ({ ...p, location: val }));
+                      const matches = filterCities(val);
+                      setCitySuggestions(matches);
+                      setShowCitySuggestions(matches.length > 0);
+                    }}
+                    onFocus={() => {
+                      const matches = filterCities(guardianProfile.location);
+                      if (matches.length > 0) { setCitySuggestions(matches); setShowCitySuggestions(true); }
+                    }}
+                    onBlur={() => setTimeout(() => setShowCitySuggestions(false), 150)}
+                    placeholder="Start typing a city…"
+                    style={{ width: "100%", padding: "11px 14px", borderRadius: 12, border: "1px solid rgba(93,64,55,0.15)", fontSize: 14, outline: "none", color: "#3E2723", fontFamily: "'DM Sans',sans-serif" }}
+                  />
+                  {showCitySuggestions && citySuggestions.length > 0 && (
+                    <div style={{
+                      position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50,
+                      background: "#fff", borderRadius: 12, marginTop: 4,
+                      border: "1px solid rgba(93,64,55,0.15)",
+                      boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+                      maxHeight: 240, overflowY: "auto"
+                    }}>
+                      {citySuggestions.map(city => (
+                        <div
+                          key={city}
+                          onMouseDown={() => {
+                            setGuardianProfile(p => ({ ...p, location: city }));
+                            setShowCitySuggestions(false);
+                          }}
+                          style={{
+                            padding: "10px 14px", fontSize: 13, color: "#3E2723", cursor: "pointer",
+                            fontFamily: "'DM Sans',sans-serif",
+                            borderBottom: "1px solid rgba(93,64,55,0.06)",
+                            transition: "background .15s"
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.background = "rgba(93,64,55,0.06)"}
+                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                        >
+                          {city}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <button onClick={saveGuardianProfile} disabled={guardianProfileLoading} style={{
                   width: "100%", padding: "12px", borderRadius: 12, border: "none", cursor: guardianProfileLoading ? "wait" : "pointer",
