@@ -463,11 +463,34 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
   };
 
   const COMMON_LOCATIONS = [
+    // India
     "Mumbai, India","Delhi, India","Bengaluru, India","Hyderabad, India","Chennai, India","Kolkata, India","Pune, India","Ahmedabad, India","Jaipur, India","Lucknow, India",
     "Chandigarh, India","Bhopal, India","Indore, India","Nagpur, India","Vadodara, India","Coimbatore, India","Kochi, India","Thiruvananthapuram, India","Visakhapatnam, India","Patna, India",
     "Guwahati, India","Dehradun, India","Shimla, India","Mysuru, India","Mangaluru, India","Surat, India","Rajkot, India","Agra, India","Varanasi, India","Amritsar, India",
-    "New York, USA","Los Angeles, USA","Chicago, USA","Houston, USA","San Francisco, USA","London, UK","Toronto, Canada","Sydney, Australia","Dubai, UAE","Singapore",
-    "Kathmandu, Nepal","Dhaka, Bangladesh","Colombo, Sri Lanka","Kuala Lumpur, Malaysia"
+    // USA
+    "New York, USA","Los Angeles, USA","Chicago, USA","Houston, USA","San Francisco, USA","Seattle, USA","Boston, USA","Miami, USA","Dallas, USA","Atlanta, USA",
+    "Washington DC, USA","Denver, USA","Phoenix, USA","San Diego, USA","Philadelphia, USA","Austin, USA","Portland, USA","Las Vegas, USA","Minneapolis, USA","Detroit, USA",
+    // Canada
+    "Toronto, Canada","Vancouver, Canada","Montreal, Canada","Calgary, Canada","Ottawa, Canada","Edmonton, Canada","Winnipeg, Canada",
+    // UK & Ireland
+    "London, UK","Manchester, UK","Birmingham, UK","Edinburgh, UK","Glasgow, UK","Liverpool, UK","Bristol, UK","Leeds, UK","Dublin, Ireland",
+    // Europe
+    "Paris, France","Berlin, Germany","Munich, Germany","Frankfurt, Germany","Amsterdam, Netherlands","Brussels, Belgium","Zurich, Switzerland","Geneva, Switzerland",
+    "Vienna, Austria","Rome, Italy","Milan, Italy","Madrid, Spain","Barcelona, Spain","Lisbon, Portugal","Stockholm, Sweden","Copenhagen, Denmark",
+    "Oslo, Norway","Helsinki, Finland","Prague, Czech Republic","Warsaw, Poland","Budapest, Hungary","Athens, Greece","Istanbul, Turkey",
+    // Middle East
+    "Dubai, UAE","Abu Dhabi, UAE","Riyadh, Saudi Arabia","Jeddah, Saudi Arabia","Doha, Qatar","Kuwait City, Kuwait","Muscat, Oman","Bahrain",
+    // Asia
+    "Singapore","Tokyo, Japan","Osaka, Japan","Seoul, South Korea","Beijing, China","Shanghai, China","Hong Kong","Taipei, Taiwan",
+    "Bangkok, Thailand","Jakarta, Indonesia","Kuala Lumpur, Malaysia","Manila, Philippines","Ho Chi Minh City, Vietnam","Hanoi, Vietnam",
+    // South Asia
+    "Kathmandu, Nepal","Dhaka, Bangladesh","Colombo, Sri Lanka","Islamabad, Pakistan","Karachi, Pakistan","Lahore, Pakistan","Kabul, Afghanistan",
+    // Oceania
+    "Sydney, Australia","Melbourne, Australia","Brisbane, Australia","Perth, Australia","Auckland, New Zealand","Wellington, New Zealand",
+    // Africa
+    "Cairo, Egypt","Lagos, Nigeria","Nairobi, Kenya","Cape Town, South Africa","Johannesburg, South Africa","Accra, Ghana","Addis Ababa, Ethiopia","Casablanca, Morocco",
+    // Latin America
+    "Mexico City, Mexico","São Paulo, Brazil","Rio de Janeiro, Brazil","Buenos Aires, Argentina","Santiago, Chile","Lima, Peru","Bogotá, Colombia","Medellín, Colombia"
   ];
   const filteredLocations = profileData.location
     ? COMMON_LOCATIONS.filter(l => l.toLowerCase().includes(profileData.location.toLowerCase()))
