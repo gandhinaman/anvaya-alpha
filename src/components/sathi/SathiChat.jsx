@@ -526,11 +526,11 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
             <div style={{ maxWidth: "82%", display: "flex", flexDirection: "column", gap: 4 }}>
               <div
                 style={{
-                  padding: "10px 14px",
+                  padding: "14px 18px",
                   borderRadius:
                     msg.role === "user"
-                      ? "16px 16px 4px 16px"
-                      : "16px 16px 16px 4px",
+                      ? "20px 20px 6px 20px"
+                      : "20px 20px 20px 6px",
                   background:
                     msg.role === "user"
                       ? "rgba(93,64,55,.35)"
@@ -540,8 +540,8 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
                       ? "1px solid rgba(93,64,55,.4)"
                       : "1px solid rgba(255,248,240,.08)",
                   color: "#FFF8F0",
-                  fontSize: 13,
-                  lineHeight: 1.55,
+                  fontSize: 17,
+                  lineHeight: 1.7,
                 }}
               >
                 {msg.content}
@@ -612,11 +612,11 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
       {/* Input bar */}
       <div
         style={{
-          padding: "10px 14px",
-          paddingBottom: "max(10px, env(safe-area-inset-bottom))",
+          padding: "12px 14px",
+          paddingBottom: "max(12px, env(safe-area-inset-bottom))",
           borderTop: "1px solid rgba(255,248,240,.08)",
           display: "flex",
-          gap: 8,
+          gap: 10,
           alignItems: "center",
           flexShrink: 0,
         }}
@@ -625,15 +625,15 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
           onClick={toggleVoice}
           disabled={streaming}
           style={{
-            width: 44,
-            height: 44,
-            borderRadius: 14,
+            width: 56,
+            height: 56,
+            borderRadius: 16,
             border: isListening
-              ? "2px solid rgba(220,38,38,.5)"
-              : "1.5px solid rgba(255,255,255,.15)",
+              ? "2.5px solid rgba(220,38,38,.5)"
+              : "1.5px solid rgba(255,248,240,.15)",
             background: isListening
               ? "rgba(220,38,38,.2)"
-              : "rgba(249,249,247,.08)",
+              : "rgba(255,248,240,.08)",
             cursor: streaming ? "default" : "pointer",
             display: "flex",
             alignItems: "center",
@@ -645,8 +645,8 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
           }}
         >
           {isListening
-            ? <MicOff size={20} color="#fca5a5" />
-            : <Mic size={20} color="rgba(255,248,240,.6)" />
+            ? <MicOff size={24} color="#fca5a5" />
+            : <Mic size={24} color="rgba(255,248,240,.6)" />
           }
         </button>
 
@@ -657,8 +657,8 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
             border: isListening
               ? "1.5px solid rgba(220,38,38,.3)"
               : "1px solid rgba(255,248,240,.12)",
-            borderRadius: 14,
-            padding: "10px 14px",
+            borderRadius: 16,
+            padding: "14px 18px",
             display: "flex",
             alignItems: "center",
           }}
@@ -684,7 +684,7 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
               border: "none",
               outline: "none",
               color: "#FFF8F0",
-              fontSize: 14,
+              fontSize: 17,
               fontFamily: "'DM Sans', sans-serif",
             }}
           />
@@ -694,9 +694,9 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
           onClick={() => sendMessage(input)}
           disabled={!input.trim() || streaming}
           style={{
-            width: 44,
-            height: 44,
-            borderRadius: 14,
+            width: 56,
+            height: 56,
+            borderRadius: 16,
             border: "none",
             background:
               input.trim() && !streaming
@@ -715,7 +715,7 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
           }}
         >
           <Send
-            size={16}
+            size={20}
             color={
               input.trim() && !streaming
                 ? "#FFF8F0"

@@ -135,31 +135,31 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
                   <button
                     onClick={() => setExpandedId(isExpanded ? null : m.id)}
                     style={{
-                      width: "100%", padding: "14px 16px", display: "flex", alignItems: "center", gap: 12,
+                      width: "100%", padding: "16px 18px", display: "flex", alignItems: "center", gap: 14,
                       background: "transparent", border: "none", cursor: "pointer", textAlign: "left",
                     }}
                   >
                     <div style={{
-                      width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-                      background: "rgba(198,139,89,.2)", border: "1px solid rgba(198,139,89,.3)",
-                      display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22,
+                      width: 52, height: 52, borderRadius: 14, flexShrink: 0,
+                      background: "rgba(198,139,89,.2)", border: "1.5px solid rgba(198,139,89,.3)",
+                      display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26,
                     }}>
                       {TONE_EMOJI[m.emotional_tone] || "📝"}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ color: "#FFF8F0", fontSize: 15, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <div style={{ color: "#FFF8F0", fontSize: 17, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {m.title || (lang === "en" ? "A shared memory" : "एक याद")}
                       </div>
-                      <div style={{ color: "rgba(255,248,240,.4)", fontSize: 12, marginTop: 2, display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ color: "rgba(255,248,240,.5)", fontSize: 14, marginTop: 3, display: "flex", alignItems: "center", gap: 8 }}>
                         <span>{formatDate(m.created_at)}</span>
                         {memComments.length > 0 && (
                           <span style={{ display: "flex", alignItems: "center", gap: 3, color: "#D4A574" }}>
-                            <MessageCircle size={11} /> {memComments.length}
+                            <MessageCircle size={13} /> {memComments.length}
                           </span>
                         )}
                       </div>
                     </div>
-                    {isExpanded ? <ChevronUp size={18} color="rgba(255,248,240,.4)" /> : <ChevronDown size={18} color="rgba(255,248,240,.4)" />}
+                    {isExpanded ? <ChevronUp size={20} color="rgba(255,248,240,.5)" /> : <ChevronDown size={20} color="rgba(255,248,240,.5)" />}
                   </button>
 
                   {/* Expanded content */}
@@ -167,7 +167,7 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
                     <div style={{ padding: "0 16px 16px", borderTop: "1px solid rgba(255,248,240,.06)" }}>
                       {/* Summary */}
                       {m.ai_summary && (
-                        <p style={{ color: "rgba(255,248,240,.7)", fontSize: 14, lineHeight: 1.6, marginTop: 12, fontStyle: "italic" }}>
+                        <p style={{ color: "rgba(255,248,240,.75)", fontSize: 16, lineHeight: 1.7, marginTop: 14, fontStyle: "italic" }}>
                           "{m.ai_summary}"
                         </p>
                       )}

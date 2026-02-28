@@ -686,32 +686,32 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
         : <div style={{height:"env(safe-area-inset-top,20px)"}}/>
       }
 
-      <div style={{display:"flex",justifyContent:"center",alignItems:"center",marginTop:14,gap:10,padding:"0 18px"}}>
-        <div style={{background:"rgba(255,248,240,.1)",borderRadius:100,border:"1px solid rgba(255,248,240,.15)",padding:3,display:"flex",gap:2}}>
+      <div style={{display:"flex",justifyContent:"center",alignItems:"center",marginTop:14,gap:12,padding:"0 18px"}}>
+        <div style={{background:"rgba(255,248,240,.1)",borderRadius:100,border:"1px solid rgba(255,248,240,.15)",padding:4,display:"flex",gap:3}}>
           {["en","hi"].map(l=>(
             <button key={l} onClick={()=>switchLang(l)} style={{
-              padding:"5px 16px",borderRadius:100,border:"none",cursor:"pointer",fontSize:12,fontWeight:500,
-              background:lang===l?"rgba(255,248,240,.22)":"transparent",
-              color:lang===l?"#FFF8F0":"rgba(255,248,240,.45)",transition:"all .3s"
+              padding:"8px 20px",borderRadius:100,border:"none",cursor:"pointer",fontSize:16,fontWeight:600,
+              background:lang===l?"rgba(255,248,240,.25)":"transparent",
+              color:lang===l?"#FFF8F0":"rgba(255,248,240,.55)",transition:"all .3s"
             }}>{l==="en"?"English":"हिंदी"}</button>
           ))}
         </div>
         {!inPanel && (
           <button onClick={async()=>{await supabase.auth.signOut();window.location.href="/login";}} style={{
-            width:32,height:32,borderRadius:10,border:"1px solid rgba(255,248,240,.12)",
-            background:"rgba(255,248,240,.06)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0
+            width:48,height:48,borderRadius:14,border:"1.5px solid rgba(255,248,240,.18)",
+            background:"rgba(255,248,240,.08)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0
           }} title="Sign out">
-            <LogOut size={14} color="rgba(255,248,240,.5)"/>
+            <LogOut size={20} color="rgba(255,248,240,.6)"/>
           </button>
         )}
       </div>
 
       <div style={{textAlign:"center",marginTop:16}}>
-        <div style={{fontFamily:"'Playfair Display',serif",fontSize:13,color:"rgba(255,248,240,.38)",letterSpacing:"0.3em",fontWeight:300}}>ANVAYA</div>
-        <div style={{fontFamily:"'Playfair Display',serif",fontSize:isMock?36:42,color:"#FFF8F0",fontWeight:600,letterSpacing:"0.05em",marginTop:2}}>
+        <div style={{fontFamily:"'Playfair Display',serif",fontSize:14,color:"rgba(255,248,240,.45)",letterSpacing:"0.3em",fontWeight:400}}>ANVAYA</div>
+        <div style={{fontFamily:"'Playfair Display',serif",fontSize:isMock?40:48,color:"#FFF8F0",fontWeight:600,letterSpacing:"0.05em",marginTop:2}}>
           {lang==="en"?"Sathi":"साथी"}
         </div>
-        <div style={{fontSize:12,color:"rgba(255,248,240,.4)",marginTop:3}}>
+        <div style={{fontSize:16,color:"rgba(255,248,240,.55)",marginTop:5}}>
           {lang==="en"?"Your trusted companion":"आपका विश्वसनीय साथी"}
         </div>
       </div>
@@ -722,7 +722,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
             onClick={startVoiceConversation}
             className={voicePhase==="listening"?"orb-rec":voicePhase==="speaking"?"orb-rec":"orb"}
             style={{
-              width:isMock?148:160,height:isMock?148:160,borderRadius:"50%",
+              width:isMock?160:180,height:isMock?160:180,borderRadius:"50%",
               background: voicePhase==="listening"
                 ? "conic-gradient(from 180deg at 50% 50%,#5D4037 0deg,#6D4C41 90deg,#8D6E63 180deg,#5D4037 270deg,#5D4037 360deg)"
                 : voicePhase==="thinking"
@@ -747,34 +747,34 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
         </div>
       </div>
 
-      <div style={{textAlign:"center",marginTop:18,padding:"0 36px",minHeight:48}}>
+      <div style={{textAlign:"center",marginTop:20,padding:"0 28px",minHeight:56}}>
         {voicePhase==="listening"&&(
-          <p style={{color:"rgba(255,248,240,.7)",fontSize:13,lineHeight:1.5,animation:"fadeUp .3s ease both"}}>
+          <p style={{color:"rgba(255,248,240,.8)",fontSize:18,lineHeight:1.6,animation:"fadeUp .4s ease both",fontWeight:500}}>
             {voiceText||(lang==="en"?"Listening…":"सुन रहा हूँ…")}
           </p>
         )}
         {voicePhase==="thinking"&&(
-          <p style={{color:"rgba(255,248,240,.5)",fontSize:13,lineHeight:1.5,animation:"fadeUp .3s ease both"}}>
+          <p style={{color:"rgba(255,248,240,.6)",fontSize:17,lineHeight:1.6,animation:"fadeUp .4s ease both"}}>
             {lang==="en"?`"${voiceText}" — thinking…`:`"${voiceText}" — सोच रहा हूँ…`}
           </p>
         )}
         {voicePhase==="speaking"&&(
-          <p className="scr" style={{color:"rgba(255,248,240,.7)",fontSize:13,lineHeight:1.6,animation:"fadeUp .3s ease both",maxHeight:80,overflowY:"auto"}}>
+          <p className="scr" style={{color:"rgba(255,248,240,.8)",fontSize:17,lineHeight:1.7,animation:"fadeUp .4s ease both",maxHeight:100,overflowY:"auto"}}>
             {voiceResponse}
           </p>
         )}
         {voicePhase==="idle"&&(
-          <p style={{color:"rgba(255,248,240,.5)",fontSize:13,lineHeight:1.5}}>
+          <p style={{color:"rgba(255,248,240,.6)",fontSize:18,lineHeight:1.6,fontWeight:500}}>
             {lang==="en"?"Tap the orb to talk to Sathi":"साथी से बात करने के लिए ऑर्ब टैप करें"}
           </p>
         )}
       </div>
 
       <div style={{padding:"12px 18px 0"}}>
-        <div style={{background:"rgba(255,248,240,.08)",border:"1px solid rgba(255,248,240,.12)",borderRadius:14,padding:"10px 14px"}}>
+        <div style={{background:"rgba(255,248,240,.1)",border:"1.5px solid rgba(255,248,240,.15)",borderRadius:16,padding:"14px 18px"}}>
           <input value={inp} onChange={e=>{setInp(e.target.value);if(checkTrigger(e.target.value)){setOverlay(true);setOverlayPhase("ask");}}}
-            placeholder={lang==="en"?"Type anything… if you're in trouble, type or say 'help' to Sathi":"कुछ भी लिखें… मुश्किल में 'help' बोलें"}
-            style={{width:"100%",background:"transparent",border:"none",outline:"none",color:"#FFF8F0",fontSize:13}}/>
+            placeholder={lang==="en"?"Type anything… say 'help' if in trouble":"कुछ भी लिखें… मुश्किल में 'help' बोलें"}
+            style={{width:"100%",background:"transparent",border:"none",outline:"none",color:"#FFF8F0",fontSize:17}}/>
         </div>
       </div>
 
@@ -794,30 +794,31 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
         </div>
       )}
 
-      <div style={{padding:"14px 16px",display:"flex",flexDirection:"column",gap:10,flex:1,justifyContent:"flex-end"}}>
+      <div style={{padding:"16px 16px",display:"flex",flexDirection:"column",gap:14,flex:1,justifyContent:"flex-end"}}>
         {[
-          {icon:<Mic size={19} color="#FFF8F0"/>,label:lang==="en"?"Record a Memory":"यादें रिकॉर्ड करें",sub:lang==="en"?"Your voice, preserved forever":"आपकी आवाज़, सदा के लिए",acc:"#C68B59",fn:()=>setMemoryOpen(true)},
-          {icon:<BookOpen size={19} color="#FFF8F0"/>,label:lang==="en"?"Memory Log":"यादों की डायरी",sub:lang==="en"?"Your memories & family comments":"आपकी यादें और परिवार की टिप्पणियाँ",acc:"#8D6E63",fn:()=>setMemoryLogOpen(true)},
-          {icon:<MessageCircle size={19} color="#FFF8F0"/>,label:lang==="en"?"Ask Sathi":"साथी से पूछें",sub:lang==="en"?"Health · Reminders · Stories":"स्वास्थ्य · याद · कहानियाँ",acc:"#5D4037",fn:()=>setChatOpen(true)},
-          {icon:<Phone size={19} color="#FFF8F0"/>,label:lang==="en"?"Call Child":"बच्चे को कॉल करें",sub:linkedName||"Guardian",acc:"#A1887F",fn:()=>setCallOpen(true)},
+          {icon:<Mic size={24} color="#FFF8F0"/>,label:lang==="en"?"Record a Memory":"यादें रिकॉर्ड करें",sub:lang==="en"?"Your voice, preserved forever":"आपकी आवाज़, सदा के लिए",acc:"#C68B59",fn:()=>setMemoryOpen(true)},
+          {icon:<BookOpen size={24} color="#FFF8F0"/>,label:lang==="en"?"Memory Log":"यादों की डायरी",sub:lang==="en"?"Your memories & family comments":"आपकी यादें और परिवार की टिप्पणियाँ",acc:"#8D6E63",fn:()=>setMemoryLogOpen(true)},
+          {icon:<MessageCircle size={24} color="#FFF8F0"/>,label:lang==="en"?"Ask Sathi":"साथी से पूछें",sub:lang==="en"?"Health · Reminders · Stories":"स्वास्थ्य · याद · कहानियाँ",acc:"#5D4037",fn:()=>setChatOpen(true)},
+          {icon:<Phone size={24} color="#FFF8F0"/>,label:lang==="en"?"Call Child":"बच्चे को कॉल करें",sub:linkedName||"Guardian",acc:"#A1887F",fn:()=>setCallOpen(true)},
         ].map((c,i)=>(
           <button key={i} onClick={c.fn} className="glass" style={{
-            display:"flex",alignItems:"center",gap:12,padding:"12px 14px",
-            border:"1px solid rgba(255,248,240,.1)",cursor:"pointer",
-            animation:`fadeUp .6s ease ${.1+i*.1}s both`,width:"100%",textAlign:"left"
+            display:"flex",alignItems:"center",gap:14,padding:"16px 18px",
+            border:"1.5px solid rgba(255,248,240,.12)",cursor:"pointer",
+            animation:`fadeUp .7s ease ${.1+i*.12}s both`,width:"100%",textAlign:"left",
+            borderRadius:20
           }}>
-            <div style={{width:40,height:40,borderRadius:12,flexShrink:0,background:c.acc,
+            <div style={{width:52,height:52,borderRadius:14,flexShrink:0,background:c.acc,
               display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 4px 14px ${c.acc}55`}}>
               {c.icon}
             </div>
             <div style={{flex:1,minWidth:0}}>
-              <div style={{color:"#FFF8F0",fontSize:13,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.label}</div>
-              <div style={{color:"rgba(255,248,240,.45)",fontSize:11,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.sub}</div>
+              <div style={{color:"#FFF8F0",fontSize:17,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.label}</div>
+              <div style={{color:"rgba(255,248,240,.55)",fontSize:14,marginTop:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.sub}</div>
             </div>
-            <ChevronRight size={14} color="rgba(255,248,240,.3)"/>
+            <ChevronRight size={18} color="rgba(255,248,240,.4)"/>
           </button>
         ))}
-        <div style={{height:"env(safe-area-inset-bottom,12px)"}}/>
+        <div style={{height:"env(safe-area-inset-bottom,14px)"}}/>
       </div>
 
       {overlay&&(
