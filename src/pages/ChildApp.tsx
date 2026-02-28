@@ -5,7 +5,7 @@ export default function ChildApp() {
   const { profile } = useProfile();
 
   return (
-    <div style={{ width: "100%", height: "100vh", overflow: "hidden" }}>
+    <div style={{ width: "100%", height: "100dvh", overflow: "hidden" }}>
       <style>{guardianStyles}</style>
       <GuardianDashboard profileId={profile?.id} />
     </div>

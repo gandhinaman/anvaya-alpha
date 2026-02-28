@@ -1035,12 +1035,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
       <div style={{position:"absolute",inset:0,pointerEvents:"none",
         background:"radial-gradient(ellipse at 20% 20%,rgba(198,139,89,.06) 0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(141,110,99,.06) 0%,transparent 60%)"}}/>
 
-      {isMock
-        ? <div style={{display:"flex",justifyContent:"space-between",padding:"12px 24px 0",color:"rgba(249,249,247,.6)",fontSize:12,fontWeight:500}}>
-            <span>9:41</span><span>●●●</span>
-          </div>
-        : <div style={{height:"env(safe-area-inset-top,20px)"}}/>
-      }
+      {/* Safe area top spacing is now handled globally by #root padding-top */}
 
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:14,padding:"0 18px"}}>
         <div style={{width:48}}/>
