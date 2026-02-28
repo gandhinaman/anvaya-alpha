@@ -33,9 +33,9 @@ export default function ProtectedRoute({ children }: Props) {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "#F2F4F3",
+        background: "#2C1810",
         fontFamily: "'DM Sans', sans-serif",
-        color: "#064E3B"
+        color: "#FFF8F0"
       }}>
         Loading…
       </div>

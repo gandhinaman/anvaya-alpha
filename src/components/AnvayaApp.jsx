@@ -25,19 +25,19 @@ function useWindowSize() {
 
 // ─── GLOBAL STYLES ────────────────────────────────────────────────────────────
 const fontStyle = `
-  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { font-family: 'DM Sans', sans-serif; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
   button { font-family: 'DM Sans', sans-serif; }
   input  { font-family: 'DM Sans', sans-serif; }
 
   @keyframes breathe {
-    0%,100% { transform:scale(1); box-shadow:0 0 60px 20px rgba(6,78,59,.35),0 0 120px 40px rgba(6,78,59,.15); }
-    50%      { transform:scale(1.08); box-shadow:0 0 80px 30px rgba(6,78,59,.5),0 0 160px 60px rgba(6,78,59,.2); }
+    0%,100% { transform:scale(1); box-shadow:0 0 60px 20px rgba(44,24,16,.35),0 0 120px 40px rgba(44,24,16,.15); }
+    50%      { transform:scale(1.08); box-shadow:0 0 80px 30px rgba(44,24,16,.5),0 0 160px 60px rgba(44,24,16,.2); }
   }
   @keyframes breatheX {
-    0%,100% { transform:scale(1.35); box-shadow:0 0 100px 40px rgba(6,78,59,.5),0 0 200px 80px rgba(6,78,59,.25); }
-    50%      { transform:scale(1.48); box-shadow:0 0 130px 50px rgba(6,78,59,.65),0 0 240px 100px rgba(6,78,59,.3); }
+    0%,100% { transform:scale(1.35); box-shadow:0 0 100px 40px rgba(44,24,16,.5),0 0 200px 80px rgba(44,24,16,.25); }
+    50%      { transform:scale(1.48); box-shadow:0 0 130px 50px rgba(44,24,16,.65),0 0 240px 100px rgba(44,24,16,.3); }
   }
   @keyframes waveBar {
     0%,100% { height:6px; }
@@ -61,9 +61,9 @@ const fontStyle = `
     to   { transform: scaleY(1); }
   }
   @keyframes callPulse {
-    0%   { transform:scale(1); box-shadow:0 0 0 0 rgba(5,150,105,.5); }
-    70%  { transform:scale(1.05); box-shadow:0 0 0 30px rgba(5,150,105,0); }
-    100% { transform:scale(1); box-shadow:0 0 0 0 rgba(5,150,105,0); }
+    0%   { transform:scale(1); box-shadow:0 0 0 0 rgba(198,139,89,.5); }
+    70%  { transform:scale(1.05); box-shadow:0 0 0 30px rgba(198,139,89,0); }
+    100% { transform:scale(1); box-shadow:0 0 0 0 rgba(198,139,89,0); }
   }
   @keyframes dotBounce {
     0%,80%,100% { transform:translateY(0); }
@@ -80,12 +80,12 @@ const fontStyle = `
 
   .pring::before {
     content:''; position:absolute; inset:-14px; border-radius:50%;
-    border:2px solid rgba(6,78,59,.4); animation:pring 2.6s ease-out infinite;
+    border:2px solid rgba(93,64,55,.4); animation:pring 2.6s ease-out infinite;
   }
 
   .glass {
-    background:rgba(249,249,247,.08); backdrop-filter:blur(12px);
-    -webkit-backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,.1); border-radius:24px;
+    background:rgba(255,248,240,.08); backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px); border:1px solid rgba(255,248,240,.1); border-radius:24px;
   }
   .gcard {
     background:rgba(255,255,255,0.72);
@@ -93,10 +93,10 @@ const fontStyle = `
     -webkit-backdrop-filter:blur(16px);
     border:1px solid rgba(255,255,255,0.55);
     border-radius:20px;
-    box-shadow:0 8px 32px rgba(6,78,59,0.06);
+    box-shadow:0 8px 32px rgba(62,39,35,0.06);
   }
   .gtxt {
-    background:linear-gradient(135deg,#064E3B 0%,#0d7a5f 50%,#059669 100%);
+    background:linear-gradient(135deg,#3E2723 0%,#5D4037 50%,#8D6E63 100%);
     -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
   }
 
@@ -190,13 +190,12 @@ function AudioPlayer({color="#4F46E5", audioUrl=null}) {
 
 // ─── CALL OVERLAY ─────────────────────────────────────────────────────────────
 function CallOverlay({ open, onClose, lang, userId, linkedUserId, fromName }) {
-  const [phase, setPhase] = useState("calling"); // calling | connected
+  const [phase, setPhase] = useState("calling");
   const [timer, setTimer] = useState(0);
   const channelRef = useRef(null);
 
   useEffect(() => {
     if (!open) { setPhase("calling"); setTimer(0); return; }
-    // Broadcast incoming_call via Realtime
     if (linkedUserId) {
       const ch = supabase.channel(`user:${linkedUserId}`);
       ch.subscribe((status) => {
@@ -206,7 +205,6 @@ function CallOverlay({ open, onClose, lang, userId, linkedUserId, fromName }) {
       });
       channelRef.current = ch;
     }
-    // After 3s transition to connected
     const t = setTimeout(() => setPhase("connected"), 3000);
     return () => { clearTimeout(t); if (channelRef.current) { supabase.removeChannel(channelRef.current); channelRef.current = null; } };
   }, [open, linkedUserId]);
@@ -230,24 +228,22 @@ function CallOverlay({ open, onClose, lang, userId, linkedUserId, fromName }) {
   return (
     <div className="fadein" style={{
       position: "absolute", inset: 0, zIndex: 50,
-      background: "linear-gradient(160deg,#022c22 0%,#064E3B 50%,#065f46 100%)",
+      background: "linear-gradient(160deg,#1A0F0A 0%,#2C1810 50%,#3E2723 100%)",
       display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 24
     }}>
-      {/* Pulsing circle */}
       <div style={{
         width: 120, height: 120, borderRadius: "50%",
-        background: "linear-gradient(135deg,#059669,#065f46)",
+        background: "linear-gradient(135deg,#C68B59,#8D6E63)",
         display: "flex", alignItems: "center", justifyContent: "center",
         animation: phase === "calling" ? "callPulse 1.5s ease-in-out infinite" : "none",
-        boxShadow: phase === "connected" ? "0 0 40px rgba(5,150,105,.4)" : undefined,
+        boxShadow: phase === "connected" ? "0 0 40px rgba(198,139,89,.4)" : undefined,
         transition: "box-shadow .5s"
       }}>
-        <Phone size={40} color="#F9F9F7" />
+        <Phone size={40} color="#FFF8F0" />
       </div>
 
-      {/* Status text */}
       <div style={{ textAlign: "center" }}>
-        <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 28, color: "#F9F9F7", fontWeight: 600 }}>
+        <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 28, color: "#FFF8F0", fontWeight: 600 }}>
           {phase === "calling"
             ? (lang === "en" ? `Calling ${fromName || "…"}` : `${fromName || ""} को कॉल कर रहे हैं…`)
             : (lang === "en" ? "Connected" : "कनेक्टेड")}
@@ -256,19 +252,18 @@ function CallOverlay({ open, onClose, lang, userId, linkedUserId, fromName }) {
           <div style={{ display: "flex", justifyContent: "center", gap: 4, marginTop: 10 }}>
             {[0, 1, 2].map(i => (
               <div key={i} style={{
-                width: 8, height: 8, borderRadius: "50%", background: "rgba(249,249,247,.5)",
+                width: 8, height: 8, borderRadius: "50%", background: "rgba(255,248,240,.5)",
                 animation: `dotBounce 1.2s ease-in-out ${i * 0.2}s infinite`
               }} />
             ))}
           </div>
         ) : (
-          <div style={{ color: "rgba(249,249,247,.6)", fontSize: 18, marginTop: 8, fontFamily: "'DM Sans',sans-serif", fontWeight: 500 }}>
+          <div style={{ color: "rgba(255,248,240,.6)", fontSize: 18, marginTop: 8, fontFamily: "'DM Sans',sans-serif", fontWeight: 500 }}>
             {fmt(timer)}
           </div>
         )}
       </div>
 
-      {/* End Call button */}
       <button onClick={endCall} style={{
         width: 64, height: 64, borderRadius: "50%",
         background: "#DC2626", border: "none", cursor: "pointer",
@@ -277,7 +272,7 @@ function CallOverlay({ open, onClose, lang, userId, linkedUserId, fromName }) {
       }}>
         <PhoneOff size={26} color="#fff" />
       </button>
-      <span style={{ color: "rgba(249,249,247,.4)", fontSize: 12 }}>
+      <span style={{ color: "rgba(255,248,240,.4)", fontSize: 12 }}>
         {lang === "en" ? "End Call" : "कॉल समाप्त करें"}
       </span>
     </div>
@@ -673,16 +668,16 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
 
   const wrap = isMock
     ? {width:360,height:760,position:"relative",overflow:"hidden",
-       background:"linear-gradient(160deg,#022c22 0%,#064E3B 40%,#065f46 70%,#0a3f34 100%)",
+       background:"linear-gradient(160deg,#1A0F0A 0%,#2C1810 40%,#3E2723 70%,#2A1B14 100%)",
        borderRadius:36,boxShadow:"0 32px 64px rgba(0,0,0,.5)",flexShrink:0,display:"flex",flexDirection:"column"}
     : {width:"100%",minHeight:"100vh",position:"relative",overflow:"hidden",
-       background:"linear-gradient(160deg,#022c22 0%,#064E3B 40%,#065f46 70%,#0a3f34 100%)",
+       background:"linear-gradient(160deg,#1A0F0A 0%,#2C1810 40%,#3E2723 70%,#2A1B14 100%)",
        display:"flex",flexDirection:"column"};
 
   return (
     <div style={wrap}>
       <div style={{position:"absolute",inset:0,pointerEvents:"none",
-        background:"radial-gradient(ellipse at 20% 20%,rgba(251,191,36,.06) 0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(234,88,12,.06) 0%,transparent 60%)"}}/>
+        background:"radial-gradient(ellipse at 20% 20%,rgba(198,139,89,.06) 0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(141,110,99,.06) 0%,transparent 60%)"}}/>
 
       {isMock
         ? <div style={{display:"flex",justifyContent:"space-between",padding:"12px 24px 0",color:"rgba(249,249,247,.6)",fontSize:12,fontWeight:500}}>
@@ -692,31 +687,31 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
       }
 
       <div style={{display:"flex",justifyContent:"center",alignItems:"center",marginTop:14,gap:10,padding:"0 18px"}}>
-        <div style={{background:"rgba(249,249,247,.1)",borderRadius:100,border:"1px solid rgba(255,255,255,.15)",padding:3,display:"flex",gap:2}}>
+        <div style={{background:"rgba(255,248,240,.1)",borderRadius:100,border:"1px solid rgba(255,248,240,.15)",padding:3,display:"flex",gap:2}}>
           {["en","hi"].map(l=>(
             <button key={l} onClick={()=>switchLang(l)} style={{
               padding:"5px 16px",borderRadius:100,border:"none",cursor:"pointer",fontSize:12,fontWeight:500,
-              background:lang===l?"rgba(249,249,247,.22)":"transparent",
-              color:lang===l?"#F9F9F7":"rgba(249,249,247,.45)",transition:"all .3s"
+              background:lang===l?"rgba(255,248,240,.22)":"transparent",
+              color:lang===l?"#FFF8F0":"rgba(255,248,240,.45)",transition:"all .3s"
             }}>{l==="en"?"English":"हिंदी"}</button>
           ))}
         </div>
         {!inPanel && (
           <button onClick={async()=>{await supabase.auth.signOut();window.location.href="/login";}} style={{
-            width:32,height:32,borderRadius:10,border:"1px solid rgba(255,255,255,.12)",
-            background:"rgba(249,249,247,.06)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0
+            width:32,height:32,borderRadius:10,border:"1px solid rgba(255,248,240,.12)",
+            background:"rgba(255,248,240,.06)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0
           }} title="Sign out">
-            <LogOut size={14} color="rgba(249,249,247,.5)"/>
+            <LogOut size={14} color="rgba(255,248,240,.5)"/>
           </button>
         )}
       </div>
 
       <div style={{textAlign:"center",marginTop:16}}>
-        <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:13,color:"rgba(249,249,247,.38)",letterSpacing:"0.3em",fontWeight:300}}>ANVAYA</div>
-        <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:isMock?36:42,color:"#F9F9F7",fontWeight:600,letterSpacing:"0.05em",marginTop:2}}>
+        <div style={{fontFamily:"'Playfair Display',serif",fontSize:13,color:"rgba(255,248,240,.38)",letterSpacing:"0.3em",fontWeight:300}}>ANVAYA</div>
+        <div style={{fontFamily:"'Playfair Display',serif",fontSize:isMock?36:42,color:"#FFF8F0",fontWeight:600,letterSpacing:"0.05em",marginTop:2}}>
           {lang==="en"?"Sathi":"साथी"}
         </div>
-        <div style={{fontSize:12,color:"rgba(249,249,247,.4)",marginTop:3}}>
+        <div style={{fontSize:12,color:"rgba(255,248,240,.4)",marginTop:3}}>
           {lang==="en"?"Your trusted companion":"आपका विश्वसनीय साथी"}
         </div>
       </div>
@@ -729,24 +724,24 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
             style={{
               width:isMock?148:160,height:isMock?148:160,borderRadius:"50%",
               background: voicePhase==="listening"
-                ? "conic-gradient(from 180deg at 50% 50%,#4F46E5 0deg,#6366F1 90deg,#818CF8 180deg,#4F46E5 270deg,#4F46E5 360deg)"
+                ? "conic-gradient(from 180deg at 50% 50%,#5D4037 0deg,#6D4C41 90deg,#8D6E63 180deg,#5D4037 270deg,#5D4037 360deg)"
                 : voicePhase==="thinking"
-                ? "conic-gradient(from 180deg at 50% 50%,#d97706 0deg,#f59e0b 90deg,#fbbf24 180deg,#d97706 270deg,#d97706 360deg)"
+                ? "conic-gradient(from 180deg at 50% 50%,#C68B59 0deg,#D4A574 90deg,#E8C9A0 180deg,#C68B59 270deg,#C68B59 360deg)"
                 : voicePhase==="speaking"
-                ? "conic-gradient(from 180deg at 50% 50%,#059669 0deg,#10b981 90deg,#34d399 180deg,#059669 270deg,#059669 360deg)"
-                : "conic-gradient(from 180deg at 50% 50%,#064E3B 0deg,#059669 90deg,#d97706 180deg,#065f46 270deg,#064E3B 360deg)",
+                ? "conic-gradient(from 180deg at 50% 50%,#8D6E63 0deg,#A1887F 90deg,#BCAAA4 180deg,#8D6E63 270deg,#8D6E63 360deg)"
+                : "conic-gradient(from 180deg at 50% 50%,#3E2723 0deg,#5D4037 90deg,#C68B59 180deg,#6D4C41 270deg,#3E2723 360deg)",
               position:"relative",cursor:"pointer",transition:"background .5s, transform .5s"
             }}
           >
             <div style={{position:"absolute",inset:8,borderRadius:"50%",
               background:"radial-gradient(circle at 35% 35%,rgba(255,255,255,.12) 0%,transparent 65%)",
-              border:"1px solid rgba(255,255,255,.15)"}}/>
+              border:"1px solid rgba(255,248,240,.15)"}}/>
             {voicePhase==="listening"&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}><Waveform/></div>}
             {voicePhase==="thinking"&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
-              <Loader2 size={36} color="rgba(249,249,247,.8)" style={{animation:"spin 1.2s linear infinite"}}/>
+              <Loader2 size={36} color="rgba(255,248,240,.8)" style={{animation:"spin 1.2s linear infinite"}}/>
             </div>}
             {voicePhase==="speaking"&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
-              <Headphones size={36} color="rgba(249,249,247,.8)"/>
+              <Headphones size={36} color="rgba(255,248,240,.8)"/>
             </div>}
           </div>
         </div>
@@ -754,61 +749,61 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
 
       <div style={{textAlign:"center",marginTop:18,padding:"0 36px",minHeight:48}}>
         {voicePhase==="listening"&&(
-          <p style={{color:"rgba(249,249,247,.7)",fontSize:13,lineHeight:1.5,animation:"fadeUp .3s ease both"}}>
+          <p style={{color:"rgba(255,248,240,.7)",fontSize:13,lineHeight:1.5,animation:"fadeUp .3s ease both"}}>
             {voiceText||(lang==="en"?"Listening…":"सुन रहा हूँ…")}
           </p>
         )}
         {voicePhase==="thinking"&&(
-          <p style={{color:"rgba(249,249,247,.5)",fontSize:13,lineHeight:1.5,animation:"fadeUp .3s ease both"}}>
+          <p style={{color:"rgba(255,248,240,.5)",fontSize:13,lineHeight:1.5,animation:"fadeUp .3s ease both"}}>
             {lang==="en"?`"${voiceText}" — thinking…`:`"${voiceText}" — सोच रहा हूँ…`}
           </p>
         )}
         {voicePhase==="speaking"&&(
-          <p className="scr" style={{color:"rgba(249,249,247,.7)",fontSize:13,lineHeight:1.6,animation:"fadeUp .3s ease both",maxHeight:80,overflowY:"auto"}}>
+          <p className="scr" style={{color:"rgba(255,248,240,.7)",fontSize:13,lineHeight:1.6,animation:"fadeUp .3s ease both",maxHeight:80,overflowY:"auto"}}>
             {voiceResponse}
           </p>
         )}
         {voicePhase==="idle"&&(
-          <p style={{color:"rgba(249,249,247,.5)",fontSize:13,lineHeight:1.5}}>
+          <p style={{color:"rgba(255,248,240,.5)",fontSize:13,lineHeight:1.5}}>
             {lang==="en"?"Tap the orb to talk to Sathi":"साथी से बात करने के लिए ऑर्ब टैप करें"}
           </p>
         )}
       </div>
 
       <div style={{padding:"12px 18px 0"}}>
-        <div style={{background:"rgba(249,249,247,.08)",border:"1px solid rgba(255,255,255,.12)",borderRadius:14,padding:"10px 14px"}}>
+        <div style={{background:"rgba(255,248,240,.08)",border:"1px solid rgba(255,248,240,.12)",borderRadius:14,padding:"10px 14px"}}>
           <input value={inp} onChange={e=>{setInp(e.target.value);if(checkTrigger(e.target.value)){setOverlay(true);setOverlayPhase("ask");}}}
             placeholder={lang==="en"?"Type anything… if you're in trouble, type or say 'help' to Sathi":"कुछ भी लिखें… मुश्किल में 'help' बोलें"}
-            style={{width:"100%",background:"transparent",border:"none",outline:"none",color:"#F9F9F7",fontSize:13}}/>
+            style={{width:"100%",background:"transparent",border:"none",outline:"none",color:"#FFF8F0",fontSize:13}}/>
         </div>
       </div>
 
       {/* Linking code card */}
       {linkCode && !linkedUserId && !isMock && (
-        <div style={{margin:"0 16px 6px",padding:"10px 14px",background:"rgba(249,249,247,.08)",border:"1px solid rgba(255,255,255,.12)",borderRadius:14}}>
+        <div style={{margin:"0 16px 6px",padding:"10px 14px",background:"rgba(255,248,240,.08)",border:"1px solid rgba(255,248,240,.12)",borderRadius:14}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
             <div>
-              <div style={{fontSize:10,color:"rgba(249,249,247,.4)",marginBottom:3}}>{lang==="en"?"Your linking code":"आपका लिंकिंग कोड"}</div>
-              <div style={{fontSize:22,fontWeight:700,color:"#34D399",letterSpacing:"0.15em",fontFamily:"'DM Sans',sans-serif"}}>{linkCode}</div>
+              <div style={{fontSize:10,color:"rgba(255,248,240,.4)",marginBottom:3}}>{lang==="en"?"Your linking code":"आपका लिंकिंग कोड"}</div>
+              <div style={{fontSize:22,fontWeight:700,color:"#D4A574",letterSpacing:"0.15em",fontFamily:"'DM Sans',sans-serif"}}>{linkCode}</div>
             </div>
-            <button onClick={copyCode} style={{background:"rgba(249,249,247,.1)",border:"1px solid rgba(255,255,255,.15)",borderRadius:10,padding:"8px 12px",cursor:"pointer",color:"#F9F9F7",fontSize:11,display:"flex",alignItems:"center",gap:5}}>
+            <button onClick={copyCode} style={{background:"rgba(255,248,240,.1)",border:"1px solid rgba(255,248,240,.15)",borderRadius:10,padding:"8px 12px",cursor:"pointer",color:"#FFF8F0",fontSize:11,display:"flex",alignItems:"center",gap:5}}>
               {codeCopied?<><Check size={13}/>Copied</>:<><Copy size={13}/>Copy</>}
             </button>
           </div>
-          <div style={{fontSize:10,color:"rgba(249,249,247,.35)",marginTop:5}}>{lang==="en"?"Share this code with your child to link accounts":"अपने बच्चे को यह कोड दें"}</div>
+          <div style={{fontSize:10,color:"rgba(255,248,240,.35)",marginTop:5}}>{lang==="en"?"Share this code with your child to link accounts":"अपने बच्चे को यह कोड दें"}</div>
         </div>
       )}
 
       <div style={{padding:"14px 16px",display:"flex",flexDirection:"column",gap:10,flex:1,justifyContent:"flex-end"}}>
         {[
-          {icon:<Mic size={19} color="#F9F9F7"/>,label:lang==="en"?"Record a Memory":"यादें रिकॉर्ड करें",sub:lang==="en"?"Your voice, preserved forever":"आपकी आवाज़, सदा के लिए",acc:"#d97706",fn:()=>setMemoryOpen(true)},
-          {icon:<BookOpen size={19} color="#F9F9F7"/>,label:lang==="en"?"Memory Log":"यादों की डायरी",sub:lang==="en"?"Your memories & family comments":"आपकी यादें और परिवार की टिप्पणियाँ",acc:"#b45309",fn:()=>setMemoryLogOpen(true)},
-          {icon:<MessageCircle size={19} color="#F9F9F7"/>,label:lang==="en"?"Ask Sathi":"साथी से पूछें",sub:lang==="en"?"Health · Reminders · Stories":"स्वास्थ्य · याद · कहानियाँ",acc:"#4F46E5",fn:()=>setChatOpen(true)},
-          {icon:<Phone size={19} color="#F9F9F7"/>,label:lang==="en"?"Call Child":"बच्चे को कॉल करें",sub:linkedName||"Guardian",acc:"#059669",fn:()=>setCallOpen(true)},
+          {icon:<Mic size={19} color="#FFF8F0"/>,label:lang==="en"?"Record a Memory":"यादें रिकॉर्ड करें",sub:lang==="en"?"Your voice, preserved forever":"आपकी आवाज़, सदा के लिए",acc:"#C68B59",fn:()=>setMemoryOpen(true)},
+          {icon:<BookOpen size={19} color="#FFF8F0"/>,label:lang==="en"?"Memory Log":"यादों की डायरी",sub:lang==="en"?"Your memories & family comments":"आपकी यादें और परिवार की टिप्पणियाँ",acc:"#8D6E63",fn:()=>setMemoryLogOpen(true)},
+          {icon:<MessageCircle size={19} color="#FFF8F0"/>,label:lang==="en"?"Ask Sathi":"साथी से पूछें",sub:lang==="en"?"Health · Reminders · Stories":"स्वास्थ्य · याद · कहानियाँ",acc:"#5D4037",fn:()=>setChatOpen(true)},
+          {icon:<Phone size={19} color="#FFF8F0"/>,label:lang==="en"?"Call Child":"बच्चे को कॉल करें",sub:linkedName||"Guardian",acc:"#A1887F",fn:()=>setCallOpen(true)},
         ].map((c,i)=>(
           <button key={i} onClick={c.fn} className="glass" style={{
             display:"flex",alignItems:"center",gap:12,padding:"12px 14px",
-            border:"1px solid rgba(255,255,255,.1)",cursor:"pointer",
+            border:"1px solid rgba(255,248,240,.1)",cursor:"pointer",
             animation:`fadeUp .6s ease ${.1+i*.1}s both`,width:"100%",textAlign:"left"
           }}>
             <div style={{width:40,height:40,borderRadius:12,flexShrink:0,background:c.acc,
@@ -816,10 +811,10 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
               {c.icon}
             </div>
             <div style={{flex:1,minWidth:0}}>
-              <div style={{color:"#F9F9F7",fontSize:13,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.label}</div>
-              <div style={{color:"rgba(249,249,247,.45)",fontSize:11,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.sub}</div>
+              <div style={{color:"#FFF8F0",fontSize:13,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.label}</div>
+              <div style={{color:"rgba(255,248,240,.45)",fontSize:11,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.sub}</div>
             </div>
-            <ChevronRight size={14} color="rgba(249,249,247,.3)"/>
+            <ChevronRight size={14} color="rgba(255,248,240,.3)"/>
           </button>
         ))}
         <div style={{height:"env(safe-area-inset-bottom,12px)"}}/>
@@ -828,61 +823,61 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
       {overlay&&(
         <div className="fadein" style={{
           position:"absolute",inset:0,borderRadius:isMock?36:0,
-          background:overlayPhase==="confirmed"?"rgba(2,44,34,.95)":"rgba(2,18,14,.88)",backdropFilter:"blur(20px)",
+          background:overlayPhase==="confirmed"?"rgba(26,15,10,.95)":"rgba(26,15,10,.88)",backdropFilter:"blur(20px)",
           display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
           padding:32,gap:20,zIndex:10,transition:"background .5s"
         }}>
           {overlayPhase==="ask"&&(<>
-            <div style={{width:60,height:60,borderRadius:"50%",background:"rgba(249,249,247,.1)",display:"flex",alignItems:"center",justifyContent:"center"}}>
-              <Heart size={26} color="#F9F9F7"/>
+            <div style={{width:60,height:60,borderRadius:"50%",background:"rgba(255,248,240,.1)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+              <Heart size={26} color="#FFF8F0"/>
             </div>
             <div style={{textAlign:"center"}}>
-              <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:28,color:"#F9F9F7",fontWeight:400,lineHeight:1.3}}>
+              <div style={{fontFamily:"'Playfair Display',serif",fontSize:28,color:"#FFF8F0",fontWeight:400,lineHeight:1.3}}>
                 {lang==="en"?"I heard you.":"मैंने सुना।"}
               </div>
-              <div style={{color:"rgba(249,249,247,.6)",fontSize:14,marginTop:7,lineHeight:1.6}}>
-                {lang==="en"?<>Should I call <strong style={{color:"#F9F9F7"}}>{linkedName||"your guardian"}</strong>?</>:<>क्या मैं <strong style={{color:"#F9F9F7"}}>{linkedName||"आपके guardian"}</strong> को बुलाऊँ?</>}
+              <div style={{color:"rgba(255,248,240,.6)",fontSize:14,marginTop:7,lineHeight:1.6}}>
+                {lang==="en"?<>Should I call <strong style={{color:"#FFF8F0"}}>{linkedName||"your guardian"}</strong>?</>:<>क्या मैं <strong style={{color:"#FFF8F0"}}>{linkedName||"आपके guardian"}</strong> को बुलाऊँ?</>}
               </div>
             </div>
             <button onClick={handleEmergencyCall} style={{
               width:"100%",padding:"17px",borderRadius:18,border:"none",cursor:"pointer",
-              background:"linear-gradient(135deg,#059669,#065f46)",
-              color:"#F9F9F7",fontSize:18,fontWeight:700,
-              boxShadow:"0 8px 28px rgba(5,150,105,.45)",letterSpacing:"0.02em"
+              background:"linear-gradient(135deg,#C68B59,#8D6E63)",
+              color:"#FFF8F0",fontSize:18,fontWeight:700,
+              boxShadow:"0 8px 28px rgba(198,139,89,.45)",letterSpacing:"0.02em"
             }}>✓ {lang==="en"?"Yes, Call Now":"हाँ, अभी कॉल करें"}</button>
             <button onClick={closeOverlay} style={{
-              background:"transparent",border:"1px solid rgba(255,255,255,.15)",
-              color:"rgba(249,249,247,.48)",padding:"10px 28px",borderRadius:100,cursor:"pointer",fontSize:13
+              background:"transparent",border:"1px solid rgba(255,248,240,.15)",
+              color:"rgba(255,248,240,.48)",padding:"10px 28px",borderRadius:100,cursor:"pointer",fontSize:13
             }}>{lang==="en"?"Not now":"अभी नहीं"}</button>
           </>)}
 
           {overlayPhase==="alerting"&&(<>
-            <div style={{width:70,height:70,borderRadius:"50%",background:"rgba(5,150,105,.2)",display:"flex",alignItems:"center",justifyContent:"center",animation:"callPulse 1.5s ease-in-out infinite"}}>
-              <Phone size={30} color="#34D399"/>
+            <div style={{width:70,height:70,borderRadius:"50%",background:"rgba(198,139,89,.2)",display:"flex",alignItems:"center",justifyContent:"center",animation:"callPulse 1.5s ease-in-out infinite"}}>
+              <Phone size={30} color="#D4A574"/>
             </div>
-            <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:22,color:"#F9F9F7",fontWeight:400,textAlign:"center"}}>
+            <div style={{fontFamily:"'Playfair Display',serif",fontSize:22,color:"#FFF8F0",fontWeight:400,textAlign:"center"}}>
               {lang==="en"?`Alerting ${linkedName||"guardian"}…`:`${linkedName||"guardian"} को सूचित कर रहे हैं…`}
             </div>
             <div style={{display:"flex",gap:4}}>
-              {[0,1,2].map(i=>(<div key={i} style={{width:8,height:8,borderRadius:"50%",background:"rgba(249,249,247,.5)",animation:`dotBounce 1.2s ease-in-out ${i*.2}s infinite`}}/>))}
+              {[0,1,2].map(i=>(<div key={i} style={{width:8,height:8,borderRadius:"50%",background:"rgba(255,248,240,.5)",animation:`dotBounce 1.2s ease-in-out ${i*.2}s infinite`}}/>))}
             </div>
           </>)}
 
           {overlayPhase==="confirmed"&&(<>
-            <div style={{width:80,height:80,borderRadius:"50%",background:"rgba(5,150,105,.25)",display:"flex",alignItems:"center",justifyContent:"center",animation:"callPulse 2s ease-in-out infinite"}}>
-              <Check size={36} color="#34D399"/>
+            <div style={{width:80,height:80,borderRadius:"50%",background:"rgba(198,139,89,.25)",display:"flex",alignItems:"center",justifyContent:"center",animation:"callPulse 2s ease-in-out infinite"}}>
+              <Check size={36} color="#D4A574"/>
             </div>
             <div style={{textAlign:"center"}}>
-              <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:24,color:"#F9F9F7",fontWeight:400,lineHeight:1.4}}>
+              <div style={{fontFamily:"'Playfair Display',serif",fontSize:24,color:"#FFF8F0",fontWeight:400,lineHeight:1.4}}>
                 {lang==="en"?`${linkedName||"Guardian"} has been alerted.`:`${linkedName||"Guardian"} को सूचित कर दिया गया।`}
               </div>
-              <div style={{color:"rgba(52,211,153,.8)",fontSize:14,marginTop:8}}>
+              <div style={{color:"rgba(212,165,116,.8)",fontSize:14,marginTop:8}}>
                 {lang==="en"?"Help is coming.":"मदद आ रही है।"}
               </div>
             </div>
             <button onClick={closeOverlay} style={{
-              marginTop:16,background:"transparent",border:"1px solid rgba(255,255,255,.2)",
-              color:"rgba(249,249,247,.6)",padding:"12px 32px",borderRadius:100,cursor:"pointer",fontSize:13
+              marginTop:16,background:"transparent",border:"1px solid rgba(255,248,240,.2)",
+              color:"rgba(255,248,240,.6)",padding:"12px 32px",borderRadius:100,cursor:"pointer",fontSize:13
             }}>{lang==="en"?"Close":"बंद करें"}</button>
           </>)}
         </div>

@@ -356,7 +356,7 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
         position: "fixed",
         inset: 0,
         zIndex: 200,
-        background: "linear-gradient(160deg,#022c22 0%,#064E3B 40%,#065f46 70%,#0a3f34 100%)",
+        background: "linear-gradient(160deg,#1A0F0A 0%,#2C1810 40%,#3E2723 70%,#2A1B14 100%)",
         display: "flex",
         flexDirection: "column",
       }}
@@ -368,7 +368,7 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
           alignItems: "center",
           justifyContent: "space-between",
           padding: "16px 18px 12px",
-          borderBottom: "1px solid rgba(255,255,255,.08)",
+          borderBottom: "1px solid rgba(255,248,240,.08)",
           flexShrink: 0,
         }}
       >
@@ -378,27 +378,27 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
               width: 34,
               height: 34,
               borderRadius: 10,
-              background: "#4F46E5",
+              background: "#5D4037",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              boxShadow: "0 4px 14px rgba(79,70,229,0.35)",
+              boxShadow: "0 4px 14px rgba(93,64,55,0.35)",
             }}
           >
-            <MessageCircle size={16} color="#F9F9F7" />
+            <MessageCircle size={16} color="#FFF8F0" />
           </div>
           <div>
             <div
               style={{
-                fontFamily: "'Cormorant Garamond',serif",
+                fontFamily: "'Playfair Display',serif",
                 fontSize: 18,
-                color: "#F9F9F7",
+                color: "#FFF8F0",
                 fontWeight: 600,
               }}
             >
               {lang === "hi" ? "साथी" : "Sathi"}
             </div>
-            <div style={{ fontSize: 10, color: "rgba(249,249,247,.4)" }}>
+            <div style={{ fontSize: 10, color: "rgba(255,248,240,.4)" }}>
               {lang === "hi" ? "आपका AI साथी" : "Your AI companion"}
             </div>
           </div>
@@ -437,7 +437,7 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
         }}
       >
         {loadingHistory && (
-          <div style={{ textAlign: "center", padding: 20, color: "rgba(249,249,247,.4)", fontSize: 12 }}>
+          <div style={{ textAlign: "center", padding: 20, color: "rgba(255,248,240,.4)", fontSize: 12 }}>
             {lang === "hi" ? "बातचीत लोड हो रही है…" : "Loading conversation…"}
           </div>
         )}
@@ -460,17 +460,17 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
                 width: 52,
                 height: 52,
                 borderRadius: "50%",
-                background: "rgba(249,249,247,.06)",
+                background: "rgba(255,248,240,.06)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <MessageCircle size={22} color="rgba(249,249,247,.3)" />
+              <MessageCircle size={22} color="rgba(255,248,240,.3)" />
             </div>
             <p
               style={{
-                color: "rgba(249,249,247,.35)",
+                color: "rgba(255,248,240,.35)",
                 fontSize: 13,
                 textAlign: "center",
                 lineHeight: 1.5,
@@ -497,9 +497,9 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
                   style={{
                     padding: "7px 13px",
                     borderRadius: 100,
-                    border: "1px solid rgba(255,255,255,.12)",
-                    background: "rgba(249,249,247,.06)",
-                    color: "rgba(249,249,247,.6)",
+                    border: "1px solid rgba(255,248,240,.12)",
+                    background: "rgba(255,248,240,.06)",
+                    color: "rgba(255,248,240,.6)",
                     fontSize: 11,
                     cursor: "pointer",
                     fontFamily: "'DM Sans', sans-serif",
@@ -533,13 +533,13 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
                       : "16px 16px 16px 4px",
                   background:
                     msg.role === "user"
-                      ? "rgba(79,70,229,.35)"
-                      : "rgba(249,249,247,.08)",
+                      ? "rgba(93,64,55,.35)"
+                      : "rgba(255,248,240,.08)",
                   border:
                     msg.role === "user"
-                      ? "1px solid rgba(79,70,229,.4)"
-                      : "1px solid rgba(255,255,255,.08)",
-                  color: "#F9F9F7",
+                      ? "1px solid rgba(93,64,55,.4)"
+                      : "1px solid rgba(255,248,240,.08)",
+                  color: "#FFF8F0",
                   fontSize: 13,
                   lineHeight: 1.55,
                 }}
@@ -554,7 +554,7 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
                           width: 5,
                           height: 5,
                           borderRadius: "50%",
-                          background: "rgba(249,249,247,.5)",
+                          background: "rgba(255,248,240,.5)",
                           display: "inline-block",
                           animation: `fadeIn .4s ease ${d * 0.15}s infinite alternate`,
                         }}
@@ -582,14 +582,14 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
                     padding: "10px 18px",
                     borderRadius: 12,
                     border: speakingIdx === i
-                      ? "2px solid rgba(79,70,229,.5)"
-                      : "2px solid rgba(255,255,255,.15)",
+                      ? "2px solid rgba(93,64,55,.5)"
+                      : "2px solid rgba(255,248,240,.15)",
                     background: speakingIdx === i
-                      ? "rgba(79,70,229,.25)"
-                      : "rgba(249,249,247,.06)",
+                      ? "rgba(93,64,55,.25)"
+                      : "rgba(255,248,240,.06)",
                     color: speakingIdx === i
-                      ? "#a5b4fc"
-                      : "rgba(249,249,247,.55)",
+                      ? "#D4A574"
+                      : "rgba(255,248,240,.55)",
                     fontSize: 16,
                     fontWeight: 600,
                     cursor: "pointer",
@@ -614,7 +614,7 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
         style={{
           padding: "10px 14px",
           paddingBottom: "max(10px, env(safe-area-inset-bottom))",
-          borderTop: "1px solid rgba(255,255,255,.08)",
+          borderTop: "1px solid rgba(255,248,240,.08)",
           display: "flex",
           gap: 8,
           alignItems: "center",
@@ -646,17 +646,17 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
         >
           {isListening
             ? <MicOff size={20} color="#fca5a5" />
-            : <Mic size={20} color="rgba(249,249,247,.6)" />
+            : <Mic size={20} color="rgba(255,248,240,.6)" />
           }
         </button>
 
         <div
           style={{
             flex: 1,
-            background: "rgba(249,249,247,.06)",
+            background: "rgba(255,248,240,.06)",
             border: isListening
               ? "1.5px solid rgba(220,38,38,.3)"
-              : "1px solid rgba(255,255,255,.12)",
+              : "1px solid rgba(255,248,240,.12)",
             borderRadius: 14,
             padding: "10px 14px",
             display: "flex",
@@ -683,7 +683,7 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
               background: "transparent",
               border: "none",
               outline: "none",
-              color: "#F9F9F7",
+              color: "#FFF8F0",
               fontSize: 14,
               fontFamily: "'DM Sans', sans-serif",
             }}
@@ -700,8 +700,8 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
             border: "none",
             background:
               input.trim() && !streaming
-                ? "linear-gradient(135deg,#4F46E5,#6366F1)"
-                : "rgba(249,249,247,.06)",
+                ? "linear-gradient(135deg,#5D4037,#6D4C41)"
+                : "rgba(255,248,240,.06)",
             cursor: input.trim() && !streaming ? "pointer" : "default",
             display: "flex",
             alignItems: "center",
@@ -710,7 +710,7 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
             transition: "all .2s",
             boxShadow:
               input.trim() && !streaming
-                ? "0 4px 14px rgba(79,70,229,0.35)"
+                ? "0 4px 14px rgba(93,64,55,0.35)"
                 : "none",
           }}
         >
@@ -718,8 +718,8 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
             size={16}
             color={
               input.trim() && !streaming
-                ? "#F9F9F7"
-                : "rgba(249,249,247,.3)"
+                ? "#FFF8F0"
+                : "rgba(255,248,240,.3)"
             }
           />
         </button>
