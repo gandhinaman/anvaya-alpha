@@ -308,6 +308,18 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
     });
   },[propUserId]);
 
+  // Broadcast presence so guardian can see parent is online
+  useEffect(() => {
+    if (!userId) return;
+    const presenceCh = supabase.channel(`presence:${userId}`);
+    presenceCh.subscribe(async (status) => {
+      if (status === "SUBSCRIBED") {
+        await presenceCh.track({ online: true, lastSeen: new Date().toISOString() });
+      }
+    });
+    return () => { supabase.removeChannel(presenceCh); };
+  }, [userId]);
+
   // Fetch linked user's name
   useEffect(()=>{
     if(!linkedUserId) return;

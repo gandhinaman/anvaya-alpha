@@ -295,6 +295,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
   const [incomingCall, setIncomingCall] = useState(null);
   const [emergency, setEmergency] = useState(null);
   const [callOpen, setCallOpen] = useState(false);
+  const [parentOnline, setParentOnline] = useState(false);
 
   const { parentProfile, memories: realMemories, medications, healthEvents, stats: derivedStats, loading: dataLoading, lastUpdated, toggleMedication } = useParentData(profileId);
 
@@ -343,6 +344,18 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
     return () => { supabase.removeChannel(ch); };
   }, [profileId]);
 
+  // Track parent online presence
+  useEffect(() => {
+    if (!parentProfile?.id) return;
+    const presenceCh = supabase.channel(`presence:${parentProfile.id}`)
+      .on("presence", { event: "sync" }, () => {
+        const state = presenceCh.presenceState();
+        const isOnline = Object.keys(state).length > 0;
+        setParentOnline(isOnline);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(presenceCh); };
+  }, [parentProfile?.id]);
   const handleMarkSafe = async () => {
     if (profileId && parentProfile) {
       await supabase.from("health_events").insert({
@@ -453,10 +466,10 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
            </div>
            <div>
              <div style={{ fontSize: 12, fontWeight: 700, color: "#3E2723" }}>{parentProfile?.full_name || "Parent"}</div>
-             <div style={{ fontSize: 10, color: "#C68B59", display: "flex", alignItems: "center", gap: 4 }}>
-               <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#C68B59", display: "inline-block" }} />
-               {dataLoading ? "Loading…" : "Active"}
-             </div>
+              <div style={{ fontSize: 10, color: parentOnline ? "#22C55E" : "#8D6E63", display: "flex", alignItems: "center", gap: 4 }}>
+                <span style={{ width: 5, height: 5, borderRadius: "50%", background: parentOnline ? "#22C55E" : "#8D6E63", display: "inline-block" }} />
+                {dataLoading ? "Loading…" : parentOnline ? "Online" : "Offline"}
+              </div>
            </div>
          </div>
        </div>
@@ -642,9 +655,10 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                    </div>
                    <div>
                      <div style={{ fontSize: 14, fontWeight: 700, color: "#3E2723" }}>{parentProfile.full_name || "Parent"}</div>
-                     <div style={{ fontSize: 11, color: "#C68B59", display: "flex", alignItems: "center", gap: 4 }}>
-                       <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#C68B59" }} />Active
-                     </div>
+                      <div style={{ fontSize: 11, color: parentOnline ? "#22C55E" : "#8D6E63", display: "flex", alignItems: "center", gap: 4 }}>
+                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: parentOnline ? "#22C55E" : "#8D6E63" }} />
+                        {parentOnline ? "Online" : "Offline"}
+                      </div>
                    </div>
                 </div>
               </div>
