@@ -1,9 +1,9 @@
-import type { CapacitorConfig } from '@capacitor/cli';
+import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.15f9b36f82154684988a0e68a6183ccd',
-  appName: 'anvaya-alpha',
-  webDir: 'dist',
+  appId: "app.lovable.anvayaalpha.app",
+  appName: "anvaya-alpha",
+  webDir: "dist",
 
   // To enable dev hot-reload, uncomment the server block below:
   // server: {
@@ -11,21 +11,14 @@ const config: CapacitorConfig = {
   //   cleartext: true,
   //   allowNavigation: ['*.lovableproject.com', '*.supabase.co', '*.lovable.app'],
   // },
-  plugins: {
-    Keyboard: {
-      resize: 'body',
-      scrollAssist: true,
-      scrollPadding: false,
-    },
-  },
   ios: {
-    contentInset: 'automatic',
-    preferredContentMode: 'mobile',
-    backgroundColor: '#1A0F0A',
+    contentInset: "automatic",
+    preferredContentMode: "mobile",
+    backgroundColor: "#1A0F0A",
     allowsLinkPreview: false,
   },
   android: {
-    backgroundColor: '#1A0F0A',
+    backgroundColor: "#1A0F0A",
   },
 };
 
