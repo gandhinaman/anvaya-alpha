@@ -6,7 +6,12 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SUMMARY_PROMPT = `Analyze this personal memory recording. Respond in this exact JSON format only, no other text:
+const SUMMARY_PROMPT = `You are analyzing a personal memory recording. You have access to BOTH the raw audio waveform AND the transcript text.
+
+CRITICAL: Use the ACTUAL AUDIO SIGNAL to assess vocal_energy, emotional_state, and activity_level. Listen for real pitch variation, speech rate, pauses, trembling, breathing patterns, and tonal energy — do NOT guess these from words alone.
+Use the TRANSCRIPT TEXT to assess cognitive_vitality (word retrieval, narrative coherence, vocabulary richness, recall accuracy).
+
+Respond in this exact JSON format only, no other text:
 {
   "title": "Short descriptive title, max 6 words, e.g. 'Childhood story about kite flying'",
   "summary": "2 warm sentences summarizing the memory",
@@ -15,31 +20,62 @@ const SUMMARY_PROMPT = `Analyze this personal memory recording. Respond in this 
     "vocal_energy": {
       "score": 0-100,
       "label": "one of: Low, Moderate, High, Very High",
-      "detail": "Brief note on tone and pitch patterns detected"
+      "detail": "Brief note on actual pitch range, volume variation, and tonal expressiveness heard in the audio"
     },
     "cognitive_vitality": {
       "score": 0-100,
       "label": "one of: Declining, Fair, Sharp, Very Sharp",
-      "detail": "Brief note on word retrieval, narrative coherence, vocabulary richness, and recall accuracy"
+      "detail": "Brief note on word retrieval, narrative coherence, vocabulary richness, and recall accuracy from the transcript"
     },
     "emotional_state": {
       "score": 0-100,
       "label": "one of: Distressed, Tense, Calm, Serene",
-      "detail": "Brief note on breathing patterns and tonal cues"
+      "detail": "Brief note on breathing patterns, vocal trembling, tonal warmth/tension heard in the audio"
     },
     "activity_level": {
       "score": 0-100,
       "label": "one of: Low, Moderate, Active, Very Active",
-      "detail": "Brief note on speech speed and enthusiasm in tone"
+      "detail": "Brief note on speech pace, rhythm, and enthusiasm heard in the audio"
     }
   }
 }
 
-Scoring guidance:
-- vocal_energy: Assess tone variation and pitch range. Monotone/flat = low, expressive/animated = high.
-- cognitive_vitality: Assess word-finding ability (hesitations, substitutions), narrative coherence (does the story track logically?), vocabulary richness, temporal recall accuracy (dates, sequences), and self-correction frequency. Frequent word-finding pauses or confused timelines = declining, fluent recall with rich detail = very sharp.
-- emotional_state: Assess emotional cues in tone — trembling/rushed = distressed, warm/steady = calm/serene.
-- activity_level: Assess speech pace and enthusiasm. Slow/lethargic = low, fast/energetic = very active.
+Scoring guidance (use AUDIO for first three, TRANSCRIPT for cognitive):
+- vocal_energy (AUDIO): Listen to actual pitch range and volume dynamics. Flat monotone = low, wide pitch variation with emphasis = high.
+- cognitive_vitality (TRANSCRIPT): Assess word-finding pauses, narrative coherence, vocabulary richness, temporal recall accuracy. Frequent hesitations or confused timelines = declining, fluent recall with rich detail = very sharp.
+- emotional_state (AUDIO): Listen for vocal trembling, rushed breathing, sighing, tonal warmth vs tension. Trembling/rushed = distressed, warm/steady = calm/serene.
+- activity_level (AUDIO): Listen to actual speech rate (words per minute), rhythmic energy, enthusiasm in delivery. Slow/lethargic = low, fast/energetic = very active.
+
+Do NOT use generic titles like "Share a memory" or "Untitled".`;
+
+const SUMMARY_PROMPT_TEXT_ONLY = `Analyze this personal memory recording from transcript text only (audio was too large for direct analysis). Respond in this exact JSON format only, no other text:
+{
+  "title": "Short descriptive title, max 6 words",
+  "summary": "2 warm sentences summarizing the memory",
+  "emotional_tone": "one of: joyful, nostalgic, peaceful, concerned",
+  "voice_metrics": {
+    "vocal_energy": {
+      "score": 0-100,
+      "label": "one of: Low, Moderate, High, Very High",
+      "detail": "Inferred from linguistic cues (limited accuracy without audio)"
+    },
+    "cognitive_vitality": {
+      "score": 0-100,
+      "label": "one of: Declining, Fair, Sharp, Very Sharp",
+      "detail": "Brief note on word retrieval, narrative coherence, vocabulary richness"
+    },
+    "emotional_state": {
+      "score": 0-100,
+      "label": "one of: Distressed, Tense, Calm, Serene",
+      "detail": "Inferred from linguistic cues (limited accuracy without audio)"
+    },
+    "activity_level": {
+      "score": 0-100,
+      "label": "one of: Low, Moderate, Active, Very Active",
+      "detail": "Inferred from linguistic cues (limited accuracy without audio)"
+    }
+  }
+}
 
 Do NOT use generic titles like "Share a memory" or "Untitled".`;
 
@@ -53,22 +89,35 @@ Deno.serve(async (req) => {
 
     // Step 1: Fetch the audio/video file and transcribe with Sarvam STT
     let transcript = "[Audio recording - transcription unavailable]";
+    let audioBase64: string | null = null;
+    let audioMimeType = "audio/webm";
 
     try {
       const fileRes = await fetch(audioUrl);
       if (fileRes.ok) {
         const fileBuffer = await fileRes.arrayBuffer();
         const bytes = new Uint8Array(fileBuffer);
+        audioMimeType = mediaType === "video" ? "video/webm" : "audio/webm";
+
+        // Keep audio bytes as base64 for multimodal analysis (under 5MB)
+        if (bytes.length < 5 * 1024 * 1024) {
+          let binary = "";
+          for (let i = 0; i < bytes.length; i++) {
+            binary += String.fromCharCode(bytes[i]);
+          }
+          audioBase64 = btoa(binary);
+          console.log(`Audio base64 prepared: ${(bytes.length / 1024).toFixed(0)}KB`);
+        } else {
+          console.log(`Audio too large for multimodal (${(bytes.length / 1024 / 1024).toFixed(1)}MB), using text-only analysis`);
+        }
 
         // Only attempt transcription if file is under 10MB
         if (bytes.length < 10 * 1024 * 1024) {
           const sarvamKey = Deno.env.get("SARVAM_API_KEY");
 
           if (sarvamKey) {
-            // Use Sarvam STT
-            const mimeType = mediaType === "video" ? "video/webm" : "audio/webm";
             const formData = new FormData();
-            const blob = new Blob([bytes], { type: mimeType });
+            const blob = new Blob([bytes], { type: audioMimeType });
             formData.append("file", blob, "recording.webm");
             formData.append("model", "saarika:v2.5");
             formData.append("language_code", "unknown");
@@ -76,9 +125,7 @@ Deno.serve(async (req) => {
 
             const sttRes = await fetch("https://api.sarvam.ai/speech-to-text", {
               method: "POST",
-              headers: {
-                "api-subscription-key": sarvamKey,
-              },
+              headers: { "api-subscription-key": sarvamKey },
               body: formData,
             });
 
@@ -111,6 +158,19 @@ Deno.serve(async (req) => {
 
     if (aiKey) {
       try {
+        // Build multimodal or text-only message
+        const useMultimodal = !!audioBase64;
+        const promptText = `The person was asked this prompt: "${promptQuestion || 'Share a memory'}"\n\nHere is their transcribed response:\n\n"${transcript}"\n\n${useMultimodal ? SUMMARY_PROMPT : SUMMARY_PROMPT_TEXT_ONLY}`;
+
+        const messageContent = useMultimodal
+          ? [
+              { type: "input_audio", input_audio: { data: audioBase64, format: "wav" } },
+              { type: "text", text: promptText },
+            ]
+          : promptText;
+
+        console.log(`Using ${useMultimodal ? "multimodal audio+text" : "text-only"} analysis`);
+
         const summaryRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
           headers: {
@@ -120,10 +180,7 @@ Deno.serve(async (req) => {
           body: JSON.stringify({
             model: "google/gemini-2.5-flash",
             messages: [
-              {
-                role: "user",
-                content: `The person was asked this prompt: "${promptQuestion || 'Share a memory'}"\n\nHere is their transcribed response:\n\n"${transcript}"\n\n${SUMMARY_PROMPT}`,
-              },
+              { role: "user", content: messageContent },
             ],
           }),
         });
