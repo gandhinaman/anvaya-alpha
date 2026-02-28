@@ -43,39 +43,65 @@ interface Stats {
   activityLevel: { value: string; trend: string };
 }
 
-function deriveStats(healthEvents: HealthEvent[], memories: Memory[]): Stats {
-  const latestByType = (type: string) => {
-    const events = healthEvents.filter(e => e.event_type === type);
-    return events.length > 0 ? events[0] : null;
-  };
+function weightedAggregateByType(healthEvents: HealthEvent[], types: string[]): { score: number | null; label: string; trend: string } {
+  const events = healthEvents.filter(e => types.includes(e.event_type) && e.value?.score != null);
+  if (events.length === 0) {
+    // Fallback to latest event label
+    const latest = healthEvents.filter(e => types.includes(e.event_type));
+    if (latest.length > 0) {
+      return { score: null, label: latest[0]?.value?.label || "No data", trend: latest[0]?.value?.detail || "—" };
+    }
+    return { score: null, label: "No data", trend: "—" };
+  }
 
-  // Vocal Energy: tone & pitch analysis
-  const vocalEvent = latestByType("vocal_energy");
-  const vocalLabel = vocalEvent?.value?.label || "No data";
-  const vocalScore = vocalEvent?.value?.score;
-  const vocalTrend = vocalEvent?.value?.detail || "—";
+  const now = new Date();
+  const twoDaysAgo = new Date(now);
+  twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
 
-  // Cognitive Vitality: word retrieval, recall, coherence
-  const cogEvent = latestByType("cognitive_vitality") || latestByType("cognitive_clarity");
-  const cogScore = cogEvent?.value?.score;
-  const cogLabel = cogEvent?.value?.label || "No data";
-  const cogTrend = cogEvent?.value?.detail || "—";
+  // Split into recent (0-2 days, 50% weight) and older (2-7 days, 50% weight)
+  const recent: number[] = [];
+  const older: number[] = [];
+  for (const e of events) {
+    const d = new Date(e.recorded_at || "");
+    if (d >= twoDaysAgo) {
+      recent.push(e.value.score);
+    } else {
+      older.push(e.value.score);
+    }
+  }
 
-  // Emotional State: breathing & tone
-  const emoEvent = latestByType("emotional_state");
-  const emoLabel = emoEvent?.value?.label || "Neutral";
-  const emoTrend = emoEvent?.value?.detail || "—";
+  const avg = (arr: number[]) => arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
+  const recentAvg = avg(recent);
+  const olderAvg = avg(older);
 
-  // Activity Level: speech speed & enthusiasm
-  const actEvent = latestByType("activity_level");
-  const actLabel = actEvent?.value?.label || "No data";
-  const actTrend = actEvent?.value?.detail || "—";
+  let finalScore: number;
+  if (recentAvg != null && olderAvg != null) {
+    finalScore = Math.round(recentAvg * 0.5 + olderAvg * 0.5);
+  } else if (recentAvg != null) {
+    finalScore = Math.round(recentAvg);
+  } else {
+    finalScore = Math.round(olderAvg!);
+  }
+
+  // Latest event for label/trend
+  const latest = events[0];
+  const label = latest?.value?.label || "No data";
+  const trend = latest?.value?.detail || "—";
+
+  return { score: finalScore, label, trend };
+}
+
+function deriveStats(healthEvents: HealthEvent[], _memories: Memory[]): Stats {
+  const vocal = weightedAggregateByType(healthEvents, ["vocal_energy"]);
+  const cog = weightedAggregateByType(healthEvents, ["cognitive_vitality", "cognitive_clarity"]);
+  const emo = weightedAggregateByType(healthEvents, ["emotional_state"]);
+  const act = weightedAggregateByType(healthEvents, ["activity_level"]);
 
   return {
-    vocalEnergy: { value: vocalScore != null ? `${vocalScore}%` : vocalLabel, trend: vocalScore != null ? capitalize(vocalLabel) : vocalTrend },
-    cognitiveClarity: { value: cogScore != null ? `${cogScore}%` : cogLabel, trend: cogScore != null ? capitalize(cogLabel) : cogTrend },
-    emotionalTone: { value: emoEvent?.value?.score != null ? `${emoEvent.value.score}%` : capitalize(emoLabel), trend: emoEvent?.value?.score != null ? capitalize(emoLabel) : emoTrend },
-    activityLevel: { value: actEvent?.value?.score != null ? `${actEvent.value.score}%` : capitalize(actLabel), trend: actEvent?.value?.score != null ? capitalize(actLabel) : actTrend },
+    vocalEnergy: { value: vocal.score != null ? `${vocal.score}%` : vocal.label, trend: vocal.score != null ? capitalize(vocal.label) : vocal.trend },
+    cognitiveClarity: { value: cog.score != null ? `${cog.score}%` : cog.label, trend: cog.score != null ? capitalize(cog.label) : cog.trend },
+    emotionalTone: { value: emo.score != null ? `${emo.score}%` : capitalize(emo.label), trend: emo.score != null ? capitalize(emo.label) : emo.trend },
+    activityLevel: { value: act.score != null ? `${act.score}%` : capitalize(act.label), trend: act.score != null ? capitalize(act.label) : act.trend },
   };
 }
 
@@ -177,6 +203,24 @@ export function useParentData(profileId: string | null) {
 
     return () => { supabase.removeChannel(ch); };
   }, [profileId, fetchAll]);
+
+  // Refresh data at midnight local time for daily metric reset
+  useEffect(() => {
+    const scheduleNextMidnight = () => {
+      const now = new Date();
+      const midnight = new Date(now);
+      midnight.setDate(midnight.getDate() + 1);
+      midnight.setHours(0, 0, 0, 0);
+      const ms = midnight.getTime() - now.getTime();
+      return setTimeout(() => {
+        fetchAll();
+        // Re-schedule for the next midnight
+        timerRef = scheduleNextMidnight();
+      }, ms);
+    };
+    let timerRef = scheduleNextMidnight();
+    return () => clearTimeout(timerRef);
+  }, [fetchAll]);
 
   const stats = deriveStats(healthEvents, memories);
 
