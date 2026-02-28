@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
             const formData = new FormData();
             const blob = new Blob([bytes], { type: mimeType });
             formData.append("file", blob, "recording.webm");
-            formData.append("model", "saarika:v2");
+            formData.append("model", "saarika:v2.5");
             formData.append("language_code", "unknown");
             formData.append("with_timestamps", "false");
 
