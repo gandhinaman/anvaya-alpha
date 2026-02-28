@@ -36,8 +36,8 @@ const fontStyle = `
     50%      { transform:scale(1.08); box-shadow:0 0 80px 30px rgba(44,24,16,.5),0 0 160px 60px rgba(44,24,16,.2); }
   }
   @keyframes breatheX {
-    0%,100% { transform:scale(1.35); box-shadow:0 0 100px 40px rgba(44,24,16,.5),0 0 200px 80px rgba(44,24,16,.25); }
-    50%      { transform:scale(1.48); box-shadow:0 0 130px 50px rgba(44,24,16,.65),0 0 240px 100px rgba(44,24,16,.3); }
+    0%,100% { transform:scale(1.1); box-shadow:0 0 60px 20px rgba(44,24,16,.35),0 0 100px 40px rgba(44,24,16,.15); }
+    50%      { transform:scale(1.18); box-shadow:0 0 80px 30px rgba(44,24,16,.45),0 0 130px 50px rgba(44,24,16,.2); }
   }
   @keyframes waveBar {
     0%,100% { height:6px; }
@@ -721,8 +721,8 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
             messages: history.map(m => ({ role: m.role, content: m.content })),
             userId,
             system: lang === "hi"
-              ? "You are Ava, a warm and culturally sensitive AI companion for elderly Indian users. Respond ONLY in Hindi. Keep responses short, warm, and clear. You can help with health reminders, telling stories, answering questions, and providing companionship. Never give medical diagnoses. If the user seems distressed, gently suggest calling their family member."
-              : "You are Ava, a warm and culturally sensitive AI companion for elderly Indian users. Respond ONLY in English. Keep responses short, warm, and clear. You can help with health reminders, telling stories, answering questions, and providing companionship. Never give medical diagnoses. If the user seems distressed, gently suggest calling their family member.",
+              ? "You are Ava, a warm AI companion for elderly Indian users. Respond ONLY in Hindi. CRITICAL: Keep responses to 2-3 SHORT sentences maximum — this will be read aloud, so brevity is essential. Be warm but very concise. Never give medical diagnoses."
+              : "You are Ava, a warm AI companion for elderly Indian users. Respond ONLY in English. CRITICAL: Keep responses to 2-3 SHORT sentences maximum — this will be read aloud, so brevity is essential. Be warm but very concise. Never give medical diagnoses.",
           }),
         }
       );
@@ -963,18 +963,20 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
         <div style={{fontFamily:"'Playfair Display',serif",fontSize:isMock?40:48,color:"#FFF8F0",fontWeight:600,letterSpacing:"0.05em",marginTop:2}}>
           {lang==="en"?"Ava":"आवा"}
         </div>
-        <div style={{fontSize:16,color:"rgba(255,248,240,.55)",marginTop:5}}>
+        {voicePhase==="idle"&&<div style={{fontSize:16,color:"rgba(255,248,240,.55)",marginTop:5}}>
           {lang==="en"?"Your trusted companion":"आपका विश्वसनीय साथी"}
-        </div>
+        </div>}
       </div>
 
-      <div style={{display:"flex",justifyContent:"center",marginTop:voicePhase!=="idle"?24:isMock?36:48,transition:"margin .5s ease",flexShrink:0}}>
+      <div style={{display:"flex",justifyContent:"center",marginTop:voicePhase!=="idle"?16:isMock?36:48,transition:"margin .5s ease",flexShrink:0}}>
         <div style={{position:"relative"}} className="pring">
           <div
             onClick={startVoiceConversation}
             className={voicePhase==="listening"?"orb-rec":voicePhase==="speaking"?"orb-rec":"orb"}
             style={{
-              width:isMock?160:180,height:isMock?160:180,borderRadius:"50%",
+              width:voicePhase!=="idle"?(isMock?120:140):(isMock?160:180),
+              height:voicePhase!=="idle"?(isMock?120:140):(isMock?160:180),
+              borderRadius:"50%",
               background: voicePhase==="listening"
                 ? "radial-gradient(circle at 40% 35%,#E8C9A0 0%,#C68B59 40%,#8D6E63 80%,#5D4037 100%)"
                 : voicePhase==="thinking"
@@ -982,9 +984,9 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
                 : voicePhase==="speaking"
                 ? "radial-gradient(circle at 40% 35%,#D7CCC8 0%,#BCAAA4 35%,#A1887F 65%,#8D6E63 100%)"
                 : "radial-gradient(circle at 40% 35%,#E8C9A0 0%,#D4A574 30%,#C68B59 55%,#8D6E63 80%,#5D4037 100%)",
-              position:"relative",cursor:"pointer",transition:"background .6s ease, transform .5s",
+              position:"relative",cursor:"pointer",transition:"all .5s ease",
               boxShadow: voicePhase!=="idle"
-                ? "0 0 60px 15px rgba(212,165,116,.3), 0 0 120px 40px rgba(198,139,89,.12)"
+                ? "0 0 40px 10px rgba(212,165,116,.25), 0 0 80px 30px rgba(198,139,89,.1)"
                 : "0 0 50px 12px rgba(198,139,89,.2), 0 0 100px 30px rgba(141,110,99,.08)"
             }}
           >
@@ -995,33 +997,33 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
               background:"radial-gradient(circle at 65% 70%,rgba(255,248,240,.08) 0%,transparent 50%)"}}/>
             {voicePhase==="listening"&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}><Waveform/></div>}
             {voicePhase==="thinking"&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
-              <Loader2 size={36} color="rgba(255,248,240,.85)" style={{animation:"spin 1.2s linear infinite"}}/>
+              <Loader2 size={28} color="rgba(255,248,240,.85)" style={{animation:"spin 1.2s linear infinite"}}/>
             </div>}
             {voicePhase==="speaking"&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
-              <Headphones size={36} color="rgba(255,248,240,.85)"/>
+              <Headphones size={28} color="rgba(255,248,240,.85)"/>
             </div>}
           </div>
         </div>
       </div>
 
-      <div style={{textAlign:"center",marginTop:20,padding:"0 28px",minHeight:56}}>
+      <div style={{textAlign:"center",marginTop:12,padding:"0 28px",minHeight:40}}>
         {voicePhase==="listening"&&(
-          <p style={{color:"rgba(255,248,240,.8)",fontSize:18,lineHeight:1.6,animation:"fadeUp .4s ease both",fontWeight:500}}>
+          <p style={{color:"rgba(255,248,240,.8)",fontSize:16,lineHeight:1.5,animation:"fadeUp .4s ease both",fontWeight:500}}>
             {voiceText||(lang==="en"?"Listening…":"सुन रहा हूँ…")}
           </p>
         )}
         {voicePhase==="thinking"&&(
-          <p style={{color:"rgba(255,248,240,.6)",fontSize:17,lineHeight:1.6,animation:"fadeUp .4s ease both"}}>
+          <p style={{color:"rgba(255,248,240,.6)",fontSize:15,lineHeight:1.5,animation:"fadeUp .4s ease both"}}>
             {lang==="en"?`"${voiceText}" — thinking…`:`"${voiceText}" — सोच रहा हूँ…`}
           </p>
         )}
         {voicePhase==="speaking"&&(
-          <p className="scr" style={{color:"rgba(255,248,240,.8)",fontSize:17,lineHeight:1.7,animation:"fadeUp .4s ease both",maxHeight:100,overflowY:"auto"}}>
+          <p className="scr" style={{color:"rgba(255,248,240,.8)",fontSize:15,lineHeight:1.6,animation:"fadeUp .4s ease both",maxHeight:70,overflowY:"auto"}}>
             {voiceResponse}
           </p>
         )}
         {voicePhase==="idle"&&(
-          <p style={{color:"rgba(255,248,240,.6)",fontSize:18,lineHeight:1.6,fontWeight:500}}>
+          <p style={{color:"rgba(255,248,240,.6)",fontSize:16,lineHeight:1.5,fontWeight:500}}>
             {lang==="en"?"Tap the orb to talk to Ava":"आवा से बात करने के लिए ऑर्ब टैप करें"}
           </p>
         )}
