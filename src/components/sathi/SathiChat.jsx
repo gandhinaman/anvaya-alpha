@@ -174,12 +174,7 @@ export default function SathiChat({ open, onClose, lang = "en", userId, initialM
       );
 
       if (!res.ok) {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = lang === "hi" ? "hi-IN" : "en-US";
-        utterance.rate = 0.95;
-        utterance.onend = () => setSpeakingIdx(-1);
-        window.speechSynthesis.speak(utterance);
-        return;
+        throw new Error(`TTS failed: ${res.status}`);
       }
 
       const audio = new Audio();
@@ -187,8 +182,11 @@ export default function SathiChat({ open, onClose, lang = "en", userId, initialM
       audio.onended = () => setSpeakingIdx(-1);
       audio.onerror = () => setSpeakingIdx(-1);
 
-      // Stream audio via MediaSource (Chrome/Android) or blob fallback (iOS/Safari)
-      if (window.MediaSource && MediaSource.isTypeSupported('audio/mpeg')) {
+      // Check content type — MediaSource only works for audio/mpeg
+      const contentType = res.headers.get('content-type') || '';
+      const isMpeg = contentType.includes('audio/mpeg');
+
+      if (isMpeg && window.MediaSource && MediaSource.isTypeSupported('audio/mpeg')) {
         const mediaSource = new MediaSource();
         audio.src = URL.createObjectURL(mediaSource);
         mediaSource.addEventListener('sourceopen', async () => {
@@ -213,7 +211,7 @@ export default function SathiChat({ open, onClose, lang = "en", userId, initialM
           } catch { setSpeakingIdx(-1); }
         }, { once: true });
       } else {
-        // iOS/Safari fallback
+        // Blob fallback for audio/wav (Sarvam) or iOS/Safari
         const blob = await res.blob();
         audio.src = URL.createObjectURL(blob);
         audio.play().catch(() => setSpeakingIdx(-1));
