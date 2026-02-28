@@ -705,7 +705,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
             ) : (() => {
               const q = memorySearch.toLowerCase();
               const filtered = memories.filter(m =>
-                !q || m.title.toLowerCase().includes(q) || (m.transcript && m.transcript.toLowerCase().includes(q))
+                !q || m.title.toLowerCase().includes(q) || (m.transcript && m.transcript.toLowerCase().includes(q)) || (m.summary && m.summary.toLowerCase().includes(q))
               );
               return filtered.length === 0 ? (
                 <div className="gcard" style={{ padding: 28, textAlign: "center" }}>
