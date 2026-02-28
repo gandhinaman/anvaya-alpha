@@ -986,7 +986,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
             <div style={{
               display: "grid",
               gridTemplateColumns: isMobile ? "1fr" : inPanel ? "1fr" : "2fr 1fr",
-              gap: 14, marginBottom: 14, alignItems: "start"
+              gap: 14, marginBottom: 14
             }}>
               <div className="gcard s5" style={{ padding: 20 }}>
                 <div style={{ marginBottom: 14 }}>
@@ -994,6 +994,14 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                   <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>24-hour vocal and acoustic analysis</div>
                 </div>
                 <AcousticHeatmap healthEvents={healthEvents} />
+                <div style={{
+                  marginTop: 14, padding: "10px 12px",
+                  background: "rgba(141,110,99,0.06)", borderRadius: 12, border: "1px solid rgba(141,110,99,0.1)"
+                }}>
+                  <p style={{ fontSize: 10.5, color: "#6b6b6b", lineHeight: 1.55, margin: 0 }}>
+                    This heatmap shows when your parent is most vocally active throughout the week. Brighter cells indicate higher vocal energy scores at that hour. Patterns can reveal daily routines, social activity windows, and times of low engagement.
+                  </p>
+                </div>
               </div>
 
               <div className="gcard s6" style={{ padding: 20 }}>
@@ -1225,7 +1233,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
             <div style={{
               display: "grid",
               gridTemplateColumns: isMobile ? "1fr" : inPanel ? "1fr" : "2fr 1fr",
-              gap: 14, marginBottom: 14, alignItems: "start"
+              gap: 14, marginBottom: 14
             }}>
               <div className="gcard s5" style={{ padding: 20 }}>
                 <div style={{ marginBottom: 14 }}>
@@ -1233,9 +1241,17 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                   <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>24-hour vocal and acoustic analysis</div>
                 </div>
                 <AcousticHeatmap healthEvents={healthEvents} />
+                <div style={{
+                  marginTop: 14, padding: "10px 12px",
+                  background: "rgba(141,110,99,0.06)", borderRadius: 12, border: "1px solid rgba(141,110,99,0.1)"
+                }}>
+                  <p style={{ fontSize: 10.5, color: "#6b6b6b", lineHeight: 1.55, margin: 0 }}>
+                    This heatmap shows when your parent is most vocally active throughout the week. Brighter cells indicate higher vocal energy scores at that hour. Patterns can reveal daily routines, social activity windows, and times of low engagement.
+                  </p>
+                </div>
               </div>
 
-              <div className="gcard s6" style={{ padding: 20, maxHeight: 340, display: "flex", flexDirection: "column" }}>
+              <div className="gcard s6" style={{ padding: 20, display: "flex", flexDirection: "column" }}>
                 <div style={{ marginBottom: 14, flexShrink: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Recent Alerts</div>
                   <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Latest health & activity events</div>
