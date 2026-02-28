@@ -19,14 +19,42 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(false);
   const scrollRef = useRef(null);
   const suggested = lang === "hi" ? SUGGESTED_HI : SUGGESTED_EN;
 
+  // Load today's conversation history when chat opens
   useEffect(() => {
-    if (open) {
-      setMessages([]);
+    if (open && userId) {
+      loadConversationHistory();
     }
-  }, [open]);
+  }, [open, userId]);
+
+  const loadConversationHistory = async () => {
+    setLoadingHistory(true);
+    try {
+      const today = new Date().toISOString().split("T")[0];
+      const { data, error } = await supabase
+        .from("conversations")
+        .select("messages")
+        .eq("user_id", userId)
+        .gte("created_at", today)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (data?.messages && Array.isArray(data.messages) && data.messages.length > 0) {
+        setMessages(data.messages);
+      } else {
+        setMessages([]);
+      }
+    } catch {
+      // No conversation found for today, start fresh
+      setMessages([]);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -221,7 +249,13 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
           gap: 10,
         }}
       >
-        {messages.length === 0 && (
+        {loadingHistory && (
+          <div style={{ textAlign: "center", padding: 20, color: "rgba(249,249,247,.4)", fontSize: 12 }}>
+            {lang === "hi" ? "बातचीत लोड हो रही है…" : "Loading conversation…"}
+          </div>
+        )}
+
+        {!loadingHistory && messages.length === 0 && (
           <div
             style={{
               display: "flex",
