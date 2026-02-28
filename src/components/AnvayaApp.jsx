@@ -665,13 +665,14 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
       return;
     }
 
-    // Unlock audio on iOS — must run in user gesture context
-    try {
-      const { unlockAudio } = await import("@/lib/audioUnlock");
-      const warmedAudio = await unlockAudio();
-      preWarmedAudioRef.current = warmedAudio;
-    } catch (e) {
-      console.warn("Audio unlock failed:", e);
+    // Unlock audio on iOS — only once, skip if already done
+    if (!preWarmedAudioRef.current) {
+      try {
+        const { unlockAudio } = await import("@/lib/audioUnlock");
+        preWarmedAudioRef.current = await unlockAudio();
+      } catch (e) {
+        console.warn("Audio unlock failed:", e);
+      }
     }
 
     // Try Web Speech API first (works on desktop Chrome, Android Chrome)
@@ -875,16 +876,12 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
         throw new Error(`TTS failed: ${response.status}`);
       }
 
-      const audioBlob = await response.blob();
-      const audioUrl = URL.createObjectURL(audioBlob);
-      
       // Reuse pre-warmed Audio element if available (bypasses iOS autoplay)
       let audio;
       if (preWarmedAudioRef.current) {
         audio = preWarmedAudioRef.current;
-        audio.src = audioUrl;
       } else {
-        audio = new Audio(audioUrl);
+        audio = new Audio();
       }
       ttsAudioRef.current = audio;
 
@@ -897,7 +894,40 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
         ttsAudioRef.current = null;
       };
 
-      await audio.play();
+      // Stream audio via MediaSource (Chrome/Android) or blob fallback (iOS/Safari)
+      if (window.MediaSource && MediaSource.isTypeSupported('audio/mpeg')) {
+        const mediaSource = new MediaSource();
+        audio.src = URL.createObjectURL(mediaSource);
+        await new Promise((resolve, reject) => {
+          mediaSource.addEventListener('sourceopen', async () => {
+            try {
+              const sourceBuffer = mediaSource.addSourceBuffer('audio/mpeg');
+              const reader = response.body.getReader();
+              let started = false;
+              const pump = async () => {
+                const { done, value } = await reader.read();
+                if (done) {
+                  if (mediaSource.readyState === 'open') mediaSource.endOfStream();
+                  resolve();
+                  return;
+                }
+                sourceBuffer.appendBuffer(value);
+                if (!started) {
+                  started = true;
+                  audio.play().catch(() => {});
+                }
+                sourceBuffer.addEventListener('updateend', pump, { once: true });
+              };
+              pump();
+            } catch (e) { reject(e); }
+          }, { once: true });
+        });
+      } else {
+        // iOS/Safari fallback — no MediaSource for mp3
+        const audioBlob = await response.blob();
+        audio.src = URL.createObjectURL(audioBlob);
+        await audio.play();
+      }
     } catch (err) {
       console.error("ElevenLabs TTS error, falling back to browser:", err);
       // Fallback to browser speech
