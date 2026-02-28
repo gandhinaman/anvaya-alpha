@@ -10,6 +10,7 @@ import Onboarding from "./pages/Onboarding";
 import ParentApp from "./pages/ParentApp";
 import ChildApp from "./pages/ChildApp";
 import RoleRedirect from "./pages/RoleRedirect";
+import InstallPage from "./pages/InstallPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/install" element={<InstallPage />} />
           <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
           <Route path="/" element={<ProtectedRoute><RoleRedirect /></ProtectedRoute>} />
           <Route path="/sathi" element={<ProtectedRoute><ParentApp /></ProtectedRoute>} />
