@@ -613,6 +613,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
 
   const speechRecRef = useRef(null);
   const wavRecorderRef = useRef(null);
+  const lastTapRef = useRef(0);
 
   // Ref for a pre-warmed Audio element (survives across TTS calls)
   const preWarmedAudioRef = useRef(null);
@@ -1069,7 +1070,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
       <div style={{textAlign:"center",marginTop:16}}>
         <div style={{fontFamily:"'Playfair Display',serif",fontSize:14,color:"rgba(255,248,240,.45)",letterSpacing:"0.3em",fontWeight:400}}>ANVAYA</div>
         <div style={{fontFamily:"'Playfair Display',serif",fontSize:isMock?40:48,color:"#FFF8F0",fontWeight:600,letterSpacing:"0.05em",marginTop:2}}>
-          {lang==="en"?"Ava":"आवा"}
+          {lang==="en"?"Ava":"एवा"}
         </div>
         {voicePhase==="idle"&&<div style={{fontSize:16,color:"rgba(255,248,240,.55)",marginTop:5}}>
           {lang==="en"?"Your trusted companion":"आपका विश्वसनीय साथी"}
@@ -1079,8 +1080,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
       <div style={{display:"flex",justifyContent:"center",marginTop:voicePhase!=="idle"?16:isMock?36:48,transition:"margin .5s ease",flexShrink:0}}>
         <div style={{position:"relative"}} className="pring">
           <div
-            onPointerUp={(e) => { e.preventDefault(); startVoiceConversation(); }}
-            onTouchEnd={(e) => { e.preventDefault(); startVoiceConversation(); }}
+            onClick={() => { const now=Date.now(); if(now-lastTapRef.current<400)return; lastTapRef.current=now; startVoiceConversation(); }}
             className={voicePhase==="listening"?"orb-rec":voicePhase==="speaking"?"orb-rec":"orb"}
             style={{
               width:voicePhase!=="idle"?(isMock?120:140):(isMock?160:180),
@@ -1135,7 +1135,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
         )}
         {voicePhase==="idle"&&(
           <p style={{color:"rgba(255,248,240,.6)",fontSize:16,lineHeight:1.5,fontWeight:500}}>
-            {lang==="en"?"Tap the orb to talk to Ava":"आवा से बात करने के लिए ऑर्ब टैप करें"}
+            {lang==="en"?"Tap the orb to talk to Ava":"एवा से बात करने के लिए ऑर्ब टैप करें"}
           </p>
         )}
       </div>
@@ -1268,7 +1268,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
         {[
           {icon:<Mic size={24} color="#FFF8F0"/>,label:lang==="en"?"Record a Memory":"यादें रिकॉर्ड करें",sub:lang==="en"?"Your voice, preserved forever":"आपकी आवाज़, सदा के लिए",acc:"#C68B59",fn:()=>setMemoryOpen(true)},
           {icon:<BookOpen size={24} color="#FFF8F0"/>,label:lang==="en"?"Memory Log":"यादों की डायरी",sub:lang==="en"?"Your memories & family comments":"आपकी यादें और परिवार की टिप्पणियाँ",acc:"#C68B59",fn:()=>setMemoryLogOpen(true)},
-          {icon:<MessageCircle size={24} color="#FFF8F0"/>,label:lang==="en"?"Ask Ava":"आवा से पूछें",sub:lang==="en"?"Health · Reminders · Stories":"स्वास्थ्य · याद · कहानियाँ",acc:"#C68B59",fn:()=>setChatOpen(true)},
+          {icon:<MessageCircle size={24} color="#FFF8F0"/>,label:lang==="en"?"Ask Ava":"एवा से पूछें",sub:lang==="en"?"Health · Reminders · Stories":"स्वास्थ्य · याद · कहानियाँ",acc:"#C68B59",fn:()=>setChatOpen(true)},
           {icon:<Phone size={24} color="#FFF8F0"/>,label:lang==="en"?"Call Child":"बच्चे को कॉल करें",sub:linkedName||"Caregiver",acc:"#C68B59",fn:()=>setCallOpen(true)},
         ].map((c,i)=>(
           <button key={i} onClick={c.fn} className="glass" style={{

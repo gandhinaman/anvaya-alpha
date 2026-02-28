@@ -40,8 +40,9 @@ Deno.serve(async (req) => {
           target_language_code: targetLang,
           speaker: "anushka",
           model: "bulbul:v2",
+          enable_preprocessing: true,
           pitch: 0,
-          pace: 1.1,
+          pace: 1.0,
           loudness: 1.0,
         }),
       });
