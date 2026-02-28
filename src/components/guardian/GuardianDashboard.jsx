@@ -682,9 +682,9 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
             ) : (
               <div style={{
                 display: "grid",
-                gridTemplateColumns: isMobile ? "1fr" : inPanel ? "1fr" : "repeat(3,1fr)",
-                gap: 13
-              }}>
+                  gridTemplateColumns: "1fr",
+                  gap: 13
+                }}>
                 {memories.map((m, i) => (
                   <MemoryCard key={i} {...m} index={i} />
                 ))}
@@ -1027,10 +1027,10 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               ) : (
                 <div style={{
                   display: "grid",
-                  gridTemplateColumns: isMobile ? "1fr" : inPanel ? "1fr" : "repeat(3,1fr)",
+                  gridTemplateColumns: isMobile ? "1fr" : inPanel ? "1fr" : "1fr 1fr",
                   gap: 13
                 }}>
-                  {memories.slice(0, 3).map((m, i) => (
+                  {memories.slice(0, 2).map((m, i) => (
                     <MemoryCard key={i} {...m} index={i} />
                   ))}
                 </div>
