@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ParentProfile {
@@ -205,21 +205,23 @@ export function useParentData(profileId: string | null) {
   }, [profileId, fetchAll]);
 
   // Refresh data at midnight local time for daily metric reset
+  const midnightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    const scheduleNextMidnight = () => {
+    const scheduleMidnight = () => {
       const now = new Date();
       const midnight = new Date(now);
       midnight.setDate(midnight.getDate() + 1);
       midnight.setHours(0, 0, 0, 0);
       const ms = midnight.getTime() - now.getTime();
-      return setTimeout(() => {
+      midnightTimer.current = setTimeout(() => {
         fetchAll();
-        // Re-schedule for the next midnight
-        timerRef = scheduleNextMidnight();
+        scheduleMidnight();
       }, ms);
     };
-    let timerRef = scheduleNextMidnight();
-    return () => clearTimeout(timerRef);
+    scheduleMidnight();
+    return () => {
+      if (midnightTimer.current) clearTimeout(midnightTimer.current);
+    };
   }, [fetchAll]);
 
   const stats = deriveStats(healthEvents, memories);
