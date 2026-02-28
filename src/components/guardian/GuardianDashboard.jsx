@@ -4,7 +4,7 @@ import {
   Home, Bell, Settings, ChevronRight, Play, Pause,
   User, LogOut, Headphones, Brain, Check, Menu, X,
   TrendingUp, Zap, PhoneOff, AlertTriangle, ShieldCheck,
-  Loader2, Link2, Copy
+  Loader2, Link2, Copy, Search
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useParentData } from "@/hooks/useParentData";
@@ -361,6 +361,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
   const [linkSuccess, setLinkSuccess] = useState("");
   const [notifPref, setNotifPref] = useState({ emergency: true, medication: true, memories: true });
   const [signingOut, setSigningOut] = useState(false);
+  const [memorySearch, setMemorySearch] = useState("");
 
   const handleLinkAccount = async () => {
     setLinkError(""); setLinkSuccess("");
@@ -671,6 +672,27 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               <h2 style={{ fontSize: 16, fontWeight: 700, color: "#1a1a1a" }}>Memory Archive</h2>
               <p style={{ fontSize: 12, color: "#6b6b6b", marginTop: 3 }}>AI-summarized recordings with emotional context</p>
             </div>
+            <div style={{
+              display: "flex", alignItems: "center", gap: 8, padding: "10px 14px",
+              background: "rgba(255,255,255,0.72)", backdropFilter: "blur(12px)",
+              border: "1px solid rgba(93,64,55,0.12)", borderRadius: 14, marginBottom: 16
+            }}>
+              <Search size={16} color="#9CA3AF" />
+              <input
+                value={memorySearch}
+                onChange={e => setMemorySearch(e.target.value)}
+                placeholder="Search memories…"
+                style={{
+                  flex: 1, border: "none", outline: "none", background: "transparent",
+                  fontSize: 13, color: "#3E2723", fontFamily: "'DM Sans',sans-serif"
+                }}
+              />
+              {memorySearch && (
+                <button onClick={() => setMemorySearch("")} style={{ background: "transparent", border: "none", cursor: "pointer", padding: 2 }}>
+                  <X size={14} color="#9CA3AF" />
+                </button>
+              )}
+            </div>
             {realMemories.length === 0 ? (
               <div className="gcard" style={{ padding: 28, textAlign: "center" }}>
                 <Headphones size={28} color="#9CA3AF" style={{ margin: "0 auto 10px" }} />
@@ -679,17 +701,24 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                   <span style={{ color: "#9CA3AF", fontSize: 12 }}>Tap "Record a Memory" on the Sathi app to begin.</span>
                 </p>
               </div>
-            ) : (
-              <div style={{
-                display: "grid",
-                  gridTemplateColumns: "1fr",
-                  gap: 13
-                }}>
-                {memories.map((m, i) => (
-                  <MemoryCard key={i} {...m} index={i} />
-                ))}
-              </div>
-            )}
+            ) : (() => {
+              const q = memorySearch.toLowerCase();
+              const filtered = memories.filter(m =>
+                !q || m.title.toLowerCase().includes(q) || (m.summary && m.summary.toLowerCase().includes(q)) || (m.emotionalTone && m.emotionalTone.toLowerCase().includes(q))
+              );
+              return filtered.length === 0 ? (
+                <div className="gcard" style={{ padding: 28, textAlign: "center" }}>
+                  <Search size={28} color="#9CA3AF" style={{ margin: "0 auto 10px" }} />
+                  <p style={{ fontSize: 13, color: "#6b6b6b" }}>No memories match "{memorySearch}"</p>
+                </div>
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 13 }}>
+                  {filtered.map((m, i) => (
+                    <MemoryCard key={i} {...m} index={i} />
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         )}
 
