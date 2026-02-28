@@ -257,7 +257,7 @@ function WeeklyTrendChart() {
 function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null, emotionalTone = null }) {
   const toneColors = { joyful: "#C68B59", nostalgic: "#8D6E63", peaceful: "#5D4037", concerned: "#DC2626" };
   const tone = emotionalTone || "positive";
-  const toneColor = toneColors[tone.toLowerCase()] || "#059669";
+  const toneColor = toneColors[tone.toLowerCase()] || "#C68B59";
   return (
     <div className="gcard" style={{ padding: 18, animation: `fadeUp .5s ease ${.6 + index * .1}s both` }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
