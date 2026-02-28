@@ -5,10 +5,13 @@ export function startWavRecording() {
   return new Promise(async (resolve, reject) => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+
+      // Let the device pick its native sample rate (iOS ignores forced 16kHz)
+      const AC = window.AudioContext || window.webkitAudioContext;
+      const audioCtx = new AC();
+      await audioCtx.resume(); // required on iOS
+
       const source = audioCtx.createMediaStreamSource(stream);
-      
-      // Use ScriptProcessorNode for broad compatibility
       const bufferSize = 4096;
       const processor = audioCtx.createScriptProcessor(bufferSize, 1, 1);
       const chunks = [];
@@ -20,6 +23,8 @@ export function startWavRecording() {
 
       source.connect(processor);
       processor.connect(audioCtx.destination);
+
+      const nativeSampleRate = audioCtx.sampleRate;
 
       const stop = () => {
         processor.disconnect();
@@ -36,8 +41,14 @@ export function startWavRecording() {
           offset += chunk.length;
         }
 
+        // Resample from native rate → 16 kHz if necessary
+        const TARGET_RATE = 16000;
+        const samples = nativeSampleRate !== TARGET_RATE
+          ? resample(merged, nativeSampleRate, TARGET_RATE)
+          : merged;
+
         // Convert to 16-bit PCM WAV
-        const wavBuffer = encodeWAV(merged, 16000);
+        const wavBuffer = encodeWAV(samples, TARGET_RATE);
         
         // Convert to base64
         const bytes = new Uint8Array(wavBuffer);
@@ -57,6 +68,21 @@ export function startWavRecording() {
   });
 }
 
+// Linear interpolation resampling
+function resample(samples, fromRate, toRate) {
+  const ratio = fromRate / toRate;
+  const newLength = Math.round(samples.length / ratio);
+  const result = new Float32Array(newLength);
+  for (let i = 0; i < newLength; i++) {
+    const srcIndex = i * ratio;
+    const low = Math.floor(srcIndex);
+    const high = Math.min(low + 1, samples.length - 1);
+    const frac = srcIndex - low;
+    result[i] = samples[low] * (1 - frac) + samples[high] * frac;
+  }
+  return result;
+}
+
 function encodeWAV(samples, sampleRate) {
   const buffer = new ArrayBuffer(44 + samples.length * 2);
   const view = new DataView(buffer);
@@ -68,19 +94,18 @@ function encodeWAV(samples, sampleRate) {
 
   // fmt chunk
   writeString(view, 12, "fmt ");
-  view.setUint32(16, 16, true); // chunk size
-  view.setUint16(20, 1, true); // PCM format
-  view.setUint16(22, 1, true); // mono
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
   view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * 2, true); // byte rate
-  view.setUint16(32, 2, true); // block align
-  view.setUint16(34, 16, true); // bits per sample
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
 
   // data chunk
   writeString(view, 36, "data");
   view.setUint32(40, samples.length * 2, true);
 
-  // Write PCM samples
   let offset = 44;
   for (let i = 0; i < samples.length; i++) {
     const s = Math.max(-1, Math.min(1, samples[i]));
