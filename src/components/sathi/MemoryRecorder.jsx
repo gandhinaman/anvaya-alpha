@@ -13,6 +13,22 @@ const PROMPTS_EN = [
   "Who was your closest friend growing up?",
   "What's something you're really proud of?",
   "Tell us about a festival you'll never forget.",
+  // Indian culture additions
+  "What was Diwali like in your childhood home?",
+  "Tell us about your favorite temple or holy place.",
+  "What did your grandmother teach you about life?",
+  "Describe the rangoli your family used to make.",
+  "What was your favorite street food growing up?",
+  "Tell us about a train journey you remember.",
+  "What's a folk song or lullaby from your childhood?",
+  "How did your family celebrate Holi?",
+  "What was your school like as a child?",
+  "Tell us about your village or mohalla.",
+  "What's a recipe passed down in your family?",
+  "Describe a monsoon memory that makes you happy.",
+  "Who was a teacher that changed your life?",
+  "What games did you play as a child?",
+  "Tell us about a wedding you'll never forget.",
 ];
 
 const PROMPTS_HI = [
@@ -26,6 +42,22 @@ const PROMPTS_HI = [
   "बड़े होते हुए आपका सबसे करीबी दोस्त कौन था?",
   "किस बात पर आपको सबसे ज़्यादा गर्व है?",
   "कोई त्योहार बताइए जो आप कभी नहीं भूलेंगे।",
+  // Indian culture additions
+  "बचपन में दिवाली कैसी होती थी?",
+  "अपने पसंदीदा मंदिर या पवित्र स्थान के बारे में बताइए।",
+  "दादी-नानी ने ज़िंदगी के बारे में क्या सिखाया?",
+  "आपके घर में कैसी रंगोली बनती थी?",
+  "बचपन का पसंदीदा स्ट्रीट फ़ूड क्या था?",
+  "कोई ट्रेन का सफ़र बताइए जो याद है।",
+  "बचपन का कोई लोकगीत या लोरी सुनाइए।",
+  "आपके परिवार में होली कैसे मनाते थे?",
+  "बचपन में आपका स्कूल कैसा था?",
+  "अपने गाँव या मोहल्ले के बारे में बताइए।",
+  "परिवार में पीढ़ियों से चली आ रही कोई रेसिपी बताइए।",
+  "बारिश की कोई ऐसी याद जो खुश कर दे।",
+  "कौन से गुरु ने आपकी ज़िंदगी बदल दी?",
+  "बचपन में कौन से खेल खेलते थे?",
+  "कोई शादी बताइए जो आप कभी नहीं भूलेंगे।",
 ];
 
 export default function MemoryRecorder({ open, onClose, lang = "en", userId, linkedName }) {
