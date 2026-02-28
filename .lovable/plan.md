@@ -1,90 +1,57 @@
 
 
-# Fix iOS Native App: Scrolling, Keyboard, and Permissions
+# Fix Orb Tap, Hindi Name, and Sarvam TTS Upgrade
 
-## Problems Identified
+## 1. Fix Orb Tap on iOS
 
-1. **No scrolling**: The main SathiScreen wrapper uses `overflow: "hidden"` with fixed `height: "100dvh"` -- nothing can scroll.
-2. **Keyboard pushes content off-screen**: No Capacitor Keyboard plugin is installed. When the iOS keyboard opens, the WebView resizes but `overflow: hidden` prevents the input from staying visible. The chat input bar gets hidden behind the keyboard.
-3. **Mic/Camera permissions**: The app uses `getUserMedia()` for audio/video recording, which requires native permission declarations in `Info.plist`. These are configured at the Xcode project level, but Capacitor can be configured to set them. Additionally, no Capacitor permission-requesting plugins are installed.
+**Problem**: The orb uses both `onPointerUp` and `onTouchEnd` (line 1082-1083 of AnvayaApp.jsx), which can double-fire on iOS WKWebView, causing the voice conversation to start and immediately cancel.
 
-## Solution
+**Fix**: Replace both handlers with a single `onClick` handler plus a debounce guard ref to prevent double-invocation. The existing `touchAction: "manipulation"` and `WebkitTapHighlightColor: "transparent"` are already correct.
 
-### 1. Install Capacitor Keyboard Plugin
+**File**: `src/components/AnvayaApp.jsx` (lines 1082-1083)
+- Remove `onPointerUp` and `onTouchEnd`
+- Add `onClick` with a simple timestamp-based guard (ignore taps within 400ms of each other)
 
-Add `@capacitor/keyboard` to handle iOS keyboard behavior properly:
-- Configure `resize: "body"` in `capacitor.config.ts` so the WebView body resizes when the keyboard appears
-- Set `scroll` to enable auto-scrolling to the focused input
+## 2. Fix Hindi Name: आवा to एवा
 
-**capacitor.config.ts changes:**
-```text
-plugins: {
-  Keyboard: {
-    resize: "body",
-    scrollAssist: true,
-    scrollPadding: false,
-  },
-}
-```
+Replace all occurrences of "आवा" with "एवा" across three files:
 
-### 2. Fix Overflow on Main Containers
+| File | Occurrences |
+|------|-------------|
+| `src/components/AnvayaApp.jsx` | 5 instances (title, subtitle, "Ask Ava" card, instruction text, voice prompt) |
+| `src/components/sathi/SathiChat.jsx` | 2 instances (header, placeholder) |
+| `src/components/sathi/MemoryRecorder.jsx` | 2 instances (listening prompt, processing text) |
 
-**SathiScreen wrapper** (AnvayaApp.jsx line 1029): Change `overflow: "hidden"` to allow vertical scrolling within child containers. The wrapper itself should clip horizontally but the content areas (chat, home cards) need their own scroll contexts.
+## 3. Upgrade Sarvam TTS
 
-**SathiChat** (SathiChat.jsx): The chat is `position: fixed` with `inset: 0` -- this is fine, but the input bar at the bottom needs to respond to the keyboard. Add a listener for Capacitor Keyboard events to adjust the bottom padding when the keyboard opens/closes.
+**File**: `supabase/functions/elevenlabs-tts/index.ts`
 
-**ParentApp.tsx**: Same issue -- `overflow: "hidden"` prevents any scrolling.
+Changes to the Sarvam TTS section:
+- Upgrade model from `bulbul:v2` to `bulbul:v2` (keep v2 as v3 is not yet documented as GA; instead focus on param tuning)
+- Add `enable_preprocessing: true` for better handling of numbers, abbreviations, and mixed-language text
+- Adjust `pace` from `1.1` to `1.0` for clearer speech for elderly users
+- Keep WAV output format (Sarvam returns base64 WAV natively; converting to MP3 would add latency)
 
-### 3. Add Keyboard-Aware Input Handling
-
-In `src/main.tsx`, after detecting the native platform, import `@capacitor/keyboard` and listen for `keyboardWillShow`/`keyboardWillHide` events. Set a CSS custom property `--keyboard-height` on `document.documentElement` that components can use to adjust their bottom padding.
-
-Components with bottom input bars (SathiChat, Login) will use this variable:
-```text
-paddingBottom: "calc(var(--keyboard-height, 0px) + env(safe-area-inset-bottom, 0px))"
-```
-
-### 4. Add Native Permission Descriptions
-
-Update `capacitor.config.ts` to include iOS permission usage descriptions so the system permission dialogs appear correctly:
-
-```text
-ios: {
-  ...existing config,
-  // These go into Info.plist via Capacitor
-}
-```
-
-Note: The actual `NSMicrophoneUsageDescription`, `NSCameraUsageDescription`, and `NSSpeechRecognitionUsageDescription` strings must be added to the iOS project's `Info.plist` file. Since this is done at the native layer, I will:
-- Document the required plist entries for the user to add in Xcode
-- These cannot be set from the web codebase alone
-
-### 5. Fix Login Page Scroll
-
-The Login page uses `minHeight: "100dvh"` which is correct, but it also doesn't scroll if content overflows (signup form is tall). Ensure the login container allows vertical scroll.
+These are the only three changes -- no new features or database modifications needed.
 
 ---
 
-## Files to Modify
+## Technical Details
 
-1. **`capacitor.config.ts`** -- Add Keyboard plugin config
-2. **`package.json`** -- Add `@capacitor/keyboard` dependency
-3. **`src/main.tsx`** -- Add Keyboard event listeners to set `--keyboard-height` CSS variable
-4. **`src/components/AnvayaApp.jsx`** -- Change SathiScreen wrapper from `overflow: hidden` to allow child scrolling
-5. **`src/components/sathi/SathiChat.jsx`** -- Make input bar keyboard-aware using `--keyboard-height`
-6. **`src/pages/ParentApp.tsx`** -- Allow overflow for content scrolling
-7. **`src/pages/Login.tsx`** -- Allow vertical scroll on the login form
-8. **`src/components/guardian/GuardianDashboard.jsx`** -- Ensure scrollable content area
+### Orb click guard pattern
+```text
+const lastTapRef = useRef(0);
+const handleOrbTap = () => {
+  const now = Date.now();
+  if (now - lastTapRef.current < 400) return;
+  lastTapRef.current = now;
+  startVoiceConversation();
+};
+// Then on the div: onClick={handleOrbTap}
+```
 
-## Post-Implementation Steps
-
-After these code changes, the user will need to:
-1. Git pull the updated code
-2. Run `npm install` (for the new keyboard package)
-3. Run `npx cap sync` to sync the plugin to the iOS project
-4. In Xcode, add these to `Info.plist`:
-   - `NSMicrophoneUsageDescription`: "Anvaya needs microphone access for voice chat and memory recording"
-   - `NSCameraUsageDescription`: "Anvaya needs camera access for video memory recording"
-   - `NSSpeechRecognitionUsageDescription`: "Anvaya uses speech recognition for voice input"
-5. Rebuild and run on device
-
+### Files Modified
+1. `src/components/AnvayaApp.jsx` -- orb handler + आवा to एवा
+2. `src/components/sathi/SathiChat.jsx` -- आवा to एवा
+3. `src/components/sathi/MemoryRecorder.jsx` -- आवा to एवा
+4. `supabase/functions/elevenlabs-tts/index.ts` -- Sarvam TTS params
