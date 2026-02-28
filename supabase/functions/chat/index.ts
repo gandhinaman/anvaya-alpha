@@ -6,7 +6,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SATHI_SYSTEM = `You are Sathi, a warm and friendly AI companion for elderly Indian users. Respond in the user's chosen language (Hindi or English).
+const SATHI_SYSTEM = `You are Ava, a warm and friendly AI companion for elderly Indian users. Respond in the user's chosen language (Hindi or English).
 
 CRITICAL RULES:
 - Keep replies to 1-3 sentences MAX. Be brief like a real conversation.

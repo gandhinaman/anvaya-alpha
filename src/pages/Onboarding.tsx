@@ -144,7 +144,7 @@ export default function Onboarding() {
           Preferred Language
         </h2>
         <p style={{ color: "rgba(249,249,247,.45)", fontSize: 13, marginTop: 4 }}>
-          Sathi will talk to you in this language
+          Ava will talk to you in this language
         </p>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
@@ -180,7 +180,7 @@ export default function Onboarding() {
           Health Conditions
         </h2>
         <p style={{ color: "rgba(249,249,247,.45)", fontSize: 13, marginTop: 4 }}>
-          Select any that apply — helps Sathi care for you better
+          Select any that apply — helps Ava care for you better
         </p>
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>

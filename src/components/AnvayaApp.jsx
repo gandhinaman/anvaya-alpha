@@ -697,8 +697,8 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
             messages: history.map(m => ({ role: m.role, content: m.content })),
             userId,
             system: lang === "hi"
-              ? "You are Sathi, a warm and culturally sensitive AI companion for elderly Indian users. Respond ONLY in Hindi. Keep responses short, warm, and clear. You can help with health reminders, telling stories, answering questions, and providing companionship. Never give medical diagnoses. If the user seems distressed, gently suggest calling their family member."
-              : "You are Sathi, a warm and culturally sensitive AI companion for elderly Indian users. Respond ONLY in English. Keep responses short, warm, and clear. You can help with health reminders, telling stories, answering questions, and providing companionship. Never give medical diagnoses. If the user seems distressed, gently suggest calling their family member.",
+              ? "You are Ava, a warm and culturally sensitive AI companion for elderly Indian users. Respond ONLY in Hindi. Keep responses short, warm, and clear. You can help with health reminders, telling stories, answering questions, and providing companionship. Never give medical diagnoses. If the user seems distressed, gently suggest calling their family member."
+              : "You are Ava, a warm and culturally sensitive AI companion for elderly Indian users. Respond ONLY in English. Keep responses short, warm, and clear. You can help with health reminders, telling stories, answering questions, and providing companionship. Never give medical diagnoses. If the user seems distressed, gently suggest calling their family member.",
           }),
         }
       );
@@ -937,7 +937,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
       <div style={{textAlign:"center",marginTop:16}}>
         <div style={{fontFamily:"'Playfair Display',serif",fontSize:14,color:"rgba(255,248,240,.45)",letterSpacing:"0.3em",fontWeight:400}}>ANVAYA</div>
         <div style={{fontFamily:"'Playfair Display',serif",fontSize:isMock?40:48,color:"#FFF8F0",fontWeight:600,letterSpacing:"0.05em",marginTop:2}}>
-          {lang==="en"?"Sathi":"साथी"}
+          {lang==="en"?"Ava":"आवा"}
         </div>
         <div style={{fontSize:16,color:"rgba(255,248,240,.55)",marginTop:5}}>
           {lang==="en"?"Your trusted companion":"आपका विश्वसनीय साथी"}
@@ -998,7 +998,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
         )}
         {voicePhase==="idle"&&(
           <p style={{color:"rgba(255,248,240,.6)",fontSize:18,lineHeight:1.6,fontWeight:500}}>
-            {lang==="en"?"Tap the orb to talk to Sathi":"साथी से बात करने के लिए ऑर्ब टैप करें"}
+            {lang==="en"?"Tap the orb to talk to Ava":"आवा से बात करने के लिए ऑर्ब टैप करें"}
           </p>
         )}
       </div>
@@ -1131,7 +1131,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
         {[
           {icon:<Mic size={24} color="#FFF8F0"/>,label:lang==="en"?"Record a Memory":"यादें रिकॉर्ड करें",sub:lang==="en"?"Your voice, preserved forever":"आपकी आवाज़, सदा के लिए",acc:"#C68B59",fn:()=>setMemoryOpen(true)},
           {icon:<BookOpen size={24} color="#FFF8F0"/>,label:lang==="en"?"Memory Log":"यादों की डायरी",sub:lang==="en"?"Your memories & family comments":"आपकी यादें और परिवार की टिप्पणियाँ",acc:"#C68B59",fn:()=>setMemoryLogOpen(true)},
-          {icon:<MessageCircle size={24} color="#FFF8F0"/>,label:lang==="en"?"Ask Sathi":"साथी से पूछें",sub:lang==="en"?"Health · Reminders · Stories":"स्वास्थ्य · याद · कहानियाँ",acc:"#C68B59",fn:()=>setChatOpen(true)},
+          {icon:<MessageCircle size={24} color="#FFF8F0"/>,label:lang==="en"?"Ask Ava":"आवा से पूछें",sub:lang==="en"?"Health · Reminders · Stories":"स्वास्थ्य · याद · कहानियाँ",acc:"#C68B59",fn:()=>setChatOpen(true)},
           {icon:<Phone size={24} color="#FFF8F0"/>,label:lang==="en"?"Call Child":"बच्चे को कॉल करें",sub:linkedName||"Caregiver",acc:"#C68B59",fn:()=>setCallOpen(true)},
         ].map((c,i)=>(
           <button key={i} onClick={c.fn} className="glass" style={{
@@ -1894,7 +1894,7 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
             <Link2 size={32} color="#064E3B" style={{margin:"0 auto 12px"}}/>
             <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:22,fontWeight:600,color:"#064E3B",marginBottom:8}}>No parent linked yet</div>
             <p style={{fontSize:13,color:"#6b6b6b",lineHeight:1.6,marginBottom:16}}>
-              Ask your parent to share their 6-digit linking code from the Sathi app, then enter it in Settings.
+              Ask your parent to share their 6-digit linking code from the Ava app, then enter it in Settings.
             </p>
             <button onClick={()=>setNav("settings")} style={{
               padding:"12px 24px",borderRadius:14,border:"none",cursor:"pointer",
@@ -1919,7 +1919,7 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
             {/* Link Account */}
             <div className="gcard" style={{padding:20}}>
               <div style={{fontSize:13,fontWeight:700,color:"#1a1a1a",marginBottom:4}}>Link Parent Account</div>
-              <div style={{fontSize:11,color:"#6b6b6b",marginBottom:12}}>Enter the 6-digit code from your parent's Sathi screen</div>
+              <div style={{fontSize:11,color:"#6b6b6b",marginBottom:12}}>Enter the 6-digit code from your parent's Ava screen</div>
               {parentProfile ? (
                 <div style={{display:"flex",alignItems:"center",gap:10,padding:"12px 14px",background:"rgba(5,150,105,0.06)",borderRadius:12,border:"1px solid rgba(5,150,105,0.15)"}}>
                   <Check size={18} color="#059669"/>
@@ -2177,7 +2177,7 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
                   <Headphones size={28} color="#FFF8F0" style={{margin:"0 auto 10px"}}/>
                   <p style={{fontSize:13,color:"#6b6b6b",lineHeight:1.6}}>
                     No memories recorded yet.<br/>
-                    <span style={{color:"#9CA3AF",fontSize:12}}>Tap "Record a Memory" on the Sathi app to begin.</span>
+                    <span style={{color:"#9CA3AF",fontSize:12}}>Tap "Record a Memory" on the Ava app to begin.</span>
                   </p>
                 </div>
               ) : (
@@ -2315,7 +2315,7 @@ export default function App() {
   },[isMobile]);
 
   const tabs=[
-    {id:"sathi",   label:"Sathi"},
+    {id:"sathi",   label:"Ava"},
     {id:"guardian",label:"Caregiver"},
     ...(!isMobile?[{id:"both",label:"Both"}]:[]),
   ];
@@ -2356,10 +2356,10 @@ export default function App() {
             ? <SathiScreen/>
             : <div style={{flex:1,display:"flex",justifyContent:"center",alignItems:"flex-start",overflowY:"auto",background:"linear-gradient(160deg,#111 0%,#1a1a1a 100%)",padding:"40px 20px"}}>
                 <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:14}}>
-                  <div style={{fontSize:10,color:"rgba(249,249,247,.28)",letterSpacing:"0.15em",fontWeight:600}}>SATHI — MOBILE PREVIEW</div>
+                  <div style={{fontSize:10,color:"rgba(249,249,247,.28)",letterSpacing:"0.15em",fontWeight:600}}>AVA — MOBILE PREVIEW</div>
                   <SathiScreen inPanel/>
                   <div style={{padding:"6px 14px",borderRadius:100,background:"rgba(6,78,59,.2)",border:"1px solid rgba(6,78,59,.3)"}}>
-                    <span style={{fontSize:11,color:"#34D399"}}>If you're in trouble, type or say "help" to Sathi</span>
+                    <span style={{fontSize:11,color:"#34D399"}}>If you're in trouble, type or say "help" to Ava</span>
                   </div>
                 </div>
               </div>
@@ -2387,10 +2387,10 @@ export default function App() {
               padding:"28px 12px",borderRight:"1px solid rgba(255,255,255,.06)",
               overflowY:"auto"
             }}>
-              <div style={{fontSize:10,color:"rgba(249,249,247,.28)",letterSpacing:"0.14em",marginBottom:14,fontWeight:600}}>SATHI — PARENT COMPANION</div>
+              <div style={{fontSize:10,color:"rgba(249,249,247,.28)",letterSpacing:"0.14em",marginBottom:14,fontWeight:600}}>AVA — PARENT COMPANION</div>
               <SathiScreen inPanel/>
               <div style={{marginTop:14,padding:"6px 13px",borderRadius:100,background:"rgba(6,78,59,.2)",border:"1px solid rgba(6,78,59,.3)"}}>
-                <span style={{fontSize:11,color:"#34D399"}}>If you're in trouble, type or say "help" to Sathi</span>
+                <span style={{fontSize:11,color:"#34D399"}}>If you're in trouble, type or say "help" to Ava</span>
               </div>
             </div>
             <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
