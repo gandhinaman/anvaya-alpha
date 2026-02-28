@@ -44,32 +44,38 @@ interface Stats {
 }
 
 function deriveStats(healthEvents: HealthEvent[], memories: Memory[]): Stats {
-  const byType = (type: string) => healthEvents.filter(e => e.event_type === type).slice(0, 5);
+  const latestByType = (type: string) => {
+    const events = healthEvents.filter(e => e.event_type === type);
+    return events.length > 0 ? events[0] : null;
+  };
 
-  // Vocal energy from memories
-  const recentMemories = memories.slice(0, 5);
-  const energies = recentMemories.map(m => m.vocal_energy).filter(Boolean);
-  const vocalValue = energies.length > 0 ? (energies[0] || "Normal") : "No data";
+  // Vocal Energy: tone & pitch analysis
+  const vocalEvent = latestByType("vocal_energy");
+  const vocalLabel = vocalEvent?.value?.label || "No data";
+  const vocalScore = vocalEvent?.value?.score;
+  const vocalTrend = vocalEvent?.value?.detail || "—";
 
-  // Cognitive from health events
-  const cogEvents = byType("cognitive_clarity");
-  const cogValue = cogEvents.length > 0 && cogEvents[0].value
-    ? `${typeof cogEvents[0].value === 'object' && cogEvents[0].value !== null ? (cogEvents[0].value as any).score ?? 94 : cogEvents[0].value}%`
-    : "94%";
+  // Cognitive Clarity: logic & coherence
+  const cogEvent = latestByType("cognitive_clarity");
+  const cogScore = cogEvent?.value?.score;
+  const cogLabel = cogEvent?.value?.label || "No data";
+  const cogTrend = cogEvent?.value?.detail || "—";
 
-  // Emotional tone from recent memories
-  const tones = recentMemories.map(m => m.emotional_tone).filter(Boolean);
-  const toneValue = tones.length > 0 ? capitalize(tones[0]!) : "Neutral";
+  // Emotional State: breathing & tone
+  const emoEvent = latestByType("emotional_state");
+  const emoLabel = emoEvent?.value?.label || "Neutral";
+  const emoTrend = emoEvent?.value?.detail || "—";
 
-  // Activity from medication_taken events
-  const medEvents = byType("medication_taken");
-  const actValue = medEvents.length >= 3 ? "Active" : medEvents.length >= 1 ? "Moderate" : "Low";
+  // Activity Level: speech speed & enthusiasm
+  const actEvent = latestByType("activity_level");
+  const actLabel = actEvent?.value?.label || "No data";
+  const actTrend = actEvent?.value?.detail || "—";
 
   return {
-    vocalEnergy: { value: capitalize(vocalValue), trend: energies.length >= 2 ? "Tracking" : "—" },
-    cognitiveClarity: { value: cogValue, trend: "Stable" },
-    emotionalTone: { value: toneValue, trend: tones.length >= 2 ? "Tracking" : "—" },
-    activityLevel: { value: actValue, trend: medEvents.length > 0 ? `${medEvents.length} today` : "—" },
+    vocalEnergy: { value: capitalize(vocalLabel), trend: vocalScore != null ? `${vocalScore}%` : vocalTrend },
+    cognitiveClarity: { value: cogScore != null ? `${cogScore}%` : cogLabel, trend: cogTrend },
+    emotionalTone: { value: capitalize(emoLabel), trend: emoTrend },
+    activityLevel: { value: capitalize(actLabel), trend: actTrend },
   };
 }
 

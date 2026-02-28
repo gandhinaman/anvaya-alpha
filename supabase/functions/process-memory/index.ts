@@ -6,8 +6,42 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SUMMARY_PROMPT = `Summarize this personal memory in 2 warm sentences. Identify the emotional tone (one of: joyful, nostalgic, peaceful, concerned). Extract a short descriptive title (max 6 words) that captures what the memory is about — e.g. "Childhood story about kite flying" or "Favourite meal from the village". Do NOT use generic titles like "Share a memory" or "Untitled". Respond in this exact JSON format only, no other text:
-{"title": "...", "summary": "...", "emotional_tone": "..."}`;
+const SUMMARY_PROMPT = `Analyze this personal memory recording. Respond in this exact JSON format only, no other text:
+{
+  "title": "Short descriptive title, max 6 words, e.g. 'Childhood story about kite flying'",
+  "summary": "2 warm sentences summarizing the memory",
+  "emotional_tone": "one of: joyful, nostalgic, peaceful, concerned",
+  "voice_metrics": {
+    "vocal_energy": {
+      "score": 0-100,
+      "label": "one of: Low, Moderate, High, Very High",
+      "detail": "Brief note on tone and pitch patterns detected"
+    },
+    "cognitive_clarity": {
+      "score": 0-100,
+      "label": "one of: Unclear, Fair, Clear, Very Clear",
+      "detail": "Brief note on logical coherence and structured thought"
+    },
+    "emotional_state": {
+      "score": 0-100,
+      "label": "one of: Distressed, Tense, Calm, Serene",
+      "detail": "Brief note on breathing patterns and tonal cues"
+    },
+    "activity_level": {
+      "score": 0-100,
+      "label": "one of: Low, Moderate, Active, Very Active",
+      "detail": "Brief note on speech speed and enthusiasm in tone"
+    }
+  }
+}
+
+Scoring guidance:
+- vocal_energy: Assess tone variation and pitch range. Monotone/flat = low, expressive/animated = high.
+- cognitive_clarity: Assess logical flow, coherence, sentence structure, and whether ideas connect. Rambling/confused = low, structured/clear = high.
+- emotional_state: Assess emotional cues in tone — trembling/rushed = distressed, warm/steady = calm/serene.
+- activity_level: Assess speech pace and enthusiasm. Slow/lethargic = low, fast/energetic = very active.
+
+Do NOT use generic titles like "Share a memory" or "Untitled".`;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -73,6 +107,7 @@ Deno.serve(async (req) => {
     let title = promptQuestion || "A shared memory";
     let summary = transcript;
     let emotional_tone = "peaceful";
+    let voice_metrics = null;
 
     if (aiKey) {
       try {
@@ -104,6 +139,7 @@ Deno.serve(async (req) => {
               title = parsed.title || title;
               summary = parsed.summary || summary;
               emotional_tone = parsed.emotional_tone || emotional_tone;
+              voice_metrics = parsed.voice_metrics || null;
             }
           } catch {
             console.error("Failed to parse summary JSON:", rawText);
@@ -122,6 +158,8 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    const vocalEnergyLabel = voice_metrics?.vocal_energy?.label || "Normal";
+
     const { data: memoryRow, error: insertErr } = await supabase
       .from("memories")
       .insert({
@@ -132,7 +170,7 @@ Deno.serve(async (req) => {
         emotional_tone,
         audio_url: audioUrl,
         duration_seconds: durationSeconds || 0,
-        vocal_energy: "Normal",
+        vocal_energy: vocalEnergyLabel,
       })
       .select()
       .single();
@@ -142,12 +180,37 @@ Deno.serve(async (req) => {
       throw new Error("Failed to save memory");
     }
 
+    // Step 4: Save voice metrics as health_events
+    if (voice_metrics) {
+      const metricsToSave = [
+        { event_type: "vocal_energy", value: voice_metrics.vocal_energy },
+        { event_type: "cognitive_clarity", value: voice_metrics.cognitive_clarity },
+        { event_type: "emotional_state", value: voice_metrics.emotional_state },
+        { event_type: "activity_level", value: voice_metrics.activity_level },
+      ].filter(m => m.value);
+
+      if (metricsToSave.length > 0) {
+        const { error: metricsErr } = await supabase
+          .from("health_events")
+          .insert(metricsToSave.map(m => ({
+            user_id: userId,
+            event_type: m.event_type,
+            value: { ...m.value, memory_id: memoryRow.id },
+          })));
+
+        if (metricsErr) {
+          console.error("Failed to save voice metrics:", metricsErr);
+        }
+      }
+    }
+
     return new Response(
       JSON.stringify({
         transcript,
         summary,
         title,
         emotional_tone,
+        voice_metrics,
         id: memoryRow.id,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
