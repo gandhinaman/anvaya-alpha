@@ -199,8 +199,10 @@ export type Database = {
           full_name: string | null
           health_issues: string[] | null
           id: string
+          interests: string[] | null
           language: string | null
           linked_user_id: string | null
+          location: string | null
           onboarding_completed: boolean | null
           role: string
         }
@@ -210,8 +212,10 @@ export type Database = {
           full_name?: string | null
           health_issues?: string[] | null
           id: string
+          interests?: string[] | null
           language?: string | null
           linked_user_id?: string | null
+          location?: string | null
           onboarding_completed?: boolean | null
           role: string
         }
@@ -221,8 +225,10 @@ export type Database = {
           full_name?: string | null
           health_issues?: string[] | null
           id?: string
+          interests?: string[] | null
           language?: string | null
           linked_user_id?: string | null
+          location?: string | null
           onboarding_completed?: boolean | null
           role?: string
         }
