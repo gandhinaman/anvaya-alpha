@@ -861,10 +861,10 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
 
       <div style={{padding:"16px 16px",display:"flex",flexDirection:"column",gap:14,flex:1,justifyContent:"flex-end"}}>
         {[
-          {icon:<Mic size={24} color="#FFF8F0"/>,label:lang==="en"?"Record a Memory":"यादें रिकॉर्ड करें",sub:lang==="en"?"Your voice, preserved forever":"आपकी आवाज़, सदा के लिए",acc:"rgba(44,24,16,.7)",fn:()=>setMemoryOpen(true)},
-          {icon:<BookOpen size={24} color="#FFF8F0"/>,label:lang==="en"?"Memory Log":"यादों की डायरी",sub:lang==="en"?"Your memories & family comments":"आपकी यादें और परिवार की टिप्पणियाँ",acc:"rgba(44,24,16,.7)",fn:()=>setMemoryLogOpen(true)},
-          {icon:<MessageCircle size={24} color="#FFF8F0"/>,label:lang==="en"?"Ask Sathi":"साथी से पूछें",sub:lang==="en"?"Health · Reminders · Stories":"स्वास्थ्य · याद · कहानियाँ",acc:"rgba(44,24,16,.7)",fn:()=>setChatOpen(true)},
-          {icon:<Phone size={24} color="#FFF8F0"/>,label:lang==="en"?"Call Child":"बच्चे को कॉल करें",sub:linkedName||"Guardian",acc:"rgba(44,24,16,.7)",fn:()=>setCallOpen(true)},
+          {icon:<Mic size={24} color="#FFF8F0"/>,label:lang==="en"?"Record a Memory":"यादें रिकॉर्ड करें",sub:lang==="en"?"Your voice, preserved forever":"आपकी आवाज़, सदा के लिए",acc:"rgba(93,64,55,.55)",fn:()=>setMemoryOpen(true)},
+          {icon:<BookOpen size={24} color="#FFF8F0"/>,label:lang==="en"?"Memory Log":"यादों की डायरी",sub:lang==="en"?"Your memories & family comments":"आपकी यादें और परिवार की टिप्पणियाँ",acc:"rgba(93,64,55,.55)",fn:()=>setMemoryLogOpen(true)},
+          {icon:<MessageCircle size={24} color="#FFF8F0"/>,label:lang==="en"?"Ask Sathi":"साथी से पूछें",sub:lang==="en"?"Health · Reminders · Stories":"स्वास्थ्य · याद · कहानियाँ",acc:"rgba(93,64,55,.55)",fn:()=>setChatOpen(true)},
+          {icon:<Phone size={24} color="#FFF8F0"/>,label:lang==="en"?"Call Child":"बच्चे को कॉल करें",sub:linkedName||"Guardian",acc:"rgba(93,64,55,.55)",fn:()=>setCallOpen(true)},
         ].map((c,i)=>(
           <button key={i} onClick={c.fn} className="glass" style={{
             display:"flex",alignItems:"center",gap:14,padding:"16px 18px",
