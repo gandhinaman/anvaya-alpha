@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.link-account]
 verify_jwt = false
+
+[functions.sarvam-stt]
+verify_jwt = false
