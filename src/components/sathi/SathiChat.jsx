@@ -182,12 +182,42 @@ export default function SathiChat({ open, onClose, lang = "en", userId, initialM
         return;
       }
 
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
+      const audio = new Audio();
       ttsAudioRef.current = audio;
       audio.onended = () => setSpeakingIdx(-1);
-      audio.play().catch(() => setSpeakingIdx(-1));
+      audio.onerror = () => setSpeakingIdx(-1);
+
+      // Stream audio via MediaSource (Chrome/Android) or blob fallback (iOS/Safari)
+      if (window.MediaSource && MediaSource.isTypeSupported('audio/mpeg')) {
+        const mediaSource = new MediaSource();
+        audio.src = URL.createObjectURL(mediaSource);
+        mediaSource.addEventListener('sourceopen', async () => {
+          try {
+            const sourceBuffer = mediaSource.addSourceBuffer('audio/mpeg');
+            const reader = res.body.getReader();
+            let started = false;
+            const pump = async () => {
+              const { done, value } = await reader.read();
+              if (done) {
+                if (mediaSource.readyState === 'open') mediaSource.endOfStream();
+                return;
+              }
+              sourceBuffer.appendBuffer(value);
+              if (!started) {
+                started = true;
+                audio.play().catch(() => setSpeakingIdx(-1));
+              }
+              sourceBuffer.addEventListener('updateend', pump, { once: true });
+            };
+            pump();
+          } catch { setSpeakingIdx(-1); }
+        }, { once: true });
+      } else {
+        // iOS/Safari fallback
+        const blob = await res.blob();
+        audio.src = URL.createObjectURL(blob);
+        audio.play().catch(() => setSpeakingIdx(-1));
+      }
     } catch {
       setSpeakingIdx(-1);
     }
