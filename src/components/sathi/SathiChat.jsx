@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { X, Mic, MicOff, Send, MessageCircle, Volume2 } from "lucide-react";
+import { X, Mic, MicOff, Send, MessageCircle, Volume2, Check, Pill } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const SUGGESTED_EN = [
@@ -17,6 +17,74 @@ const SUGGESTED_HI = [
 
 const GREETING_EN = "How can I help you? Type or speak now.";
 const GREETING_HI = "मैं आपकी कैसे मदद कर सकता हूँ? लिखें या बोलें।";
+
+// Inline medication action buttons shown when Sathi mentions medicines
+function MedActionButtons({ userId, lang }) {
+  const [meds, setMeds] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!userId) return;
+    supabase.from("medications").select("*").eq("user_id", userId)
+      .then(({ data }) => { if (data) setMeds(data); setLoading(false); });
+  }, [userId]);
+
+  const toggleMed = async (med) => {
+    const newTaken = !med.taken_today;
+    const now = new Date().toISOString();
+    await supabase.from("medications")
+      .update({ taken_today: newTaken, last_taken: newTaken ? now : null })
+      .eq("id", med.id);
+    if (newTaken) {
+      await supabase.from("health_events").insert({
+        user_id: userId, event_type: "medication_taken",
+        value: { medication_name: med.name, medication_id: med.id },
+      });
+    }
+    const { data } = await supabase.from("medications").select("*").eq("user_id", userId);
+    if (data) setMeds(data);
+  };
+
+  if (loading || meds.length === 0) return null;
+
+  return (
+    <div style={{
+      display: "flex", flexDirection: "column", gap: 4, marginTop: 4,
+      padding: "10px 12px", background: "rgba(255,248,240,.05)",
+      borderRadius: 14, border: "1px solid rgba(255,248,240,.08)"
+    }}>
+      <div style={{ fontSize: 11, color: "rgba(255,248,240,.4)", fontWeight: 600, marginBottom: 2 }}>
+        <Pill size={12} style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }} />
+        {lang === "en" ? "Quick actions:" : "त्वरित कार्रवाई:"}
+      </div>
+      {meds.map(med => (
+        <button key={med.id} onClick={() => toggleMed(med)} style={{
+          display: "flex", alignItems: "center", gap: 8, padding: "8px 12px",
+          background: med.taken_today ? "rgba(102,187,106,.12)" : "rgba(255,248,240,.06)",
+          border: `1px solid ${med.taken_today ? "rgba(102,187,106,.25)" : "rgba(255,248,240,.1)"}`,
+          borderRadius: 10, cursor: "pointer", width: "100%", textAlign: "left", transition: "all .3s"
+        }}>
+          <div style={{
+            width: 22, height: 22, borderRadius: 6, flexShrink: 0,
+            background: med.taken_today ? "rgba(102,187,106,.2)" : "rgba(255,248,240,.08)",
+            border: `1.5px solid ${med.taken_today ? "#66BB6A" : "rgba(255,248,240,.15)"}`,
+            display: "flex", alignItems: "center", justifyContent: "center"
+          }}>
+            {med.taken_today && <Check size={13} color="#66BB6A" strokeWidth={3} />}
+          </div>
+          <span style={{
+            flex: 1, color: med.taken_today ? "rgba(255,248,240,.45)" : "#FFF8F0",
+            fontSize: 14, fontWeight: 600,
+            textDecoration: med.taken_today ? "line-through" : "none"
+          }}>{med.name}{med.dose ? ` (${med.dose})` : ""}</span>
+          <span style={{ fontSize: 10, color: med.taken_today ? "#66BB6A" : "rgba(255,248,240,.3)", fontWeight: 600 }}>
+            {med.taken_today ? "✓" : (lang === "en" ? "Take" : "लें")}
+          </span>
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export default function SathiChat({ open, onClose, lang = "en", userId, initialMessage, onInitialMessageConsumed }) {
   const [messages, setMessages] = useState([]);
@@ -574,7 +642,12 @@ export default function SathiChat({ open, onClose, lang = "en", userId, initialM
           </div>
         )}
 
-        {messages.map((msg, i) => (
+        {messages.map((msg, i) => {
+          // Detect medication-related assistant messages
+          const isMedMsg = msg.role === "assistant" && !streaming &&
+            /medicine|medication|दवा|गोली|tablet|pill|taken.*med|med.*remind|दवाइ/i.test(msg.content);
+
+          return (
           <div
             key={i}
             style={{
@@ -624,6 +697,11 @@ export default function SathiChat({ open, onClose, lang = "en", userId, initialM
                 )}
               </div>
 
+              {/* Inline medication action buttons */}
+              {isMedMsg && (
+                <MedActionButtons userId={userId} lang={lang} />
+              )}
+
               {/* Read aloud button for assistant messages with content */}
               {msg.role === "assistant" && msg.content && !streaming && (
                 <button
@@ -666,7 +744,8 @@ export default function SathiChat({ open, onClose, lang = "en", userId, initialM
               )}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Input bar */}

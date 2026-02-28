@@ -4,7 +4,7 @@ import {
   Home, Bell, Settings, ChevronRight, Play, Pause, BookOpen,
   Circle, User, LogOut, Headphones, Brain, Check, Menu, X,
   TrendingUp, Zap, BarChart2, PhoneOff, AlertTriangle, ShieldCheck,
-  Loader2, Link2, BellRing, Copy, Send
+  Loader2, Link2, BellRing, Copy, Send, Flame
 } from "lucide-react";
 import SathiChat from "./sathi/SathiChat";
 import MemoryRecorder from "./sathi/MemoryRecorder";
@@ -354,7 +354,16 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
   const [newIllness, setNewIllness] = useState("");
   const [profileSaving, setProfileSaving] = useState(false);
 
-  // Load profile data
+  // Load meds always on mount + profile data when overlay opens
+  useEffect(() => {
+    if (!userId) return;
+    const loadMeds = async () => {
+      const { data: meds } = await supabase.from("medications").select("*").eq("user_id", userId);
+      if (meds) setProfileMeds(meds);
+    };
+    loadMeds();
+  }, [userId]);
+
   useEffect(() => {
     if (!userId || profileOpen === false) return;
     const load = async () => {
@@ -371,6 +380,48 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
     };
     load();
   }, [userId, profileOpen]);
+
+  // Medication streak calculation
+  const [medStreak, setMedStreak] = useState(0);
+  useEffect(() => {
+    if (!userId || profileMeds.length === 0) { setMedStreak(0); return; }
+    const calcStreak = async () => {
+      const { data: events } = await supabase.from("health_events")
+        .select("recorded_at")
+        .eq("user_id", userId)
+        .eq("event_type", "medication_taken")
+        .order("recorded_at", { ascending: false })
+        .limit(100);
+      if (!events || events.length === 0) { setMedStreak(0); return; }
+      // Count consecutive days with at least one medication_taken event
+      const days = new Set(events.map(e => new Date(e.recorded_at).toDateString()));
+      let streak = 0;
+      const d = new Date();
+      // Check if today has any — if not, start from yesterday
+      if (!days.has(d.toDateString())) d.setDate(d.getDate() - 1);
+      while (days.has(d.toDateString())) { streak++; d.setDate(d.getDate() - 1); }
+      setMedStreak(streak);
+    };
+    calcStreak();
+  }, [userId, profileMeds]);
+
+  const toggleMedTaken = async (med) => {
+    const newTaken = !med.taken_today;
+    const now = new Date().toISOString();
+    await supabase.from("medications")
+      .update({ taken_today: newTaken, last_taken: newTaken ? now : null })
+      .eq("id", med.id);
+    if (newTaken) {
+      await supabase.from("health_events").insert({
+        user_id: userId,
+        event_type: "medication_taken",
+        value: { medication_name: med.name, medication_id: med.id },
+      });
+    }
+    // Refresh meds
+    const { data: meds } = await supabase.from("medications").select("*").eq("user_id", userId);
+    if (meds) setProfileMeds(meds);
+  };
 
   const saveProfile = async () => {
     if (!userId) return;
@@ -947,6 +998,96 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
             </button>
           </div>
           <div style={{fontSize:10,color:"rgba(255,248,240,.35)",marginTop:5}}>{lang==="en"?"Share this code with your child to link accounts":"अपने बच्चे को यह कोड दें"}</div>
+        </div>
+      )}
+
+      {/* ─── MEDICATION TRACKER WIDGET ─── */}
+      {profileMeds.length > 0 && (
+        <div style={{margin:"0 16px 4px",padding:"14px 16px",background:"rgba(255,248,240,.06)",
+          border:"1.5px solid rgba(255,248,240,.1)",borderRadius:20,animation:"fadeUp .6s ease .15s both"}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <Pill size={18} color="#C68B59"/>
+              <span style={{color:"#FFF8F0",fontSize:16,fontWeight:600}}>
+                {lang==="en"?"Today's Medicines":"आज की दवाइयाँ"}
+              </span>
+            </div>
+            {medStreak > 0 && (
+              <div style={{display:"flex",alignItems:"center",gap:5,padding:"5px 12px",
+                background:"linear-gradient(135deg,rgba(255,152,0,.2),rgba(255,87,34,.15))",
+                borderRadius:100,border:"1px solid rgba(255,152,0,.25)"}}>
+                <Flame size={14} color="#FF9800"/>
+                <span style={{color:"#FF9800",fontSize:13,fontWeight:700}}>{medStreak}</span>
+                <span style={{color:"rgba(255,152,0,.7)",fontSize:11,fontWeight:500}}>
+                  {lang==="en"?"day streak":"दिन"}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Progress bar */}
+          {(() => {
+            const taken = profileMeds.filter(m => m.taken_today).length;
+            const total = profileMeds.length;
+            const pct = Math.round((taken / total) * 100);
+            return (
+              <div style={{marginBottom:10}}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                  <span style={{fontSize:12,color:"rgba(255,248,240,.45)"}}>
+                    {taken}/{total} {lang==="en"?"taken":"ली"}
+                  </span>
+                  <span style={{fontSize:12,color:pct===100?"#66BB6A":"rgba(255,248,240,.45)",fontWeight:600}}>
+                    {pct===100?(lang==="en"?"🎉 All done!":"🎉 सब हो गया!"):`${pct}%`}
+                  </span>
+                </div>
+                <div style={{height:6,borderRadius:100,background:"rgba(255,248,240,.08)",overflow:"hidden"}}>
+                  <div style={{height:"100%",borderRadius:100,transition:"width .5s ease",
+                    width:`${pct}%`,
+                    background:pct===100?"linear-gradient(90deg,#66BB6A,#43A047)":"linear-gradient(90deg,#C68B59,#D4A574)"
+                  }}/>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Medication items */}
+          <div style={{display:"flex",flexDirection:"column",gap:6}}>
+            {profileMeds.map(med => (
+              <button key={med.id} onClick={() => toggleMedTaken(med)} style={{
+                display:"flex",alignItems:"center",gap:10,padding:"10px 12px",
+                background:med.taken_today?"rgba(102,187,106,.1)":"rgba(255,248,240,.04)",
+                border:`1.5px solid ${med.taken_today?"rgba(102,187,106,.25)":"rgba(255,248,240,.08)"}`,
+                borderRadius:14,cursor:"pointer",width:"100%",textAlign:"left",
+                transition:"all .3s"
+              }}>
+                <div style={{
+                  width:28,height:28,borderRadius:8,flexShrink:0,
+                  background:med.taken_today?"rgba(102,187,106,.2)":"rgba(255,248,240,.08)",
+                  border:`1.5px solid ${med.taken_today?"#66BB6A":"rgba(255,248,240,.15)"}`,
+                  display:"flex",alignItems:"center",justifyContent:"center",
+                  transition:"all .3s"
+                }}>
+                  {med.taken_today && <Check size={16} color="#66BB6A" strokeWidth={3}/>}
+                </div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{
+                    color:med.taken_today?"rgba(255,248,240,.5)":"#FFF8F0",
+                    fontSize:15,fontWeight:600,
+                    textDecoration:med.taken_today?"line-through":"none",
+                    transition:"all .3s"
+                  }}>{med.name}</div>
+                  {(med.dose || med.scheduled_time) && (
+                    <div style={{fontSize:12,color:"rgba(255,248,240,.35)",marginTop:1}}>
+                      {med.dose||""}{med.scheduled_time?` · ${med.scheduled_time}`:""}
+                    </div>
+                  )}
+                </div>
+                <span style={{fontSize:11,color:med.taken_today?"#66BB6A":"rgba(255,248,240,.3)",fontWeight:600}}>
+                  {med.taken_today?(lang==="en"?"✓ Taken":"✓ ली"):(lang==="en"?"Tap to take":"टैप करें")}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
