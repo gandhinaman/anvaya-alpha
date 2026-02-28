@@ -1,68 +1,74 @@
 
 
-## Make Anvaya Run as a True Native iOS App
+## Fix Orb Audio on Mobile
 
-### Problem
-The app opens in a browser-like experience because:
-- The PWA plugin generates service workers and manifest files that conflict with native Capacitor behavior
-- PWA-specific meta tags in index.html tell iOS to treat the app as a web app
-- The Capacitor service worker cleanup runs too late or not at all
+### Problem Analysis
+The orb voice flow breaks on mobile (especially iOS in Capacitor WebView) due to several issues:
+
+1. **Web Speech API unavailable** in iOS WebView — falls back to WAV recorder, but that has its own problems
+2. **AudioContext not resumed** — iOS requires an `AudioContext.resume()` call inside a user gesture before audio capture works
+3. **WAV recorder sample rate** — `new AudioContext({ sampleRate: 16000 })` is often ignored on iOS; the actual sample rate may be 48000, producing garbled audio sent to STT
+4. **TTS playback blocked** — `audio.play()` called after an async fetch (no user gesture context) is blocked by iOS autoplay policy
+5. **ScriptProcessorNode deprecated** — unreliable on some mobile browsers
 
 ### Changes
 
-**1. Disable PWA plugin when building for Capacitor**
-- Modify `vite.config.ts` to skip the `VitePWA` plugin entirely when an environment variable (e.g., `CAPACITOR_BUILD=true`) is set, or always skip it in production builds meant for native
-- Simpler approach: check for a `CAPACITOR` env flag so you can run `CAPACITOR=true npm run build` before `npx cap sync`
+**1. Fix `src/lib/wavRecorder.js` — Resample properly**
+- Remove forced `sampleRate: 16000` from AudioContext constructor (let the device pick its native rate)
+- After recording, resample from the actual `audioCtx.sampleRate` down to 16000 using linear interpolation
+- This ensures the WAV sent to Sarvam STT is always valid 16kHz audio regardless of device
 
-**2. Conditionally remove PWA meta tags from index.html**
-- Remove `apple-mobile-web-app-capable` and `apple-mobile-web-app-status-bar-style` since Capacitor handles these natively
-- These tags cause iOS to apply PWA-specific behavior inside the WebView
+**2. Fix `src/components/AnvayaApp.jsx` — AudioContext + playback**
+- **Pre-warm AudioContext on orb tap**: Create and `.resume()` an AudioContext on the user's click, before starting async operations — this "unlocks" audio on iOS
+- **Pre-warm Audio element for TTS**: Create an `Audio` element and call `.play()` with a silent data URI during the initial tap gesture, so later programmatic playback isn't blocked
+- **Better error handling**: If WAV fallback also fails, show a clear message instead of silently failing
 
-**3. Strengthen service worker cleanup in main.tsx**
-- Move the service worker unregistration to run unconditionally (not just when Capacitor is detected), or use a more reliable Capacitor detection that works with remote URLs
-- Also clear all caches to prevent stale PWA content
-
-**4. Update capacitor.config.ts for production**
-- Add a comment explaining that `server.url` should be removed for production/App Store builds
-- For production, Capacitor should load from the local `dist/` folder (no remote URL)
-
-**5. Add a native-specific build script to package.json**
-- Add a `build:native` script that sets the Capacitor flag and builds without PWA: `"build:native": "CAPACITOR=true vite build"`
-- This gives a clean separation between web (PWA) and native (Capacitor) builds
+**3. Add audio unlock utility `src/lib/audioUnlock.ts`**
+- Small helper that creates a silent AudioContext + silent Audio element on user gesture
+- Returns the unlocked AudioContext for reuse by the WAV recorder
+- Called once on orb tap before any async work
 
 ### Technical Details
 
-**vite.config.ts** changes:
-```typescript
-const isCapacitorBuild = process.env.CAPACITOR === 'true';
-
-plugins: [
-  react(),
-  mode === "development" && componentTagger(),
-  // Only include PWA for web builds, not native Capacitor
-  !isCapacitorBuild && VitePWA({ ... }),
-].filter(Boolean),
+**wavRecorder.js resampling fix:**
+```javascript
+// Use device's native sample rate
+const audioCtx = new AudioContext(); // no forced sampleRate
+// ... record at native rate ...
+// On stop: resample from audioCtx.sampleRate → 16000
+function resample(samples, fromRate, toRate) {
+  const ratio = fromRate / toRate;
+  const newLength = Math.round(samples.length / ratio);
+  const result = new Float32Array(newLength);
+  for (let i = 0; i < newLength; i++) {
+    const srcIndex = i * ratio;
+    const low = Math.floor(srcIndex);
+    const high = Math.min(low + 1, samples.length - 1);
+    const frac = srcIndex - low;
+    result[i] = samples[low] * (1 - frac) + samples[high] * frac;
+  }
+  return result;
+}
 ```
 
-**index.html** changes:
-- Remove the `apple-mobile-web-app-capable` meta tag (Capacitor sets this natively)
-- Remove the `apple-mobile-web-app-status-bar-style` tag
-- Keep the `apple-touch-icon` (harmless, useful for web)
-
-**main.tsx** changes:
-- Aggressively unregister ALL service workers and clear caches on startup regardless of Capacitor detection, since the detection may fail when loading remotely
-- Use a safer fallback: check for Capacitor OR if there's no `manifest` link in the DOM
-
-**package.json** new script:
-```json
-"build:native": "CAPACITOR=true vite build"
+**AnvayaApp.jsx orb tap — unlock audio first:**
+```javascript
+const startVoiceConversation = async () => {
+  // Unlock audio on iOS — must happen synchronously in gesture handler
+  const silentCtx = new (window.AudioContext || window.webkitAudioContext)();
+  await silentCtx.resume();
+  silentCtx.close();
+  
+  // Pre-warm an Audio element for later TTS playback
+  const warmup = new Audio("data:audio/wav;base64,UklGR...");
+  warmup.play().catch(() => {});
+  
+  // ... rest of existing logic
+};
 ```
 
-### Build workflow after changes
-For native iOS builds:
-1. `git pull` to get latest code
-2. `npm run build:native` (builds without PWA)
-3. `npx cap sync ios`
-4. Open in Xcode and run
+**TTS playback fix — reuse pre-created Audio element:**
+- Create the Audio element during the tap gesture and store in ref
+- When TTS response arrives, set `.src` on the existing element instead of creating a new `Audio()`
+- This bypasses iOS autoplay restrictions since the element was user-gesture-activated
 
-For development/hot-reload (current setup), the `server.url` in capacitor.config.ts continues to work as-is, but the service worker cleanup will be more aggressive.
