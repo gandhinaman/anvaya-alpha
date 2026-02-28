@@ -869,7 +869,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
             <div style={{
               display: "grid",
               gridTemplateColumns: isMobile ? "1fr 1fr" : inPanel ? "1fr 1fr" : "repeat(4,1fr)",
-              gap: 12, marginBottom: 0
+              gap: 12, marginBottom: 14
             }}>
               {stats.map((st, i) => {
                 const isOpen = expandedStat === `d-${i}`;
@@ -1122,7 +1122,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
             <div className="s2" style={{
               display: "grid",
               gridTemplateColumns: isMobile ? "1fr 1fr" : inPanel ? "1fr 1fr" : "repeat(4,1fr)",
-              gap: 12, marginBottom: 0
+              gap: 12, marginBottom: 14
             }}>
               {stats.map((st, i) => {
                 const isOpen = expandedStat === `m-${i}`;
