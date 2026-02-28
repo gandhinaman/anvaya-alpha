@@ -869,12 +869,12 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
             <div style={{
               display: "grid",
               gridTemplateColumns: isMobile ? "1fr 1fr" : inPanel ? "1fr 1fr" : "repeat(4,1fr)",
-              gap: 12, marginBottom: 16, alignItems: "start"
+              gap: 12, marginBottom: 0
             }}>
               {stats.map((st, i) => {
                 const isOpen = expandedStat === `d-${i}`;
                 return (
-                <div key={i} className="gcard" style={{ padding: 16, animation: `fadeUp .5s ease ${.1 + i * .07}s both`, cursor: "pointer", transition: "all .3s" }}
+                <div key={i} className="gcard" style={{ padding: 16, animation: `fadeUp .5s ease ${.1 + i * .07}s both`, cursor: "pointer", transition: "all .3s", border: isOpen ? `1.5px solid ${st.color}40` : undefined }}
                   onClick={() => setExpandedStat(isOpen ? null : `d-${i}`)}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
                     <div style={{
@@ -894,36 +894,44 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                   </div>
                   <div style={{ fontSize: 20, fontWeight: 700, color: "#1a1a1a" }}>{st.value}</div>
                   <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>{st.label}</div>
-                  {isOpen && (
-                    <div style={{
-                      marginTop: 12, padding: "14px 16px",
-                      background: `${st.color}06`, borderRadius: 12,
-                      border: `1px solid ${st.color}15`,
-                      animation: "fadeUp .25s ease both"
-                    }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 6 }}>What it measures</div>
-                      <p style={{ fontSize: 11.5, color: "#555", lineHeight: 1.5, margin: 0, marginBottom: 12 }}>{st.what}</p>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 6 }}>How it's measured</div>
-                      <p style={{ fontSize: 11.5, color: "#555", lineHeight: 1.5, margin: 0, marginBottom: 12 }}>{st.how}</p>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>What the score means</div>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                        {[
-                          { dot: "#4CAF50", text: st.meaning.high },
-                          { dot: "#FF9800", text: st.meaning.mid },
-                          { dot: "#E53935", text: st.meaning.low },
-                        ].map((row, ri) => (
-                          <div key={ri} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                            <div style={{ width: 6, height: 6, borderRadius: "50%", background: row.dot, marginTop: 5, flexShrink: 0 }} />
-                            <span style={{ fontSize: 11, color: "#666", lineHeight: 1.5 }}>{row.text}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
                 );
               })}
             </div>
+            {/* Expanded metric explanation — horizontal below grid */}
+            {stats.map((st, i) => expandedStat === `d-${i}` && (
+              <div key={`exp-d-${i}`} className="gcard" style={{
+                marginTop: 12, marginBottom: 16, padding: "18px 22px",
+                background: `${st.color}06`, border: `1px solid ${st.color}15`,
+                animation: "fadeUp .25s ease both"
+              }}>
+                <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+                  <div style={{ flex: 1, minWidth: 160 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 6 }}>What it measures</div>
+                    <p style={{ fontSize: 11.5, color: "#555", lineHeight: 1.5, margin: 0 }}>{st.what}</p>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 160 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 6 }}>How it's measured</div>
+                    <p style={{ fontSize: 11.5, color: "#555", lineHeight: 1.5, margin: 0 }}>{st.how}</p>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 200 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>What the score means</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      {[
+                        { dot: "#4CAF50", text: st.meaning.high },
+                        { dot: "#FF9800", text: st.meaning.mid },
+                        { dot: "#E53935", text: st.meaning.low },
+                      ].map((row, ri) => (
+                        <div key={ri} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                          <div style={{ width: 6, height: 6, borderRadius: "50%", background: row.dot, marginTop: 5, flexShrink: 0 }} />
+                          <span style={{ fontSize: 11, color: "#666", lineHeight: 1.5 }}>{row.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
 
             {/* Cognitive + Weekly Trends */}
             <div style={{
@@ -1114,12 +1122,12 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
             <div className="s2" style={{
               display: "grid",
               gridTemplateColumns: isMobile ? "1fr 1fr" : inPanel ? "1fr 1fr" : "repeat(4,1fr)",
-              gap: 12, marginBottom: 16, alignItems: "start"
+              gap: 12, marginBottom: 0
             }}>
               {stats.map((st, i) => {
                 const isOpen = expandedStat === `m-${i}`;
                 return (
-                <div key={i} className="gcard" style={{ padding: 16, animation: `fadeUp .5s ease ${.1 + i * .07}s both`, cursor: "pointer", transition: "all .3s" }}
+                <div key={i} className="gcard" style={{ padding: 16, animation: `fadeUp .5s ease ${.1 + i * .07}s both`, cursor: "pointer", transition: "all .3s", border: isOpen ? `1.5px solid ${st.color}40` : undefined }}
                   onClick={() => setExpandedStat(isOpen ? null : `m-${i}`)}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
                     <div style={{
@@ -1139,36 +1147,44 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                   </div>
                   <div style={{ fontSize: 20, fontWeight: 700, color: "#1a1a1a" }}>{st.value}</div>
                   <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>{st.label}</div>
-                  {isOpen && (
-                    <div style={{
-                      marginTop: 12, padding: "14px 16px",
-                      background: `${st.color}06`, borderRadius: 12,
-                      border: `1px solid ${st.color}15`,
-                      animation: "fadeUp .25s ease both"
-                    }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 6 }}>What it measures</div>
-                      <p style={{ fontSize: 11.5, color: "#555", lineHeight: 1.5, margin: 0, marginBottom: 12 }}>{st.what}</p>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 6 }}>How it's measured</div>
-                      <p style={{ fontSize: 11.5, color: "#555", lineHeight: 1.5, margin: 0, marginBottom: 12 }}>{st.how}</p>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>What the score means</div>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                        {[
-                          { dot: "#4CAF50", text: st.meaning.high },
-                          { dot: "#FF9800", text: st.meaning.mid },
-                          { dot: "#E53935", text: st.meaning.low },
-                        ].map((row, ri) => (
-                          <div key={ri} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                            <div style={{ width: 6, height: 6, borderRadius: "50%", background: row.dot, marginTop: 5, flexShrink: 0 }} />
-                            <span style={{ fontSize: 11, color: "#666", lineHeight: 1.5 }}>{row.text}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
                 );
               })}
             </div>
+            {/* Expanded metric explanation — horizontal below grid */}
+            {stats.map((st, i) => expandedStat === `m-${i}` && (
+              <div key={`exp-m-${i}`} className="gcard s2" style={{
+                marginTop: 12, marginBottom: 16, padding: "18px 22px",
+                background: `${st.color}06`, border: `1px solid ${st.color}15`,
+                animation: "fadeUp .25s ease both"
+              }}>
+                <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+                  <div style={{ flex: 1, minWidth: 160 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 6 }}>What it measures</div>
+                    <p style={{ fontSize: 11.5, color: "#555", lineHeight: 1.5, margin: 0 }}>{st.what}</p>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 160 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 6 }}>How it's measured</div>
+                    <p style={{ fontSize: 11.5, color: "#555", lineHeight: 1.5, margin: 0 }}>{st.how}</p>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 200 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>What the score means</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      {[
+                        { dot: "#4CAF50", text: st.meaning.high },
+                        { dot: "#FF9800", text: st.meaning.mid },
+                        { dot: "#E53935", text: st.meaning.low },
+                      ].map((row, ri) => (
+                        <div key={ri} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                          <div style={{ width: 6, height: 6, borderRadius: "50%", background: row.dot, marginTop: 5, flexShrink: 0 }} />
+                          <span style={{ fontSize: 11, color: "#666", lineHeight: 1.5 }}>{row.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
 
             {/* Cognitive + Weekly Trends */}
             <div style={{
