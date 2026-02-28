@@ -210,6 +210,38 @@ export type Database = {
           },
         ]
       }
+      memory_reactions: {
+        Row: {
+          created_at: string
+          id: string
+          memory_id: string
+          reaction_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          memory_id: string
+          reaction_type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          memory_id?: string
+          reaction_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "memory_reactions_memory_id_fkey"
+            columns: ["memory_id"]
+            isOneToOne: false
+            referencedRelation: "memories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           age: number | null
@@ -221,6 +253,7 @@ export type Database = {
           language: string | null
           linked_user_id: string | null
           location: string | null
+          memories_last_viewed_at: string | null
           onboarding_completed: boolean | null
           phone: string | null
           role: string
@@ -235,6 +268,7 @@ export type Database = {
           language?: string | null
           linked_user_id?: string | null
           location?: string | null
+          memories_last_viewed_at?: string | null
           onboarding_completed?: boolean | null
           phone?: string | null
           role: string
@@ -249,6 +283,7 @@ export type Database = {
           language?: string | null
           linked_user_id?: string | null
           location?: string | null
+          memories_last_viewed_at?: string | null
           onboarding_completed?: boolean | null
           phone?: string | null
           role?: string

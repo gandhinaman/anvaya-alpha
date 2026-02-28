@@ -383,6 +383,42 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
   const [showCode,setShowCode]=useState(false);
   const [codeCopied,setCodeCopied]=useState(false);
   const isMock = inPanel;
+  const [seniorUnreadCount, setSeniorUnreadCount]=useState(0);
+
+  // Fetch unread comment/reaction count for senior
+  useEffect(()=>{
+    if(!userId) return;
+    const fetchUnread = async ()=>{
+      const { data: prof } = await supabase.from("profiles").select("memories_last_viewed_at").eq("id",userId).maybeSingle();
+      const cutoff = prof?.memories_last_viewed_at || "1970-01-01T00:00:00Z";
+      
+      const { data: mems } = await supabase.from("memories").select("id").eq("user_id",userId);
+      if(!mems?.length){ setSeniorUnreadCount(0); return; }
+      const ids = mems.map(m=>m.id);
+      
+      const [{ count: cmtCount },{ count: rxnCount }] = await Promise.all([
+        supabase.from("memory_comments").select("*",{count:"exact",head:true}).in("memory_id",ids).gt("created_at",cutoff),
+        supabase.from("memory_reactions").select("*",{count:"exact",head:true}).in("memory_id",ids).gt("created_at",cutoff),
+      ]);
+      setSeniorUnreadCount((cmtCount||0)+(rxnCount||0));
+    };
+    fetchUnread();
+
+    const ch = supabase.channel("senior-unread-rt")
+      .on("postgres_changes",{event:"*",schema:"public",table:"memory_comments"},()=>fetchUnread())
+      .on("postgres_changes",{event:"*",schema:"public",table:"memory_reactions"},()=>fetchUnread())
+      .subscribe();
+    return ()=>supabase.removeChannel(ch);
+  },[userId]);
+
+  // Mark memories viewed when senior opens Memory Log
+  const openMemoryLog = async ()=>{
+    setMemoryLogOpen(true);
+    if(userId){
+      await supabase.from("profiles").update({memories_last_viewed_at:new Date().toISOString()}).eq("id",userId);
+      setSeniorUnreadCount(0);
+    }
+  };
 
   // Profile state
   const [profileData, setProfileData] = useState({
@@ -1297,7 +1333,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
       <div style={{padding:"16px 16px",display:"flex",flexDirection:"column",gap:14,flex:1,justifyContent:"flex-end"}}>
         {[
           {icon:<Mic size={24} color="#FFF8F0"/>,label:lang==="en"?"Record a Memory":"यादें रिकॉर्ड करें",sub:lang==="en"?"Your voice, preserved forever":"आपकी आवाज़, सदा के लिए",acc:"#C68B59",fn:()=>setMemoryOpen(true)},
-          {icon:<BookOpen size={24} color="#FFF8F0"/>,label:lang==="en"?"Memory Log":"यादों की डायरी",sub:lang==="en"?"Your memories & family comments":"आपकी यादें और परिवार की टिप्पणियाँ",acc:"#C68B59",fn:()=>setMemoryLogOpen(true)},
+          {icon:<BookOpen size={24} color="#FFF8F0"/>,label:lang==="en"?"Memory Log":"यादों की डायरी",sub:lang==="en"?"Your memories & family comments":"आपकी यादें और परिवार की टिप्पणियाँ",acc:"#C68B59",fn:()=>openMemoryLog(),badge:seniorUnreadCount},
           {icon:<MessageCircle size={24} color="#FFF8F0"/>,label:lang==="en"?"Ask Ava":"एवा से पूछें",sub:lang==="en"?"Health · Reminders · Stories":"स्वास्थ्य · याद · कहानियाँ",acc:"#C68B59",fn:()=>setChatOpen(true)},
           {icon:<Phone size={24} color="#FFF8F0"/>,label:lang==="en"?`Call ${linkedName||"Family"}`:`${linkedName||"परिवार"} को कॉल करें`,sub:linkedName||"Caregiver",acc:"#C68B59",fn:()=>setCallOpen(true)},
         ].map((c,i)=>(
@@ -1305,7 +1341,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
             display:"flex",alignItems:"center",gap:14,padding:"16px 18px",
             border:"1.5px solid rgba(255,248,240,.12)",cursor:"pointer",
             animation:`fadeUp .7s ease ${.1+i*.12}s both`,width:"100%",textAlign:"left",
-            borderRadius:20
+            borderRadius:20,position:"relative"
           }}>
             <div style={{width:52,height:52,borderRadius:14,flexShrink:0,background:c.acc,
               display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 4px 14px ${c.acc}55`}}>
@@ -1315,6 +1351,14 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
               <div style={{color:"#FFF8F0",fontSize:17,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.label}</div>
               <div style={{color:"rgba(255,248,240,.55)",fontSize:14,marginTop:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.sub}</div>
             </div>
+            {c.badge > 0 && (
+              <span style={{
+                position:"absolute",top:8,right:12,
+                background:"#DC2626",color:"#FFF",fontSize:10,fontWeight:700,
+                minWidth:20,height:20,borderRadius:100,display:"flex",alignItems:"center",justifyContent:"center",
+                padding:"0 6px",boxShadow:"0 2px 8px rgba(220,38,38,.4)"
+              }}>{c.badge > 99 ? "99+" : c.badge}</span>
+            )}
             <ChevronRight size={18} color="rgba(255,248,240,.4)"/>
           </button>
         ))}
