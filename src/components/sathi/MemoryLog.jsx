@@ -1,8 +1,16 @@
 import { useState, useEffect } from "react";
-import { X, BookOpen, MessageCircle, ChevronDown, ChevronUp, Play, Pause } from "lucide-react";
+import { X, BookOpen, MessageCircle, ChevronDown, ChevronUp, Play, Pause, Trash2, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const TONE_EMOJI = { joyful: "😊", nostalgic: "🌅", peaceful: "🕊️", concerned: "😟" };
+
+const CATEGORIES = [
+  { id: "all", label: "All", labelHi: "सभी", emoji: "📚" },
+  { id: "joyful", label: "Joyful", labelHi: "खुशी", emoji: "😊" },
+  { id: "nostalgic", label: "Nostalgic", labelHi: "यादें", emoji: "🌅" },
+  { id: "peaceful", label: "Peaceful", labelHi: "शांत", emoji: "🕊️" },
+  { id: "concerned", label: "Concerned", labelHi: "चिंता", emoji: "😟" },
+];
 
 export default function MemoryLog({ open, onClose, lang = "en", userId }) {
   const [memories, setMemories] = useState([]);
@@ -11,6 +19,9 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
   const [loading, setLoading] = useState(true);
   const [playingId, setPlayingId] = useState(null);
   const [audioEl, setAudioEl] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeFilter, setActiveFilter] = useState("all");
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     if (!open || !userId) return;
@@ -66,6 +77,22 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
     setPlayingId(id);
   };
 
+  const deleteMemory = async (memoryId) => {
+    if (deletingId) return;
+    setDeletingId(memoryId);
+    try {
+      // Delete comments first
+      await supabase.from("memory_comments").delete().eq("memory_id", memoryId);
+      await supabase.from("memories").delete().eq("id", memoryId);
+      setMemories((prev) => prev.filter((m) => m.id !== memoryId));
+      if (expandedId === memoryId) setExpandedId(null);
+    } catch (err) {
+      console.error("Delete error:", err);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   if (!open) return null;
 
   const formatDate = (d) => {
@@ -74,6 +101,18 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
       day: "numeric", month: "short", year: "numeric",
     });
   };
+
+  // Filter memories
+  const q = searchQuery.toLowerCase();
+  const filtered = memories.filter((m) => {
+    const matchesFilter = activeFilter === "all" || m.emotional_tone === activeFilter;
+    const matchesSearch = !q ||
+      (m.title && m.title.toLowerCase().includes(q)) ||
+      (m.ai_summary && m.ai_summary.toLowerCase().includes(q)) ||
+      (m.transcript && m.transcript.toLowerCase().includes(q)) ||
+      (m.prompt_question && m.prompt_question.toLowerCase().includes(q));
+    return matchesFilter && matchesSearch;
+  });
 
   return (
     <div
@@ -89,7 +128,7 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <BookOpen size={22} color="#C68B59" />
           <span style={{ fontFamily: "'Playfair Display',serif", fontSize: 24, color: "#FFF8F0", fontWeight: 600 }}>
-            {lang === "en" ? "Memory Log" : "यादों की डायरी"}
+            {lang === "en" ? "My Memories" : "मेरी यादें"}
           </span>
         </div>
         <button
@@ -106,6 +145,58 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
         </button>
       </div>
 
+      <div style={{ padding: "0 16px 6px", color: "rgba(255,248,240,.45)", fontSize: 13 }}>
+        {lang === "en" ? "Your stories, preserved forever" : "आपकी कहानियाँ, हमेशा के लिए सहेजी गई"}
+      </div>
+
+      {/* Search */}
+      <div style={{ padding: "0 16px", marginBottom: 8 }}>
+        <div style={{
+          display: "flex", alignItems: "center", gap: 10, padding: "10px 14px",
+          background: "rgba(255,248,240,.08)", border: "1px solid rgba(255,248,240,.12)",
+          borderRadius: 14,
+        }}>
+          <Search size={16} color="rgba(255,248,240,.4)" />
+          <input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={lang === "en" ? "Search memories..." : "यादें खोजें..."}
+            style={{
+              flex: 1, border: "none", outline: "none", background: "transparent",
+              fontSize: 14, color: "#FFF8F0", fontFamily: "'DM Sans',sans-serif",
+            }}
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery("")} style={{ background: "transparent", border: "none", cursor: "pointer", padding: 2 }}>
+              <X size={14} color="rgba(255,248,240,.4)" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Filter tabs */}
+      <div style={{ padding: "0 16px 12px", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+        <div style={{ display: "flex", gap: 8, minWidth: "max-content" }}>
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setActiveFilter(cat.id)}
+              style={{
+                padding: "7px 16px", borderRadius: 100, border: "none", cursor: "pointer",
+                background: activeFilter === cat.id ? "#C68B59" : "rgba(255,248,240,.08)",
+                color: activeFilter === cat.id ? "#FFF8F0" : "rgba(255,248,240,.55)",
+                fontSize: 13, fontWeight: 600, whiteSpace: "nowrap",
+                display: "flex", alignItems: "center", gap: 5,
+                transition: "all .2s",
+              }}
+            >
+              <span>{cat.emoji}</span>
+              {lang === "hi" ? cat.labelHi : cat.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Content */}
       <div style={{ flex: 1, overflowY: "auto", padding: "0 16px 24px" }}>
         {loading ? (
@@ -116,9 +207,13 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
           <div style={{ textAlign: "center", marginTop: 60, color: "rgba(255,248,240,.4)", fontSize: 15 }}>
             {lang === "en" ? "No memories recorded yet. Tap 'Record a Memory' to get started!" : "अभी कोई यादें नहीं हैं। 'यादें रिकॉर्ड करें' दबाएं!"}
           </div>
+        ) : filtered.length === 0 ? (
+          <div style={{ textAlign: "center", marginTop: 60, color: "rgba(255,248,240,.4)", fontSize: 15 }}>
+            {lang === "en" ? "No memories match your filter" : "कोई यादें इस फ़िल्टर से मेल नहीं खातीं"}
+          </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 8 }}>
-            {memories.map((m) => {
+            {filtered.map((m) => {
               const isExpanded = expandedId === m.id;
               const memComments = comments[m.id] || [];
               return (
@@ -152,6 +247,14 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
                       </div>
                       <div style={{ color: "rgba(255,248,240,.5)", fontSize: 14, marginTop: 3, display: "flex", alignItems: "center", gap: 8 }}>
                         <span>{formatDate(m.created_at)}</span>
+                        {m.emotional_tone && (
+                          <span style={{
+                            fontSize: 11, padding: "2px 8px", borderRadius: 100,
+                            background: "rgba(198,139,89,.15)", color: "#D4A574", fontWeight: 600,
+                          }}>
+                            {m.emotional_tone}
+                          </span>
+                        )}
                         {memComments.length > 0 && (
                           <span style={{ display: "flex", alignItems: "center", gap: 3, color: "#D4A574" }}>
                             <MessageCircle size={13} /> {memComments.length}
@@ -165,6 +268,21 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
                   {/* Expanded content */}
                   {isExpanded && (
                     <div style={{ padding: "0 16px 16px", borderTop: "1px solid rgba(255,248,240,.06)" }}>
+                      {/* Prompt question */}
+                      {m.prompt_question && (
+                        <div style={{
+                          marginTop: 14, padding: "10px 14px", borderRadius: 12,
+                          background: "rgba(198,139,89,.1)", border: "1px solid rgba(198,139,89,.2)",
+                        }}>
+                          <div style={{ fontSize: 10, color: "rgba(255,248,240,.35)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>
+                            {lang === "en" ? "Question" : "सवाल"}
+                          </div>
+                          <p style={{ color: "#D4A574", fontSize: 14, fontStyle: "italic", margin: 0, lineHeight: 1.5 }}>
+                            "{m.prompt_question}"
+                          </p>
+                        </div>
+                      )}
+
                       {/* Summary */}
                       {m.ai_summary && (
                         <p style={{ color: "rgba(255,248,240,.75)", fontSize: 16, lineHeight: 1.7, marginTop: 14, fontStyle: "italic" }}>
@@ -247,6 +365,28 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
                           </div>
                         </div>
                       )}
+
+                      {/* Delete button */}
+                      <button
+                        onClick={() => {
+                          if (window.confirm(lang === "en" ? "Delete this memory? This cannot be undone." : "क्या आप इस याद को हटाना चाहते हैं? यह वापस नहीं आएगी।")) {
+                            deleteMemory(m.id);
+                          }
+                        }}
+                        disabled={deletingId === m.id}
+                        style={{
+                          marginTop: 16, display: "flex", alignItems: "center", gap: 8,
+                          padding: "10px 16px", borderRadius: 12,
+                          background: "rgba(220,38,38,.1)", border: "1px solid rgba(220,38,38,.25)",
+                          color: "#fca5a5", fontSize: 13, fontWeight: 500, cursor: "pointer",
+                          opacity: deletingId === m.id ? 0.5 : 1,
+                        }}
+                      >
+                        <Trash2 size={14} />
+                        {deletingId === m.id
+                          ? (lang === "en" ? "Deleting…" : "हटा रहे हैं…")
+                          : (lang === "en" ? "Delete memory" : "याद हटाएं")}
+                      </button>
                     </div>
                   )}
                 </div>

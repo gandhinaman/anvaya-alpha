@@ -120,10 +120,12 @@ export type Database = {
         Row: {
           ai_summary: string | null
           audio_url: string | null
+          category: string | null
           created_at: string | null
           duration_seconds: number | null
           emotional_tone: string | null
           id: string
+          prompt_question: string | null
           title: string | null
           transcript: string | null
           user_id: string
@@ -132,10 +134,12 @@ export type Database = {
         Insert: {
           ai_summary?: string | null
           audio_url?: string | null
+          category?: string | null
           created_at?: string | null
           duration_seconds?: number | null
           emotional_tone?: string | null
           id?: string
+          prompt_question?: string | null
           title?: string | null
           transcript?: string | null
           user_id: string
@@ -144,10 +148,12 @@ export type Database = {
         Update: {
           ai_summary?: string | null
           audio_url?: string | null
+          category?: string | null
           created_at?: string | null
           duration_seconds?: number | null
           emotional_tone?: string | null
           id?: string
+          prompt_question?: string | null
           title?: string | null
           transcript?: string | null
           user_id?: string
