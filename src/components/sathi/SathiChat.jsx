@@ -315,14 +315,12 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
     <div
       className="fadein"
       style={{
-        position: "absolute",
+        position: "fixed",
         inset: 0,
-        zIndex: 20,
-        background: "rgba(2,18,14,.88)",
-        backdropFilter: "blur(20px)",
+        zIndex: 200,
+        background: "linear-gradient(160deg,#022c22 0%,#064E3B 40%,#065f46 70%,#0a3f34 100%)",
         display: "flex",
         flexDirection: "column",
-        borderRadius: "inherit",
       }}
     >
       {/* Header */}
