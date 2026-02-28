@@ -16,67 +16,47 @@ Deno.serve(async (req) => {
 
   try {
     const { userId, audioUrl, durationSeconds, promptQuestion, mediaType } = await req.json();
-    const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
 
-    if (!apiKey) {
-      throw new Error("ANTHROPIC_API_KEY not configured");
-    }
-
-    // Step 1: Fetch the audio/video file from storage URL and convert to base64
+    // Step 1: Fetch the audio/video file and transcribe with Sarvam STT
     let transcript = "[Audio recording - transcription unavailable]";
-    
+
     try {
       const fileRes = await fetch(audioUrl);
       if (fileRes.ok) {
         const fileBuffer = await fileRes.arrayBuffer();
         const bytes = new Uint8Array(fileBuffer);
-        
+
         // Only attempt transcription if file is under 10MB
         if (bytes.length < 10 * 1024 * 1024) {
-          const base64 = btoa(String.fromCharCode(...bytes));
-          const mimeType = mediaType === "video" ? "video/webm" : "audio/webm";
+          const sarvamKey = Deno.env.get("SARVAM_API_KEY");
 
-          const transcribeRes = await fetch("https://api.anthropic.com/v1/messages", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-api-key": apiKey,
-              "anthropic-version": "2023-06-01",
-            },
-            body: JSON.stringify({
-              model: "claude-sonnet-4-20250514",
-              max_tokens: 2048,
-              messages: [
-                {
-                  role: "user",
-                  content: [
-                    {
-                      type: "text",
-                      text: "Please transcribe this audio recording accurately. The speaker may use English, Hindi, or a mix of both. Return only the transcription text, nothing else.",
-                    },
-                    {
-                      type: "image",
-                      source: {
-                        type: "base64",
-                        media_type: mimeType,
-                        data: base64,
-                      },
-                    },
-                  ],
-                },
-              ],
-            }),
-          });
+          if (sarvamKey) {
+            // Use Sarvam STT
+            const mimeType = mediaType === "video" ? "video/webm" : "audio/webm";
+            const formData = new FormData();
+            const blob = new Blob([bytes], { type: mimeType });
+            formData.append("file", blob, "recording.webm");
+            formData.append("model", "saarika:v2");
+            formData.append("language_code", "unknown");
+            formData.append("with_timestamps", "false");
 
-          if (transcribeRes.ok) {
-            const transcribeData = await transcribeRes.json();
-            transcript = transcribeData.content
-              ?.filter((b: { type: string }) => b.type === "text")
-              .map((b: { text: string }) => b.text)
-              .join("") || transcript;
+            const sttRes = await fetch("https://api.sarvam.ai/speech-to-text", {
+              method: "POST",
+              headers: {
+                "api-subscription-key": sarvamKey,
+              },
+              body: formData,
+            });
+
+            if (sttRes.ok) {
+              const sttData = await sttRes.json();
+              transcript = sttData.transcript || transcript;
+            } else {
+              const errBody = await sttRes.text();
+              console.error("Sarvam STT failed:", sttRes.status, errBody);
+            }
           } else {
-            const errBody = await transcribeRes.text();
-            console.error("Transcription failed:", errBody);
+            console.error("SARVAM_API_KEY not configured, skipping transcription");
           }
         } else {
           console.error("File too large for transcription:", bytes.length);
@@ -88,51 +68,53 @@ Deno.serve(async (req) => {
       console.error("Error fetching/transcribing audio:", fetchErr);
     }
 
-    // Step 2: Generate summary, title, and emotional tone
-    const summaryRes = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 512,
-        messages: [
-          {
-            role: "user",
-            content: `The person was asked this prompt: "${promptQuestion || 'Share a memory'}"\n\nHere is their transcribed response:\n\n"${transcript}"\n\n${SUMMARY_PROMPT}`,
-          },
-        ],
-      }),
-    });
-
+    // Step 2: Generate summary using Lovable AI Gateway
+    const aiKey = Deno.env.get("LOVABLE_API_KEY");
     let title = promptQuestion || "A shared memory";
     let summary = transcript;
     let emotional_tone = "peaceful";
 
-    if (summaryRes.ok) {
-      const summaryData = await summaryRes.json();
-      const rawText = summaryData.content
-        ?.filter((b: { type: string }) => b.type === "text")
-        .map((b: { text: string }) => b.text)
-        .join("") || "";
-
+    if (aiKey) {
       try {
-        const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          const parsed = JSON.parse(jsonMatch[0]);
-          title = parsed.title || title;
-          summary = parsed.summary || summary;
-          emotional_tone = parsed.emotional_tone || emotional_tone;
+        const summaryRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${aiKey}`,
+          },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-flash",
+            messages: [
+              {
+                role: "user",
+                content: `The person was asked this prompt: "${promptQuestion || 'Share a memory'}"\n\nHere is their transcribed response:\n\n"${transcript}"\n\n${SUMMARY_PROMPT}`,
+              },
+            ],
+          }),
+        });
+
+        if (summaryRes.ok) {
+          const summaryData = await summaryRes.json();
+          const rawText = summaryData.choices?.[0]?.message?.content || "";
+
+          try {
+            const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+              const parsed = JSON.parse(jsonMatch[0]);
+              title = parsed.title || title;
+              summary = parsed.summary || summary;
+              emotional_tone = parsed.emotional_tone || emotional_tone;
+            }
+          } catch {
+            console.error("Failed to parse summary JSON:", rawText);
+          }
+        } else {
+          const errBody = await summaryRes.text();
+          console.error("AI summary failed:", errBody);
         }
-      } catch {
-        console.error("Failed to parse summary JSON:", rawText);
+      } catch (summaryErr) {
+        console.error("Summary generation error:", summaryErr);
       }
-    } else {
-      const errBody = await summaryRes.text();
-      console.error("Summary failed:", errBody);
     }
 
     // Step 3: Save to memories table
