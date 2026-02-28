@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Phone, Mic, MessageCircle, Heart, Activity, Pill,
   Home, Bell, Settings, ChevronRight, Play, Pause,
