@@ -651,7 +651,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
   );
 
   return (
-    <div style={{ width: "100%", height: "100%", display: "flex", background: "#FAF6F1", position: "relative", overflow: "hidden" }}>
+    <div style={{ width: "100%", height: "100%", display: "flex", background: "#FAF6F1", position: "relative", overflow: "hidden", paddingTop: inPanel ? 0 : "env(safe-area-inset-top, 0px)", paddingBottom: inPanel ? 0 : "env(safe-area-inset-bottom, 0px)" }}>
 
       {/* Desktop sidebar */}
       {!isMobile && <Sidebar />}

@@ -28,6 +28,8 @@ const containerStyle: React.CSSProperties = {
   background: "linear-gradient(160deg,#022c22 0%,#064E3B 40%,#065f46 70%,#0a3f34 100%)",
   fontFamily: "'DM Sans', sans-serif",
   padding: 20,
+  paddingTop: "calc(20px + env(safe-area-inset-top, 0px))",
+  paddingBottom: "calc(20px + env(safe-area-inset-bottom, 0px))",
 };
 
 const cardStyle: React.CSSProperties = {
