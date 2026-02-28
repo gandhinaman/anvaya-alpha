@@ -724,24 +724,29 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
             style={{
               width:isMock?160:180,height:isMock?160:180,borderRadius:"50%",
               background: voicePhase==="listening"
-                ? "conic-gradient(from 180deg at 50% 50%,#5D4037 0deg,#6D4C41 90deg,#8D6E63 180deg,#5D4037 270deg,#5D4037 360deg)"
+                ? "radial-gradient(circle at 40% 35%,#E8C9A0 0%,#C68B59 40%,#8D6E63 80%,#5D4037 100%)"
                 : voicePhase==="thinking"
-                ? "conic-gradient(from 180deg at 50% 50%,#C68B59 0deg,#D4A574 90deg,#E8C9A0 180deg,#C68B59 270deg,#C68B59 360deg)"
+                ? "radial-gradient(circle at 40% 35%,#FFF8F0 0%,#E8C9A0 30%,#D4A574 60%,#C68B59 100%)"
                 : voicePhase==="speaking"
-                ? "conic-gradient(from 180deg at 50% 50%,#8D6E63 0deg,#A1887F 90deg,#BCAAA4 180deg,#8D6E63 270deg,#8D6E63 360deg)"
-                : "conic-gradient(from 180deg at 50% 50%,#3E2723 0deg,#5D4037 90deg,#C68B59 180deg,#6D4C41 270deg,#3E2723 360deg)",
-              position:"relative",cursor:"pointer",transition:"background .5s, transform .5s"
+                ? "radial-gradient(circle at 40% 35%,#D7CCC8 0%,#BCAAA4 35%,#A1887F 65%,#8D6E63 100%)"
+                : "radial-gradient(circle at 40% 35%,#E8C9A0 0%,#D4A574 30%,#C68B59 55%,#8D6E63 80%,#5D4037 100%)",
+              position:"relative",cursor:"pointer",transition:"background .6s ease, transform .5s",
+              boxShadow: voicePhase!=="idle"
+                ? "0 0 60px 15px rgba(212,165,116,.3), 0 0 120px 40px rgba(198,139,89,.12)"
+                : "0 0 50px 12px rgba(198,139,89,.2), 0 0 100px 30px rgba(141,110,99,.08)"
             }}
           >
-            <div style={{position:"absolute",inset:8,borderRadius:"50%",
-              background:"radial-gradient(circle at 35% 35%,rgba(255,255,255,.12) 0%,transparent 65%)",
-              border:"1px solid rgba(255,248,240,.15)"}}/>
+            <div style={{position:"absolute",inset:6,borderRadius:"50%",
+              background:"radial-gradient(circle at 30% 25%,rgba(255,255,255,.22) 0%,rgba(255,255,255,.06) 40%,transparent 70%)",
+              border:"1px solid rgba(255,248,240,.12)"}}/>
+            <div style={{position:"absolute",inset:0,borderRadius:"50%",
+              background:"radial-gradient(circle at 65% 70%,rgba(255,248,240,.08) 0%,transparent 50%)"}}/>
             {voicePhase==="listening"&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}><Waveform/></div>}
             {voicePhase==="thinking"&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
-              <Loader2 size={36} color="rgba(255,248,240,.8)" style={{animation:"spin 1.2s linear infinite"}}/>
+              <Loader2 size={36} color="rgba(255,248,240,.85)" style={{animation:"spin 1.2s linear infinite"}}/>
             </div>}
             {voicePhase==="speaking"&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
-              <Headphones size={36} color="rgba(255,248,240,.8)"/>
+              <Headphones size={36} color="rgba(255,248,240,.85)"/>
             </div>}
           </div>
         </div>
