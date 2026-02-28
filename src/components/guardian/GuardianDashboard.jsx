@@ -471,36 +471,64 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
 
   const [expandedStat, setExpandedStat] = useState(null);
 
-  const alerts = healthEvents.slice(0, 5).map(e => {
-    const time = e.recorded_at ? new Date(e.recorded_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
-    const score = e.value?.score != null ? ` (${e.value.score}%)` : "";
-    const label = e.value?.label ? ` — ${e.value.label}` : "";
-    let text = "", type = "info", icon = "";
-    switch (e.event_type) {
-      case "medication_taken":
-        text = `💊 Medication taken: ${e.value?.medication_name || "Unknown"}`;
-        type = "success"; break;
-      case "vocal_energy":
-        text = `🎙️ Vocal Energy${score}${label}`;
-        type = e.value?.score >= 70 ? "success" : "info"; break;
-      case "cognitive_vitality":
-        text = `🧠 Cognitive Vitality${score}${label}`;
-        type = e.value?.score >= 70 ? "success" : e.value?.score < 40 ? "warning" : "info"; break;
-      case "emotional_state":
-        text = `💛 Emotional State${score}${label}`;
-        type = e.value?.label === "Distressed" ? "warning" : "info"; break;
-      case "activity_level":
-        text = `⚡ Activity Level${score}${label}`;
-        type = "info"; break;
-      case "emergency":
-        text = `🚨 Emergency alert triggered`;
-        type = "warning"; break;
-      default:
-        text = `${e.event_type.replace(/_/g, " ")} recorded`;
-    }
-    return { text, type, time };
-  });
-  if (alerts.length === 0) alerts.push({ text: "No recent events", type: "info", time: "" });
+  // Alerts: only actionable/problematic events + new recordings — not routine metrics
+  const buildAlerts = () => {
+    const items = [];
+    const fmtTime = (d) => d ? new Date(d).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+    const fmtAgo = (d) => {
+      if (!d) return "";
+      const mins = Math.floor((Date.now() - new Date(d).getTime()) / 60000);
+      if (mins < 1) return "Just now";
+      if (mins < 60) return `${mins}m ago`;
+      if (mins < 1440) return `${Math.floor(mins / 60)}h ago`;
+      return `${Math.floor(mins / 1440)}d ago`;
+    };
+
+    // Emergencies
+    healthEvents.filter(e => e.event_type === "emergency").forEach(e => {
+      items.push({ text: "🚨 Emergency alert triggered", type: "warning", time: fmtAgo(e.recorded_at), priority: 0 });
+    });
+
+    // Low scores (problematic — below thresholds)
+    healthEvents.forEach(e => {
+      const score = e.value?.score;
+      if (score == null) return;
+      if (e.event_type === "vocal_energy" && score < 40) {
+        items.push({ text: `🎙️ Low vocal energy (${score}%) — may indicate fatigue`, type: "warning", time: fmtAgo(e.recorded_at), priority: 1 });
+      } else if ((e.event_type === "cognitive_vitality" || e.event_type === "cognitive_clarity") && score < 50) {
+        items.push({ text: `🧠 Cognitive score dropped to ${score}%`, type: "warning", time: fmtAgo(e.recorded_at), priority: 1 });
+      } else if (e.event_type === "emotional_state" && (e.value?.label === "Distressed" || score < 30)) {
+        items.push({ text: `💔 Emotional distress detected${e.value?.label ? ` — ${e.value.label}` : ""}`, type: "warning", time: fmtAgo(e.recorded_at), priority: 1 });
+      } else if (e.event_type === "activity_level" && score < 30) {
+        items.push({ text: `⚡ Very low activity (${score}%) — possible isolation`, type: "warning", time: fmtAgo(e.recorded_at), priority: 1 });
+      }
+    });
+
+    // Medication events (actionable)
+    healthEvents.filter(e => e.event_type === "medication_taken").forEach(e => {
+      items.push({ text: `💊 Took ${e.value?.medication_name || "medication"}`, type: "success", time: fmtAgo(e.recorded_at), priority: 2 });
+    });
+
+    // Missed medications (not taken today)
+    medications.filter(m => !m.taken_today && m.scheduled_time).forEach(m => {
+      items.push({ text: `⏰ ${m.name} not yet taken today (scheduled ${m.scheduled_time})`, type: "warning", time: "", priority: 1 });
+    });
+
+    // New memories (recordings)
+    realMemories.slice(0, 3).forEach(m => {
+      items.push({
+        text: `🎤 New memory: "${m.title || "Untitled"}"${m.emotional_tone ? ` · ${m.emotional_tone}` : ""}`,
+        type: "info", time: fmtAgo(m.created_at), priority: 3
+      });
+    });
+
+    // Sort by priority (emergencies first), then recency
+    items.sort((a, b) => a.priority - b.priority);
+    return items.slice(0, 8);
+  };
+
+  const alerts = buildAlerts();
+  if (alerts.length === 0) alerts.push({ text: "No alerts — everything looks good ✓", type: "success", time: "" });
 
   const fmtDate = (d) => {
     if (!d) return "—";
