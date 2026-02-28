@@ -26,9 +26,9 @@ export const guardianStyles = `
     to   { opacity:1; }
   }
   @keyframes callPulse {
-    0%   { transform:scale(1); box-shadow:0 0 0 0 rgba(5,150,105,.5); }
-    70%  { transform:scale(1.05); box-shadow:0 0 0 30px rgba(5,150,105,0); }
-    100% { transform:scale(1); box-shadow:0 0 0 0 rgba(5,150,105,0); }
+    0%   { transform:scale(1); box-shadow:0 0 0 0 rgba(198,139,89,.5); }
+    70%  { transform:scale(1.05); box-shadow:0 0 0 30px rgba(198,139,89,0); }
+    100% { transform:scale(1); box-shadow:0 0 0 0 rgba(198,139,89,0); }
   }
   @keyframes spin {
     from { transform:rotate(0deg); }
@@ -42,10 +42,10 @@ export const guardianStyles = `
     -webkit-backdrop-filter:blur(16px);
     border:1px solid rgba(255,255,255,0.55);
     border-radius:20px;
-    box-shadow:0 8px 32px rgba(6,78,59,0.06);
+    box-shadow:0 8px 32px rgba(62,39,35,0.06);
   }
   .gtxt {
-    background:linear-gradient(135deg,#064E3B 0%,#0d7a5f 50%,#059669 100%);
+    background:linear-gradient(135deg,#3E2723 0%,#5D4037 50%,#8D6E63 100%);
     -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
   }
 
@@ -71,7 +71,7 @@ function useWindowSize() {
 }
 
 // ─── AUDIO PLAYER ─────────────────────────────────────────────────────────────
-function AudioPlayer({ color = "#064E3B", audioUrl = null }) {
+function AudioPlayer({ color = "#5D4037", audioUrl = null }) {
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -133,24 +133,24 @@ function CognitiveRing({ value = 94 }) {
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
       <svg width={144} height={144} viewBox="0 0 144 144">
         <defs>
-          <linearGradient id="crg" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#064E3B" />
-            <stop offset="100%" stopColor="#059669" />
-          </linearGradient>
+           <linearGradient id="crg" x1="0%" y1="0%" x2="100%" y2="100%">
+             <stop offset="0%" stopColor="#5D4037" />
+             <stop offset="100%" stopColor="#C68B59" />
+           </linearGradient>
           <filter id="crglow">
             <feGaussianBlur stdDeviation="3" result="b" />
             <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
           </filter>
         </defs>
-        <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(6,78,59,0.1)" strokeWidth={11} />
-        <circle cx={cx} cy={cy} r={r} fill="none" stroke="url(#crg)" strokeWidth={11}
-          strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={offset}
-          transform={`rotate(-90 ${cx} ${cy})`} filter="url(#crglow)"
-          style={{ transition: "stroke-dashoffset 1.2s ease" }} />
-        <text x={cx} y={cy - 6} textAnchor="middle" fontSize={30} fontWeight={700} fill="#064E3B" fontFamily="DM Sans">{value}</text>
-        <text x={cx} y={cy + 12} textAnchor="middle" fontSize={11} fill="#059669" fontFamily="DM Sans" fontWeight={500}>Stable</text>
-      </svg>
-      <span style={{ fontSize: 12, color: "#6b6b6b", fontWeight: 500 }}>Cognitive Clarity</span>
+         <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(93,64,55,0.1)" strokeWidth={11} />
+         <circle cx={cx} cy={cy} r={r} fill="none" stroke="url(#crg)" strokeWidth={11}
+           strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={offset}
+           transform={`rotate(-90 ${cx} ${cy})`} filter="url(#crglow)"
+           style={{ transition: "stroke-dashoffset 1.2s ease" }} />
+         <text x={cx} y={cy - 6} textAnchor="middle" fontSize={30} fontWeight={700} fill="#3E2723" fontFamily="DM Sans">{value}</text>
+         <text x={cx} y={cy + 12} textAnchor="middle" fontSize={11} fill="#C68B59" fontFamily="DM Sans" fontWeight={500}>Stable</text>
+       </svg>
+       <span style={{ fontSize: 12, color: "#6b6b6b", fontWeight: 500 }}>Cognitive Clarity</span>
     </div>
   );
 }
@@ -164,7 +164,7 @@ function AcousticHeatmap() {
     const v = base[c] + (Math.sin(r * 3.7 + c * 1.3) * 1.2);
     return Math.max(0, Math.min(4, Math.round(v)));
   };
-  const colors = ["rgba(6,78,59,0.06)", "rgba(6,78,59,0.18)", "rgba(5,150,105,0.35)", "rgba(5,150,105,0.6)", "rgba(5,150,105,0.9)"];
+  const colors = ["rgba(93,64,55,0.06)", "rgba(93,64,55,0.18)", "rgba(198,139,89,0.35)", "rgba(198,139,89,0.6)", "rgba(198,139,89,0.9)"];
   return (
     <div>
       <div style={{ display: "grid", gridTemplateColumns: `44px repeat(12,1fr)`, gap: 3, alignItems: "center" }}>
@@ -216,36 +216,36 @@ function WeeklyTrendChart() {
     <div>
       <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: 120, overflow: "visible" }}>
         <defs>
-          <linearGradient id="mg" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#064E3B" stopOpacity={0.2} />
-            <stop offset="100%" stopColor="#064E3B" stopOpacity={0} />
-          </linearGradient>
-          <linearGradient id="eg" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#B45309" stopOpacity={0.15} />
-            <stop offset="100%" stopColor="#B45309" stopOpacity={0} />
-          </linearGradient>
-        </defs>
-        {[60, 70, 80, 90, 100].map(v => (
-          <line key={v} x1={pad} y1={toY(v)} x2={W - pad} y2={toY(v)}
-            stroke="rgba(6,78,59,0.07)" strokeWidth={0.5} strokeDasharray="2 2" />
-        ))}
-        <path d={m.area} fill="url(#mg)" />
-        <path d={e.area} fill="url(#eg)" />
-        <path d={m.line} fill="none" stroke="#064E3B" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
-        <path d={e.line} fill="none" stroke="#B45309" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
-        {mood.map((v, i) => (<circle key={i} cx={toX(i)} cy={toY(v)} r={1.5} fill="#064E3B" />))}
-        {energy.map((v, i) => (<circle key={i} cx={toX(i)} cy={toY(v)} r={1.5} fill="#B45309" />))}
+           <linearGradient id="mg" x1="0" y1="0" x2="0" y2="1">
+             <stop offset="0%" stopColor="#5D4037" stopOpacity={0.2} />
+             <stop offset="100%" stopColor="#5D4037" stopOpacity={0} />
+           </linearGradient>
+           <linearGradient id="eg" x1="0" y1="0" x2="0" y2="1">
+             <stop offset="0%" stopColor="#C68B59" stopOpacity={0.15} />
+             <stop offset="100%" stopColor="#C68B59" stopOpacity={0} />
+           </linearGradient>
+         </defs>
+         {[60, 70, 80, 90, 100].map(v => (
+           <line key={v} x1={pad} y1={toY(v)} x2={W - pad} y2={toY(v)}
+             stroke="rgba(93,64,55,0.07)" strokeWidth={0.5} strokeDasharray="2 2" />
+         ))}
+         <path d={m.area} fill="url(#mg)" />
+         <path d={e.area} fill="url(#eg)" />
+         <path d={m.line} fill="none" stroke="#5D4037" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+         <path d={e.line} fill="none" stroke="#C68B59" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+         {mood.map((v, i) => (<circle key={i} cx={toX(i)} cy={toY(v)} r={1.5} fill="#5D4037" />))}
+         {energy.map((v, i) => (<circle key={i} cx={toX(i)} cy={toY(v)} r={1.5} fill="#C68B59" />))}
       </svg>
       <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
         {days.map(d => <span key={d} style={{ fontSize: 9, color: "#9CA3AF", fontWeight: 500 }}>{d}</span>)}
       </div>
       <div style={{ display: "flex", gap: 14, marginTop: 8 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-          <div style={{ width: 16, height: 2, borderRadius: 2, background: "#064E3B" }} />
-          <span style={{ fontSize: 11, color: "#6b6b6b" }}>Mood</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-          <div style={{ width: 16, height: 2, borderRadius: 2, background: "#B45309" }} />
+         <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+           <div style={{ width: 16, height: 2, borderRadius: 2, background: "#5D4037" }} />
+           <span style={{ fontSize: 11, color: "#6b6b6b" }}>Mood</span>
+         </div>
+         <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+           <div style={{ width: 16, height: 2, borderRadius: 2, background: "#C68B59" }} />
           <span style={{ fontSize: 11, color: "#6b6b6b" }}>Energy</span>
         </div>
       </div>
@@ -255,26 +255,26 @@ function WeeklyTrendChart() {
 
 // ─── MEMORY CARD ──────────────────────────────────────────────────────────────
 function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null, emotionalTone = null }) {
-  const toneColors = { joyful: "#059669", nostalgic: "#B45309", peaceful: "#064E3B", concerned: "#DC2626" };
+  const toneColors = { joyful: "#C68B59", nostalgic: "#8D6E63", peaceful: "#5D4037", concerned: "#DC2626" };
   const tone = emotionalTone || "positive";
   const toneColor = toneColors[tone.toLowerCase()] || "#059669";
   return (
     <div className="gcard" style={{ padding: 18, animation: `fadeUp .5s ease ${.6 + index * .1}s both` }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#064E3B", marginBottom: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{title || "Untitled Memory"}</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#3E2723", marginBottom: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{title || "Untitled Memory"}</div>
           <div style={{ display: "flex", gap: 6 }}>
-            <span style={{ fontSize: 10, fontWeight: 600, color: "#6b6b6b", background: "rgba(6,78,59,0.07)", padding: "2px 8px", borderRadius: 100 }}>{date}</span>
-            <span style={{ fontSize: 10, fontWeight: 600, color: "#6b6b6b", background: "rgba(6,78,59,0.07)", padding: "2px 8px", borderRadius: 100 }}>{duration}</span>
+             <span style={{ fontSize: 10, fontWeight: 600, color: "#6b6b6b", background: "rgba(93,64,55,0.07)", padding: "2px 8px", borderRadius: 100 }}>{date}</span>
+             <span style={{ fontSize: 10, fontWeight: 600, color: "#6b6b6b", background: "rgba(93,64,55,0.07)", padding: "2px 8px", borderRadius: 100 }}>{duration}</span>
           </div>
         </div>
       </div>
-      <AudioPlayer color="#064E3B" audioUrl={audioUrl} />
+      <AudioPlayer color="#5D4037" audioUrl={audioUrl} />
       {summary && <p style={{
         marginTop: 10, fontStyle: "italic",
         fontFamily: "'Cormorant Garamond',serif", fontSize: 14,
         color: "#6b6b6b", lineHeight: 1.65,
-        borderLeft: "2px solid rgba(6,78,59,0.2)", paddingLeft: 10
+        borderLeft: "2px solid rgba(93,64,55,0.2)", paddingLeft: 10
       }}>
         "{summary}"
       </p>}
@@ -391,10 +391,10 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
   ];
 
   const stats = [
-    { label: "Vocal Energy", value: derivedStats.vocalEnergy.value, icon: Mic, color: "#064E3B", trend: derivedStats.vocalEnergy.trend },
-    { label: "Cognitive Clarity", value: derivedStats.cognitiveClarity.value, icon: TrendingUp, color: "#0d7a5f", trend: derivedStats.cognitiveClarity.trend },
-    { label: "Emotional Tone", value: derivedStats.emotionalTone.value, icon: Heart, color: "#B45309", trend: derivedStats.emotionalTone.trend },
-    { label: "Activity Level", value: derivedStats.activityLevel.value, icon: Zap, color: "#d97706", trend: derivedStats.activityLevel.trend },
+     { label: "Vocal Energy", value: derivedStats.vocalEnergy.value, icon: Mic, color: "#5D4037", trend: derivedStats.vocalEnergy.trend },
+     { label: "Cognitive Clarity", value: derivedStats.cognitiveClarity.value, icon: TrendingUp, color: "#8D6E63", trend: derivedStats.cognitiveClarity.trend },
+     { label: "Emotional Tone", value: derivedStats.emotionalTone.value, icon: Heart, color: "#C68B59", trend: derivedStats.emotionalTone.trend },
+     { label: "Activity Level", value: derivedStats.activityLevel.value, icon: Zap, color: "#A1887F", trend: derivedStats.activityLevel.trend },
   ];
 
   const alerts = healthEvents.slice(0, 3).map(e => ({
@@ -428,50 +428,50 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
     : [{ title: "No memories yet", date: "—", duration: "—", summary: "Memories recorded by your parent will appear here.", audioUrl: null, emotionalTone: null }];
 
   const Sidebar = ({ mobile = false }) => (
-    <div style={{
-      width: mobile ? "100%" : 210, background: "rgba(255,255,255,0.95)",
-      borderRight: mobile ? "none" : "1px solid rgba(6,78,59,0.08)",
-      display: "flex", flexDirection: "column", padding: "22px 0",
-      flexShrink: 0, height: "100%",
-      boxShadow: mobile ? "none" : "2px 0 20px rgba(6,78,59,0.04)"
+     <div style={{
+       width: mobile ? "100%" : 210, background: "rgba(255,248,240,0.97)",
+       borderRight: mobile ? "none" : "1px solid rgba(93,64,55,0.08)",
+       display: "flex", flexDirection: "column", padding: "22px 0",
+       flexShrink: 0, height: "100%",
+       boxShadow: mobile ? "none" : "2px 0 20px rgba(62,39,35,0.04)"
     }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 20px 18px", borderBottom: "1px solid rgba(6,78,59,0.07)" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 20px 18px", borderBottom: "1px solid rgba(93,64,55,0.07)" }}>
         <div>
-          <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 11, color: "rgba(6,78,59,0.35)", letterSpacing: "0.3em", fontWeight: 300 }}>ANVAYA</div>
-          <div className="gtxt" style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 24, fontWeight: 600 }}>Guardian</div>
+           <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 11, color: "rgba(93,64,55,0.35)", letterSpacing: "0.3em", fontWeight: 300 }}>ANVAYA</div>
+           <div className="gtxt" style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 24, fontWeight: 600 }}>Guardian</div>
         </div>
         {mobile && <button onClick={() => setDrawer(false)} style={{ background: "transparent", border: "none", cursor: "pointer" }}><X size={18} color="#FFF8F0" /></button>}
       </div>
 
       {/* Parent status */}
-      <div style={{ padding: "12px 14px", margin: "12px 10px", background: "rgba(6,78,59,0.05)", borderRadius: 14, border: "1px solid rgba(6,78,59,0.12)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-          <div style={{ width: 34, height: 34, borderRadius: "50%", background: "linear-gradient(135deg,#064E3B,#059669)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <User size={15} color="#FFF8F0" />
-          </div>
-          <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#064E3B" }}>{parentProfile?.full_name || "Parent"}</div>
-            <div style={{ fontSize: 10, color: "#059669", display: "flex", alignItems: "center", gap: 4 }}>
-              <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#059669", display: "inline-block" }} />
-              {dataLoading ? "Loading…" : "Active"}
-            </div>
-          </div>
-        </div>
-      </div>
+       <div style={{ padding: "12px 14px", margin: "12px 10px", background: "rgba(93,64,55,0.05)", borderRadius: 14, border: "1px solid rgba(93,64,55,0.12)" }}>
+         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+           <div style={{ width: 34, height: 34, borderRadius: "50%", background: "linear-gradient(135deg,#5D4037,#C68B59)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+             <User size={15} color="#FFF8F0" />
+           </div>
+           <div>
+             <div style={{ fontSize: 12, fontWeight: 700, color: "#3E2723" }}>{parentProfile?.full_name || "Parent"}</div>
+             <div style={{ fontSize: 10, color: "#C68B59", display: "flex", alignItems: "center", gap: 4 }}>
+               <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#C68B59", display: "inline-block" }} />
+               {dataLoading ? "Loading…" : "Active"}
+             </div>
+           </div>
+         </div>
+       </div>
 
       <nav style={{ flex: 1, padding: "4px 10px", display: "flex", flexDirection: "column", gap: 1 }}>
         {navItems.map(item => (
           <button key={item.id} onClick={() => { setNav(item.id); setDrawer(false); }} style={{
             display: "flex", alignItems: "center", gap: 10, padding: "9px 12px",
             borderRadius: 11, border: "none", cursor: "pointer", textAlign: "left", width: "100%",
-            background: nav === item.id ? "rgba(6,78,59,0.08)" : "transparent",
-            color: nav === item.id ? "#064E3B" : "#6b6b6b",
+             background: nav === item.id ? "rgba(93,64,55,0.08)" : "transparent",
+             color: nav === item.id ? "#3E2723" : "#6b6b6b",
             fontWeight: nav === item.id ? 700 : 400, fontSize: 13, transition: "all .2s"
           }}>{item.icon}{item.label}</button>
         ))}
       </nav>
 
-      <div style={{ padding: "12px 10px", borderTop: "1px solid rgba(6,78,59,0.07)" }}>
+      <div style={{ padding: "12px 10px", borderTop: "1px solid rgba(93,64,55,0.07)" }}>
         <button onClick={handleSignOut} disabled={signingOut} style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", width: "100%", border: "none", background: "transparent", cursor: signingOut ? "wait" : "pointer", color: "#9CA3AF", fontSize: 12, borderRadius: 11, opacity: signingOut ? .5 : 1 }}>
           {signingOut ? <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> : <LogOut size={14} />}{signingOut ? "Signing out…" : "Sign out"}
         </button>
@@ -480,7 +480,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
   );
 
   return (
-    <div style={{ width: "100%", height: "100%", display: "flex", background: "#F2F4F3", position: "relative", overflow: "hidden" }}>
+    <div style={{ width: "100%", height: "100%", display: "flex", background: "#FAF6F1", position: "relative", overflow: "hidden" }}>
 
       {/* Desktop sidebar */}
       {!isMobile && <Sidebar />}
@@ -502,13 +502,13 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
         <div className="s1" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, flexWrap: "wrap", gap: 10 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {isMobile && (
-              <button onClick={() => setDrawer(true)} style={{ background: "transparent", border: "none", cursor: "pointer", padding: 4 }}>
-                <Menu size={20} color="#064E3B" />
+               <button onClick={() => setDrawer(true)} style={{ background: "transparent", border: "none", cursor: "pointer", padding: 4 }}>
+                 <Menu size={20} color="#3E2723" />
               </button>
             )}
             <div>
-              <h1 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: isMobile ? 24 : 30, fontWeight: 700, color: "#064E3B", lineHeight: 1.2 }}>
-                {nav === "settings" ? "Settings" : "Guardian Dashboard"}
+               <h1 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: isMobile ? 24 : 30, fontWeight: 700, color: "#3E2723", lineHeight: 1.2 }}>
+                 {nav === "settings" ? "Settings" : "Guardian Dashboard"}
               </h1>
               <p style={{ color: "#6b6b6b", fontSize: 12, marginTop: 3 }}>
                 {nav === "settings" ? "Manage your account & preferences" : <>
@@ -523,15 +523,15 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
           {nav !== "settings" && <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <button style={{
               position: "relative", width: 40, height: 40, borderRadius: 12, border: "none", cursor: "pointer",
-              background: "rgba(255,255,255,0.8)", backdropFilter: "blur(8px)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: "0 2px 8px rgba(6,78,59,0.1)"
-            }}>
-              <Bell size={16} color="#064E3B" />
-              <span style={{
-                position: "absolute", top: -3, right: -3, width: 16, height: 16, borderRadius: "50%",
-                background: "#B45309", color: "#fff", fontSize: 9, fontWeight: 700,
-                display: "flex", alignItems: "center", justifyContent: "center"
+               background: "rgba(255,248,240,0.8)", backdropFilter: "blur(8px)",
+               display: "flex", alignItems: "center", justifyContent: "center",
+               boxShadow: "0 2px 8px rgba(93,64,55,0.1)"
+             }}>
+               <Bell size={16} color="#3E2723" />
+               <span style={{
+                 position: "absolute", top: -3, right: -3, width: 16, height: 16, borderRadius: "50%",
+                 background: "#C68B59", color: "#fff", fontSize: 9, fontWeight: 700,
+                 display: "flex", alignItems: "center", justifyContent: "center"
               }}>{healthEvents.length || 0}</span>
             </button>
           </div>}
@@ -540,23 +540,23 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
         {/* No linked parent onboarding */}
         {!parentProfile && !dataLoading && nav !== "settings" && (
           <div className="gcard" style={{ padding: 28, textAlign: "center", marginBottom: 16 }}>
-            <Link2 size={32} color="#064E3B" style={{ margin: "0 auto 12px" }} />
-            <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 22, fontWeight: 600, color: "#064E3B", marginBottom: 8 }}>No parent linked yet</div>
-            <p style={{ fontSize: 13, color: "#6b6b6b", lineHeight: 1.6, marginBottom: 16 }}>
-              Ask your parent to share their 6-digit linking code from the Sathi app, then enter it in Settings.
-            </p>
-            <button onClick={() => setNav("settings")} style={{
-              padding: "12px 24px", borderRadius: 14, border: "none", cursor: "pointer",
-              background: "linear-gradient(135deg,#059669,#065f46)", color: "#fff", fontSize: 13, fontWeight: 600,
-              boxShadow: "0 4px 16px rgba(5,150,105,.3)"
-            }}>Go to Settings</button>
+           <Link2 size={32} color="#5D4037" style={{ margin: "0 auto 12px" }} />
+             <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 22, fontWeight: 600, color: "#3E2723", marginBottom: 8 }}>No parent linked yet</div>
+             <p style={{ fontSize: 13, color: "#6b6b6b", lineHeight: 1.6, marginBottom: 16 }}>
+               Ask your parent to share their 6-digit linking code from the Sathi app, then enter it in Settings.
+             </p>
+             <button onClick={() => setNav("settings")} style={{
+               padding: "12px 24px", borderRadius: 14, border: "none", cursor: "pointer",
+               background: "linear-gradient(135deg,#8D6E63,#5D4037)", color: "#FFF8F0", fontSize: 13, fontWeight: 600,
+               boxShadow: "0 4px 16px rgba(93,64,55,.3)"
+             }}>Go to Settings</button>
           </div>
         )}
 
         {/* Loading */}
         {dataLoading && nav === "home" && (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "60px 0", gap: 12 }}>
-            <Loader2 size={28} color="#064E3B" style={{ animation: "spin 1s linear infinite" }} />
+            <Loader2 size={28} color="#5D4037" style={{ animation: "spin 1s linear infinite" }} />
             <span style={{ fontSize: 13, color: "#6b6b6b" }}>Loading dashboard…</span>
           </div>
         )}
@@ -569,11 +569,11 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a", marginBottom: 4 }}>Link Parent Account</div>
               <div style={{ fontSize: 11, color: "#6b6b6b", marginBottom: 12 }}>Enter the 6-digit code from your parent's Sathi screen</div>
               {parentProfile ? (
-                <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", background: "rgba(5,150,105,0.06)", borderRadius: 12, border: "1px solid rgba(5,150,105,0.15)" }}>
-                  <Check size={18} color="#059669" />
-                  <div>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: "#059669" }}>Linked to {parentProfile.full_name || "Parent"}</div>
-                    <div style={{ fontSize: 10, color: "#6b6b6b", marginTop: 1 }}>Accounts are connected</div>
+                 <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", background: "rgba(198,139,89,0.06)", borderRadius: 12, border: "1px solid rgba(198,139,89,0.15)" }}>
+                   <Check size={18} color="#C68B59" />
+                   <div>
+                     <div style={{ fontSize: 12, fontWeight: 600, color: "#C68B59" }}>Linked to {parentProfile.full_name || "Parent"}</div>
+                     <div style={{ fontSize: 10, color: "#6b6b6b", marginTop: 1 }}>Accounts are connected</div>
                   </div>
                 </div>
               ) : (
@@ -582,13 +582,13 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                     <input value={linkCodeInput} onChange={e => setLinkCodeInput(e.target.value.replace(/\D/g, "").slice(0, 6))}
                       placeholder="000000" maxLength={6}
                       style={{
-                        flex: 1, padding: "11px 14px", borderRadius: 12, border: "1px solid rgba(6,78,59,0.15)",
-                        fontSize: 18, fontWeight: 700, letterSpacing: "0.2em", textAlign: "center",
-                        fontFamily: "'DM Sans',sans-serif", outline: "none", color: "#064E3B"
+                       flex: 1, padding: "11px 14px", borderRadius: 12, border: "1px solid rgba(93,64,55,0.15)",
+                         fontSize: 18, fontWeight: 700, letterSpacing: "0.2em", textAlign: "center",
+                         fontFamily: "'DM Sans',sans-serif", outline: "none", color: "#3E2723"
                       }} />
                     <button onClick={handleLinkAccount} disabled={linkLoading} style={{
                       padding: "11px 20px", borderRadius: 12, border: "none", cursor: linkLoading ? "wait" : "pointer",
-                      background: "linear-gradient(135deg,#059669,#065f46)", color: "#fff", fontSize: 13, fontWeight: 600,
+                       background: "linear-gradient(135deg,#8D6E63,#5D4037)", color: "#FFF8F0", fontSize: 13, fontWeight: 600,
                       opacity: linkLoading ? .6 : 1, display: "flex", alignItems: "center", gap: 6
                     }}>
                       {linkLoading ? <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> : null}
@@ -596,7 +596,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                     </button>
                   </div>
                   {linkError && <div style={{ marginTop: 8, padding: "8px 12px", borderRadius: 10, background: "rgba(220,38,38,0.08)", border: "1px solid rgba(220,38,38,0.2)", color: "#DC2626", fontSize: 11 }}>{linkError}</div>}
-                  {linkSuccess && <div style={{ marginTop: 8, padding: "8px 12px", borderRadius: 10, background: "rgba(5,150,105,0.08)", border: "1px solid rgba(5,150,105,0.2)", color: "#059669", fontSize: 11 }}>{linkSuccess}</div>}
+                  {linkSuccess && <div style={{ marginTop: 8, padding: "8px 12px", borderRadius: 10, background: "rgba(198,139,89,0.08)", border: "1px solid rgba(198,139,89,0.2)", color: "#C68B59", fontSize: 11 }}>{linkSuccess}</div>}
                 </>
               )}
             </div>
@@ -606,11 +606,11 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a", marginBottom: 4 }}>Notification Preferences</div>
               <div style={{ fontSize: 11, color: "#6b6b6b", marginBottom: 12 }}>Choose which notifications you receive</div>
               {[
-                { key: "emergency", label: "Emergency Alerts", desc: "Critical alerts when parent needs help", icon: <AlertTriangle size={16} color="#DC2626" /> },
-                { key: "medication", label: "Medication Updates", desc: "When medications are taken or missed", icon: <Pill size={16} color="#059669" /> },
-                { key: "memories", label: "New Memories", desc: "When a new memory is recorded", icon: <Headphones size={16} color="#B45309" /> },
+                 { key: "emergency", label: "Emergency Alerts", desc: "Critical alerts when parent needs help", icon: <AlertTriangle size={16} color="#DC2626" /> },
+                 { key: "medication", label: "Medication Updates", desc: "When medications are taken or missed", icon: <Pill size={16} color="#8D6E63" /> },
+                 { key: "memories", label: "New Memories", desc: "When a new memory is recorded", icon: <Headphones size={16} color="#C68B59" /> },
               ].map(n => (
-                <div key={n.key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid rgba(6,78,59,0.06)" }}>
+                <div key={n.key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid rgba(93,64,55,0.06)" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     {n.icon}
                     <div>
@@ -620,7 +620,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                   </div>
                   <button onClick={() => setNotifPref(p => ({ ...p, [n.key]: !p[n.key] }))} style={{
                     width: 40, height: 22, borderRadius: 11, border: "none", cursor: "pointer", padding: 2,
-                    background: notifPref[n.key] ? "#059669" : "#D1D5DB", transition: "background .2s",
+                    background: notifPref[n.key] ? "#C68B59" : "#D1D5DB", transition: "background .2s",
                     display: "flex", alignItems: "center",
                     justifyContent: notifPref[n.key] ? "flex-end" : "flex-start"
                   }}>
@@ -634,16 +634,16 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
             {parentProfile && (
               <div className="gcard" style={{ padding: 20 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a", marginBottom: 12 }}>Linked Parent</div>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: "50%", background: "linear-gradient(135deg,#064E3B,#059669)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <User size={20} color="#fff" />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: "#064E3B" }}>{parentProfile.full_name || "Parent"}</div>
-                    <div style={{ fontSize: 11, color: "#059669", display: "flex", alignItems: "center", gap: 4 }}>
-                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#059669" }} />Active
-                    </div>
-                  </div>
+                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                   <div style={{ width: 44, height: 44, borderRadius: "50%", background: "linear-gradient(135deg,#5D4037,#C68B59)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                     <User size={20} color="#FFF8F0" />
+                   </div>
+                   <div>
+                     <div style={{ fontSize: 14, fontWeight: 700, color: "#3E2723" }}>{parentProfile.full_name || "Parent"}</div>
+                     <div style={{ fontSize: 11, color: "#C68B59", display: "flex", alignItems: "center", gap: 4 }}>
+                       <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#C68B59" }} />Active
+                     </div>
+                   </div>
                 </div>
               </div>
             )}
@@ -707,11 +707,11 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                 <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
                   <CognitiveRing value={94} />
                 </div>
-                <div style={{
-                  display: "flex", alignItems: "flex-start", gap: 8, padding: "10px 12px",
-                  background: "rgba(5,150,105,0.06)", borderRadius: 12, border: "1px solid rgba(5,150,105,0.12)"
-                }}>
-                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#059669", marginTop: 4, flexShrink: 0 }} />
+                 <div style={{
+                   display: "flex", alignItems: "flex-start", gap: 8, padding: "10px 12px",
+                   background: "rgba(198,139,89,0.06)", borderRadius: 12, border: "1px solid rgba(198,139,89,0.12)"
+                 }}>
+                   <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#C68B59", marginTop: 4, flexShrink: 0 }} />
                   <p style={{ fontSize: 11, color: "#6b6b6b", lineHeight: 1.5 }}>
                     Pattern recognition and recall scores are within healthy range
                   </p>
@@ -724,9 +724,9 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                     <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Weekly Wellness Trends</div>
                     <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Mood and energy levels over the past week</div>
                   </div>
-                  <button style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, fontWeight: 600, color: "#064E3B", background: "transparent", border: "none", cursor: "pointer" }}>
-                    View all <ChevronRight size={12} />
-                  </button>
+                   <button style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, fontWeight: 600, color: "#5D4037", background: "transparent", border: "none", cursor: "pointer" }}>
+                     View all <ChevronRight size={12} />
+                   </button>
                 </div>
                 <WeeklyTrendChart />
               </div>
@@ -760,7 +760,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                       <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
                         <div style={{
                           width: 7, height: 7, borderRadius: "50%", marginTop: 4, flexShrink: 0,
-                          background: a.type === "info" ? "#B45309" : "#059669"
+                         background: a.type === "info" ? "#C68B59" : "#8D6E63"
                         }} />
                         <p style={{ fontSize: 11, color: "#6b6b6b", lineHeight: 1.5 }}>{a.text}</p>
                       </div>
@@ -783,27 +783,26 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                   {medications.map(med => (
                     <div key={med.id} style={{
                       display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
-                      background: med.taken_today ? "rgba(5,150,105,0.06)" : "rgba(255,255,255,0.6)",
-                      borderRadius: 12, border: `1px solid ${med.taken_today ? "rgba(5,150,105,0.15)" : "rgba(6,78,59,0.08)"}`,
+                       background: med.taken_today ? "rgba(198,139,89,0.06)" : "rgba(255,248,240,0.6)",
+                       borderRadius: 12, border: `1px solid ${med.taken_today ? "rgba(198,139,89,0.15)" : "rgba(93,64,55,0.08)"}`,
                       cursor: "pointer", transition: "all .2s"
                     }} onClick={() => toggleMedication(med.id, !med.taken_today)}>
                       <div style={{
                         width: 22, height: 22, borderRadius: 6, flexShrink: 0,
-                        border: med.taken_today ? "none" : "2px solid rgba(6,78,59,0.25)",
-                        background: med.taken_today ? "#059669" : "transparent",
-                        display: "flex", alignItems: "center", justifyContent: "center"
+                         border: med.taken_today ? "none" : "2px solid rgba(93,64,55,0.25)",
+                         background: med.taken_today ? "#C68B59" : "transparent",
                       }}>
                         {med.taken_today && <Check size={13} color="#fff" />}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{
-                          fontSize: 12, fontWeight: 600, color: med.taken_today ? "#059669" : "#1a1a1a",
+                         <div style={{
+                           fontSize: 12, fontWeight: 600, color: med.taken_today ? "#C68B59" : "#1a1a1a",
                           textDecoration: med.taken_today ? "line-through" : "none"
                         }}>{med.name}</div>
                         <div style={{ fontSize: 10, color: "#9CA3AF" }}>{med.dose || ""}{med.scheduled_time ? ` · ${med.scheduled_time}` : ""}</div>
                       </div>
                       {med.taken_today && med.last_taken && (
-                        <span style={{ fontSize: 9, color: "#059669", fontWeight: 500 }}>
+                         <span style={{ fontSize: 9, color: "#C68B59", fontWeight: 500 }}>
                           {new Date(med.last_taken).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                         </span>
                       )}
@@ -820,7 +819,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                   <h3 style={{ fontSize: 14, fontWeight: 700, color: "#1a1a1a" }}>Memory Archive</h3>
                   <p style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>AI-summarized recordings with emotional context</p>
                 </div>
-                <button style={{ fontSize: 11, fontWeight: 600, color: "#064E3B", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", gap: 3 }}>
+                <button style={{ fontSize: 11, fontWeight: 600, color: "#5D4037", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", gap: 3 }}>
                   View all <ChevronRight size={12} />
                 </button>
               </div>
@@ -852,8 +851,8 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
       {isMobile && (
         <div style={{
           position: "absolute", bottom: 0, left: 0, right: 0,
-          background: "rgba(255,255,255,.95)", backdropFilter: "blur(12px)",
-          borderTop: "1px solid rgba(6,78,59,0.08)",
+           background: "rgba(255,248,240,.95)", backdropFilter: "blur(12px)",
+           borderTop: "1px solid rgba(93,64,55,0.08)",
           display: "flex", justifyContent: "space-around", alignItems: "center",
           padding: "9px 0", paddingBottom: "max(9px,env(safe-area-inset-bottom))", zIndex: 30
         }}>
@@ -861,7 +860,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
             <button key={item.id} onClick={() => setNav(item.id)} style={{
               display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
               border: "none", background: "transparent", cursor: "pointer", padding: "0 6px",
-              color: nav === item.id ? "#064E3B" : "#9CA3AF", transition: "color .2s"
+              color: nav === item.id ? "#3E2723" : "#9CA3AF", transition: "color .2s"
             }}>
               {item.icon}
               <span style={{ fontSize: 9, fontWeight: nav === item.id ? 700 : 400 }}>{item.label}</span>
@@ -874,16 +873,16 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
       {incomingCall && (
         <div className="fadein" style={{
           position: "absolute", top: 16, right: 16, zIndex: 60,
-          background: "linear-gradient(135deg,#064E3B,#065f46)",
-          borderRadius: 16, padding: "16px 20px", minWidth: 260,
-          boxShadow: "0 8px 32px rgba(6,78,59,0.3)", border: "1px solid rgba(5,150,105,0.3)"
+           background: "linear-gradient(135deg,#3E2723,#5D4037)",
+           borderRadius: 16, padding: "16px 20px", minWidth: 260,
+           boxShadow: "0 8px 32px rgba(62,39,35,0.3)", border: "1px solid rgba(198,139,89,0.3)"
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
             <div style={{
               width: 40, height: 40, borderRadius: "50%",
-              background: "rgba(5,150,105,0.3)", display: "flex", alignItems: "center", justifyContent: "center"
-            }}>
-              <Phone size={18} color="#34D399" />
+               background: "rgba(198,139,89,0.3)", display: "flex", alignItems: "center", justifyContent: "center"
+             }}>
+               <Phone size={18} color="#C68B59" />
             </div>
             <div>
               <div style={{ color: "#F9F9F7", fontSize: 14, fontWeight: 600 }}>
@@ -895,7 +894,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
           <div style={{ display: "flex", gap: 8 }}>
             <button onClick={() => setIncomingCall(null)} style={{
               flex: 1, padding: "9px 0", borderRadius: 10, border: "none", cursor: "pointer",
-              background: "#059669", color: "#fff", fontSize: 13, fontWeight: 600
+               background: "#C68B59", color: "#FFF8F0", fontSize: 13, fontWeight: 600
             }}>Answer</button>
             <button onClick={() => setIncomingCall(null)} style={{
               flex: 1, padding: "9px 0", borderRadius: 10, border: "none", cursor: "pointer",
