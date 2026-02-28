@@ -23,7 +23,7 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "pwa-192x192.png", "pwa-512x512.png"],
       manifest: {
-        name: "Anvaya – Your Companion",
+        name: "Anvaya",
         short_name: "Anvaya",
         description: "A caring companion app for seniors — chat, voice, memories, and health tracking.",
         theme_color: "#2C1810",
