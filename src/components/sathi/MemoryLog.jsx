@@ -23,14 +23,19 @@ function CommentInput({ memoryId, userId, lang }) {
     setSending(true);
     try {
       const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", userId).maybeSingle();
-      await supabase.from("memory_comments").insert({
+      const { error } = await supabase.from("memory_comments").insert({
         memory_id: memoryId, user_id: userId,
         comment: text.trim() || (mediaType === "audio" ? "🎤 Voice reply" : "Reply"),
         media_url: mediaUrl, media_type: mediaType,
         author_name: prof?.full_name || (lang === "en" ? "You" : "आप"),
-      });
+      }).select();
+      if (error) {
+        console.error("Comment insert failed:", error);
+        alert("Could not send comment. Please try again.");
+        return;
+      }
       setText("");
-    } catch (e) { console.error("Comment error:", e); }
+    } catch (e) { console.error("Comment error:", e); alert("Could not send comment."); }
     finally { setSending(false); }
   };
 

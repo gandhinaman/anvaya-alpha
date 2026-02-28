@@ -327,16 +327,21 @@ function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null
     setSending(true);
     try {
       const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", profileId).maybeSingle();
-      await supabase.from("memory_comments").insert({
+      const { error } = await supabase.from("memory_comments").insert({
         memory_id: memoryId,
         user_id: profileId,
         comment: commentText.trim() || (mediaType === "audio" ? "🎤 Voice reply" : "🎥 Video reply"),
         media_url: mediaUrl,
         media_type: mediaType,
         author_name: prof?.full_name || "Caregiver",
-      });
+      }).select();
+      if (error) {
+        console.error("Comment insert failed:", error);
+        alert("Could not send comment. Please try again.");
+        return;
+      }
       setCommentText("");
-    } catch (err) { console.error("Comment error:", err); }
+    } catch (err) { console.error("Comment error:", err); alert("Could not send comment."); }
     finally { setSending(false); }
   };
 
