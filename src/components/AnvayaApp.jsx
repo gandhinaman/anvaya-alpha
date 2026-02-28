@@ -336,20 +336,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
     });
   },[propUserId]);
 
-  // Request mic/camera permissions early on iOS so the orb doesn't get stuck
-  useEffect(() => {
-    if (!userId) return;
-    const requestPermissions = async () => {
-      try {
-        // Request mic permission early — the stream is released immediately
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        stream.getTracks().forEach(t => t.stop());
-      } catch (e) {
-        console.warn("Early mic permission request failed:", e);
-      }
-    };
-    requestPermissions();
-  }, [userId]);
+  // Mic permission is now requested once at app startup in App.tsx
 
   // Broadcast presence so guardian can see parent is online
   useEffect(() => {
