@@ -352,6 +352,8 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
   const [newMedTime, setNewMedTime] = useState("");
   const [newInterest, setNewInterest] = useState("");
   const [newIllness, setNewIllness] = useState("");
+  const [illnessDropOpen, setIllnessDropOpen] = useState(false);
+  const [locationDropOpen, setLocationDropOpen] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
 
   // Load meds always on mount + profile data when overlay opens
@@ -460,10 +462,35 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
     setProfileData(prev => ({ ...prev, interests: prev.interests.filter((_, i) => i !== idx) }));
   };
 
-  const addIllness = () => {
-    if (!newIllness.trim()) return;
-    setProfileData(prev => ({ ...prev, health_issues: [...prev.health_issues, newIllness.trim()] }));
+  const COMMON_LOCATIONS = [
+    "Mumbai, India","Delhi, India","Bengaluru, India","Hyderabad, India","Chennai, India","Kolkata, India","Pune, India","Ahmedabad, India","Jaipur, India","Lucknow, India",
+    "Chandigarh, India","Bhopal, India","Indore, India","Nagpur, India","Vadodara, India","Coimbatore, India","Kochi, India","Thiruvananthapuram, India","Visakhapatnam, India","Patna, India",
+    "Guwahati, India","Dehradun, India","Shimla, India","Mysuru, India","Mangaluru, India","Surat, India","Rajkot, India","Agra, India","Varanasi, India","Amritsar, India",
+    "New York, USA","Los Angeles, USA","Chicago, USA","Houston, USA","San Francisco, USA","London, UK","Toronto, Canada","Sydney, Australia","Dubai, UAE","Singapore",
+    "Kathmandu, Nepal","Dhaka, Bangladesh","Colombo, Sri Lanka","Kuala Lumpur, Malaysia"
+  ];
+  const filteredLocations = profileData.location
+    ? COMMON_LOCATIONS.filter(l => l.toLowerCase().includes(profileData.location.toLowerCase()))
+    : COMMON_LOCATIONS;
+
+  const COMMON_CONDITIONS = [
+    "Diabetes (Type 1)","Diabetes (Type 2)","Hypertension","High Cholesterol","Arthritis","Osteoarthritis","Rheumatoid Arthritis",
+    "Asthma","COPD","Heart Disease","Coronary Artery Disease","Atrial Fibrillation","Heart Failure",
+    "Stroke","Parkinson's Disease","Alzheimer's Disease","Dementia","Depression","Anxiety","Insomnia",
+    "Thyroid Disorder","Hypothyroidism","Hyperthyroidism","Osteoporosis","Kidney Disease","Liver Disease",
+    "Cancer","Anemia","Cataracts","Glaucoma","Hearing Loss","Back Pain","Sciatica","Migraine",
+    "Epilepsy","Gout","Psoriasis","Eczema","Ulcer","GERD","IBS","Prostate Issues","Urinary Incontinence"
+  ];
+  const filteredConditions = newIllness
+    ? COMMON_CONDITIONS.filter(c => c.toLowerCase().includes(newIllness.toLowerCase()) && !profileData.health_issues.includes(c))
+    : COMMON_CONDITIONS.filter(c => !profileData.health_issues.includes(c));
+
+  const addIllness = (val) => {
+    const v = val || newIllness.trim();
+    if (!v) return;
+    setProfileData(prev => ({ ...prev, health_issues: [...prev.health_issues, v] }));
     setNewIllness("");
+    setIllnessDropOpen(false);
   };
 
   const removeIllness = (idx) => {
@@ -1242,16 +1269,27 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
               <label style={{fontSize:13,color:"rgba(255,248,240,.5)",fontWeight:600,marginBottom:6,display:"block"}}>
                 {lang==="en"?"Location":"स्थान"}
               </label>
-              <input value={profileData.location} onChange={e=>setProfileData(p=>({...p,location:e.target.value}))}
-                placeholder={lang==="en"?"City or town":"शहर या कस्बा"}
-                style={{width:"100%",padding:"14px 16px",borderRadius:14,border:"1.5px solid rgba(255,248,240,.15)",
-                  background:"rgba(255,248,240,.06)",color:"#FFF8F0",fontSize:18,outline:"none"}}/>
-            </div>
-
-            {/* Preferred Language */}
-            <div>
-              <label style={{fontSize:13,color:"rgba(255,248,240,.5)",fontWeight:600,marginBottom:6,display:"block"}}>
-                {lang==="en"?"Preferred Language":"पसंदीदा भाषा"}
+              <div style={{position:"relative"}}>
+                <input value={profileData.location} onChange={e=>{setProfileData(p=>({...p,location:e.target.value}));setLocationDropOpen(true);}}
+                  onFocus={()=>setLocationDropOpen(true)}
+                  placeholder={lang==="en"?"Search city or town":"शहर खोजें"}
+                  style={{width:"100%",padding:"14px 16px",borderRadius:14,border:"1.5px solid rgba(255,248,240,.15)",
+                    background:"rgba(255,248,240,.06)",color:"#FFF8F0",fontSize:18,outline:"none"}}/>
+                {locationDropOpen && filteredLocations.length > 0 && (
+                  <div className="scr" style={{position:"absolute",top:"100%",left:0,right:0,zIndex:10,marginTop:4,
+                    maxHeight:180,overflowY:"auto",borderRadius:14,border:"1.5px solid rgba(255,248,240,.15)",
+                    background:"rgba(30,18,12,.97)",backdropFilter:"blur(16px)"}}>
+                    {filteredLocations.slice(0,12).map(loc=>(
+                      <button key={loc} onClick={()=>{setProfileData(p=>({...p,location:loc}));setLocationDropOpen(false);}}
+                        style={{display:"block",width:"100%",textAlign:"left",padding:"12px 16px",border:"none",
+                          background:"transparent",color:"#FFF8F0",fontSize:15,cursor:"pointer",
+                          borderBottom:"1px solid rgba(255,248,240,.06)"}}>
+                        {loc}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               </label>
               <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
                 {[{v:"en",l:"English"},{v:"hi",l:"हिंदी"},{v:"bn",l:"বাংলা"},{v:"ta",l:"தமிழ்"},{v:"te",l:"తెలుగు"},{v:"mr",l:"मराठी"},{v:"gu",l:"ગુજરાતી"},{v:"kn",l:"ಕನ್ನಡ"}].map(opt=>(
@@ -1278,14 +1316,31 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
                   </span>
                 ))}
               </div>
-              <div style={{display:"flex",gap:8}}>
-                <input value={newIllness} onChange={e=>setNewIllness(e.target.value)}
-                  onKeyDown={e=>{if(e.key==="Enter")addIllness();}}
-                  placeholder={lang==="en"?"e.g. Diabetes, Arthritis":"जैसे मधुमेह, गठिया"}
-                  style={{flex:1,padding:"12px 16px",borderRadius:14,border:"1.5px solid rgba(255,248,240,.15)",
-                    background:"rgba(255,248,240,.06)",color:"#FFF8F0",fontSize:16,outline:"none"}}/>
-                <button onClick={addIllness} style={{padding:"12px 20px",borderRadius:14,border:"none",
-                  background:"rgba(198,139,89,.25)",color:"#C68B59",fontSize:14,fontWeight:700,cursor:"pointer"}}>+</button>
+              <div style={{position:"relative"}}>
+                <div style={{display:"flex",gap:8}}>
+                  <input value={newIllness} onChange={e=>{setNewIllness(e.target.value);setIllnessDropOpen(true);}}
+                    onFocus={()=>setIllnessDropOpen(true)}
+                    onKeyDown={e=>{if(e.key==="Enter"){addIllness();}}}
+                    placeholder={lang==="en"?"Search condition…":"बीमारी खोजें…"}
+                    style={{flex:1,padding:"12px 16px",borderRadius:14,border:"1.5px solid rgba(255,248,240,.15)",
+                      background:"rgba(255,248,240,.06)",color:"#FFF8F0",fontSize:16,outline:"none"}}/>
+                  <button onClick={()=>addIllness()} style={{padding:"12px 20px",borderRadius:14,border:"none",
+                    background:"rgba(198,139,89,.25)",color:"#C68B59",fontSize:14,fontWeight:700,cursor:"pointer"}}>+</button>
+                </div>
+                {illnessDropOpen && filteredConditions.length > 0 && (
+                  <div className="scr" style={{position:"absolute",top:"100%",left:0,right:0,zIndex:10,marginTop:4,
+                    maxHeight:180,overflowY:"auto",borderRadius:14,border:"1.5px solid rgba(255,248,240,.15)",
+                    background:"rgba(30,18,12,.97)",backdropFilter:"blur(16px)"}}>
+                    {filteredConditions.slice(0,10).map(c=>(
+                      <button key={c} onClick={()=>addIllness(c)}
+                        style={{display:"block",width:"100%",textAlign:"left",padding:"12px 16px",border:"none",
+                          background:"transparent",color:"#FFF8F0",fontSize:15,cursor:"pointer",
+                          borderBottom:"1px solid rgba(255,248,240,.06)"}}>
+                        {c}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
