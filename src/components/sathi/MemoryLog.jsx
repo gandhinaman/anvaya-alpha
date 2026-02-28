@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { X, BookOpen, MessageCircle, ChevronDown, ChevronUp, Play, Pause, Trash2, Search } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { X, BookOpen, MessageCircle, ChevronDown, ChevronUp, Play, Pause, Trash2, Search, Mic, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const TONE_EMOJI = { joyful: "😊", nostalgic: "🌅", peaceful: "🕊️", concerned: "😟" };
@@ -11,6 +11,84 @@ const CATEGORIES = [
   { id: "peaceful", label: "Peaceful", labelHi: "शांत", emoji: "🕊️" },
   { id: "concerned", label: "Concerned", labelHi: "चिंता", emoji: "😟" },
 ];
+
+function CommentInput({ memoryId, userId, lang }) {
+  const [text, setText] = useState("");
+  const [sending, setSending] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const recRef = useRef(null);
+
+  const send = async (mediaUrl = null, mediaType = null) => {
+    if (!text.trim() && !mediaUrl) return;
+    setSending(true);
+    try {
+      const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", userId).maybeSingle();
+      await supabase.from("memory_comments").insert({
+        memory_id: memoryId, user_id: userId,
+        comment: text.trim() || (mediaType === "audio" ? "🎤 Voice reply" : "Reply"),
+        media_url: mediaUrl, media_type: mediaType,
+        author_name: prof?.full_name || (lang === "en" ? "You" : "आप"),
+      });
+      setText("");
+    } catch (e) { console.error("Comment error:", e); }
+    finally { setSending(false); }
+  };
+
+  const startRec = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const rec = new MediaRecorder(stream);
+      const chunks = [];
+      rec.ondataavailable = e => chunks.push(e.data);
+      rec.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        const blob = new Blob(chunks, { type: "audio/webm" });
+        const path = `comment_audio_${Date.now()}.webm`;
+        const { data } = await supabase.storage.from("memories").upload(path, blob);
+        if (data) {
+          const { data: urlData } = supabase.storage.from("memories").getPublicUrl(data.path);
+          await send(urlData.publicUrl, "audio");
+        }
+        setRecording(false);
+      };
+      recRef.current = rec;
+      rec.start();
+      setRecording(true);
+    } catch (e) { console.error("Rec error:", e); }
+  };
+
+  const stopRec = () => { if (recRef.current?.state === "recording") recRef.current.stop(); };
+
+  return (
+    <div style={{ marginTop: 12, borderTop: "1px solid rgba(255,248,240,.06)", paddingTop: 10, display: "flex", gap: 6, alignItems: "center" }}>
+      <input value={text} onChange={e => setText(e.target.value)} onKeyDown={e => e.key === "Enter" && send()}
+        placeholder={lang === "en" ? "Reply…" : "जवाब दें…"}
+        style={{
+          flex: 1, padding: "8px 12px", borderRadius: 10, border: "1px solid rgba(255,248,240,.12)",
+          background: "rgba(255,248,240,.08)", fontSize: 13, color: "#FFF8F0", outline: "none",
+          fontFamily: "'DM Sans',sans-serif",
+        }}
+      />
+      {recording ? (
+        <button onClick={stopRec} style={{ width: 32, height: 32, borderRadius: "50%", border: "none", cursor: "pointer", background: "rgba(220,38,38,.6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Pause size={14} color="#FFF8F0" />
+        </button>
+      ) : (
+        <button onClick={startRec} style={{ width: 32, height: 32, borderRadius: "50%", border: "none", cursor: "pointer", background: "rgba(255,248,240,.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Mic size={14} color="rgba(255,248,240,.6)" />
+        </button>
+      )}
+      <button onClick={() => send()} disabled={sending || !text.trim()} style={{
+        width: 32, height: 32, borderRadius: "50%", border: "none", cursor: "pointer",
+        background: text.trim() ? "#C68B59" : "rgba(255,248,240,.06)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        opacity: sending || !text.trim() ? 0.4 : 1,
+      }}>
+        <Send size={14} color="#FFF8F0" />
+      </button>
+    </div>
+  );
+}
 
 export default function MemoryLog({ open, onClose, lang = "en", userId }) {
   const [memories, setMemories] = useState([]);
@@ -337,7 +415,7 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
                         </div>
                       )}
 
-                      {/* Comments from child */}
+                      {/* Comments from family */}
                       {memComments.length > 0 && (
                         <div style={{ marginTop: 14, borderTop: "1px solid rgba(255,248,240,.06)", paddingTop: 12 }}>
                           <div style={{ fontSize: 11, color: "rgba(255,248,240,.35)", marginBottom: 8, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", display: "flex", alignItems: "center", gap: 5 }}>
@@ -346,25 +424,37 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
                           </div>
                           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                             {memComments.map((c) => (
-                              <div
-                                key={c.id}
-                                style={{
-                                  background: "rgba(198,139,89,.1)",
-                                  border: "1px solid rgba(198,139,89,.15)",
-                                  borderRadius: 12, padding: "10px 13px",
-                                }}
-                              >
-                                <p style={{ color: "rgba(255,248,240,.75)", fontSize: 13, lineHeight: 1.5, margin: 0 }}>
-                                  {c.comment}
-                                </p>
-                                <div style={{ fontSize: 10, color: "rgba(255,248,240,.3)", marginTop: 5 }}>
-                                  {formatDate(c.created_at)}
-                                </div>
+                              <div key={c.id} style={{ background: "rgba(198,139,89,.1)", border: "1px solid rgba(198,139,89,.15)", borderRadius: 12, padding: "10px 13px" }}>
+                                {c.author_name && (
+                                  <div style={{ fontSize: 10, fontWeight: 700, color: "#D4A574", marginBottom: 4 }}>{c.author_name}</div>
+                                )}
+                                {c.media_url && c.media_type === "audio" && (
+                                  <div style={{ marginBottom: 6 }}>
+                                    <button onClick={() => togglePlay(c.media_url, `cmt-${c.id}`)} style={{
+                                      display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 8,
+                                      background: playingId === `cmt-${c.id}` ? "rgba(93,64,55,.25)" : "rgba(255,248,240,.06)",
+                                      border: "1px solid rgba(255,248,240,.1)", color: "rgba(255,248,240,.6)", fontSize: 12, cursor: "pointer",
+                                    }}>
+                                      {playingId === `cmt-${c.id}` ? <Pause size={12} /> : <Play size={12} />}
+                                      {lang === "en" ? "Voice reply" : "ऑडियो जवाब"}
+                                    </button>
+                                  </div>
+                                )}
+                                {c.media_url && c.media_type === "video" && (
+                                  <div style={{ borderRadius: 8, overflow: "hidden", maxWidth: 200, marginBottom: 6 }}>
+                                    <video src={c.media_url} controls playsInline style={{ width: "100%", display: "block" }} />
+                                  </div>
+                                )}
+                                <p style={{ color: "rgba(255,248,240,.75)", fontSize: 13, lineHeight: 1.5, margin: 0 }}>{c.comment}</p>
+                                <div style={{ fontSize: 10, color: "rgba(255,248,240,.3)", marginTop: 5 }}>{formatDate(c.created_at)}</div>
                               </div>
                             ))}
                           </div>
                         </div>
                       )}
+
+                      {/* Comment input for senior */}
+                      <CommentInput memoryId={m.id} userId={userId} lang={lang} />
 
                       {/* Delete button */}
                       <button

@@ -171,23 +171,32 @@ export type Database = {
       }
       memory_comments: {
         Row: {
+          author_name: string | null
           comment: string
           created_at: string
           id: string
+          media_type: string | null
+          media_url: string | null
           memory_id: string
           user_id: string
         }
         Insert: {
+          author_name?: string | null
           comment: string
           created_at?: string
           id?: string
+          media_type?: string | null
+          media_url?: string | null
           memory_id: string
           user_id: string
         }
         Update: {
+          author_name?: string | null
           comment?: string
           created_at?: string
           id?: string
+          media_type?: string | null
+          media_url?: string | null
           memory_id?: string
           user_id?: string
         }

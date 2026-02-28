@@ -79,6 +79,24 @@ const SUMMARY_PROMPT_TEXT_ONLY = `Analyze this personal memory recording from tr
 
 Do NOT use generic titles like "Share a memory" or "Untitled".`;
 
+const VIDEO_VISUAL_PROMPT = `You are also analyzing a VIDEO recording of an elderly person. In addition to the audio/transcript analysis above, also provide a visual analysis section.
+
+Carefully examine the video frame(s) for:
+- Facial expression: Is the person calm, happy, distressed, neutral, or in pain?
+- Apparent energy level: Do they look tired/low energy, moderate, or high energy?
+- Environment: Note the background — is it tidy, well-lit, cluttered? Any safety concerns?
+- Posture/mobility: Any visible posture issues, mobility aids, or movement concerns?
+- Concerns: Any visual red flags (bruises, unkempt appearance, unsafe environment)?
+
+Add this to your JSON response:
+"visual_analysis": {
+  "facial_expression": "one of: calm, happy, distressed, neutral, pain",
+  "apparent_energy": "one of: low, moderate, high",
+  "environment_notes": "Brief note on background, lighting, tidiness",
+  "posture_mobility": "Brief note on visible posture or movement",
+  "concerns": "Any visual red flags, or null if none"
+}`;
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -91,13 +109,14 @@ Deno.serve(async (req) => {
     let transcript = "[Audio recording - transcription unavailable]";
     let audioBase64: string | null = null;
     let audioMimeType = "audio/webm";
+    const isVideo = mediaType === "video";
 
     try {
       const fileRes = await fetch(audioUrl);
       if (fileRes.ok) {
         const fileBuffer = await fileRes.arrayBuffer();
         const bytes = new Uint8Array(fileBuffer);
-        audioMimeType = mediaType === "video" ? "video/webm" : "audio/webm";
+        audioMimeType = isVideo ? "video/webm" : "audio/webm";
 
         // Keep audio bytes as base64 for multimodal analysis (under 5MB)
         if (bytes.length < 5 * 1024 * 1024) {
@@ -106,9 +125,9 @@ Deno.serve(async (req) => {
             binary += String.fromCharCode(bytes[i]);
           }
           audioBase64 = btoa(binary);
-          console.log(`Audio base64 prepared: ${(bytes.length / 1024).toFixed(0)}KB`);
+          console.log(`Media base64 prepared: ${(bytes.length / 1024).toFixed(0)}KB, isVideo: ${isVideo}`);
         } else {
-          console.log(`Audio too large for multimodal (${(bytes.length / 1024 / 1024).toFixed(1)}MB), using text-only analysis`);
+          console.log(`Media too large for multimodal (${(bytes.length / 1024 / 1024).toFixed(1)}MB), using text-only analysis`);
         }
 
         // Only attempt transcription if file is under 10MB
@@ -155,21 +174,28 @@ Deno.serve(async (req) => {
     let summary = transcript;
     let emotional_tone = "peaceful";
     let voice_metrics = null;
+    let visual_analysis = null;
 
     if (aiKey) {
       try {
         // Build multimodal or text-only message
         const useMultimodal = !!audioBase64;
-        const promptText = `The person was asked this prompt: "${promptQuestion || 'Share a memory'}"\n\nHere is their transcribed response:\n\n"${transcript}"\n\n${useMultimodal ? SUMMARY_PROMPT : SUMMARY_PROMPT_TEXT_ONLY}`;
+        const basePrompt = useMultimodal ? SUMMARY_PROMPT : SUMMARY_PROMPT_TEXT_ONLY;
+        // Add visual analysis prompt for video recordings
+        const fullPrompt = isVideo && useMultimodal
+          ? `${basePrompt}\n\n${VIDEO_VISUAL_PROMPT}`
+          : basePrompt;
+
+        const promptText = `The person was asked this prompt: "${promptQuestion || 'Share a memory'}"\n\nHere is their transcribed response:\n\n"${transcript}"\n\n${fullPrompt}`;
 
         const messageContent = useMultimodal
           ? [
-              { type: "input_audio", input_audio: { data: audioBase64, format: "wav" } },
+              { type: isVideo ? "input_video" : "input_audio", [isVideo ? "input_video" : "input_audio"]: { data: audioBase64, format: isVideo ? "webm" : "wav" } },
               { type: "text", text: promptText },
             ]
           : promptText;
 
-        console.log(`Using ${useMultimodal ? "multimodal audio+text" : "text-only"} analysis`);
+        console.log(`Using ${useMultimodal ? "multimodal" : "text-only"} analysis, isVideo: ${isVideo}`);
 
         const summaryRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
@@ -197,6 +223,7 @@ Deno.serve(async (req) => {
               summary = parsed.summary || summary;
               emotional_tone = parsed.emotional_tone || emotional_tone;
               voice_metrics = parsed.voice_metrics || null;
+              visual_analysis = parsed.visual_analysis || null;
             }
           } catch {
             console.error("Failed to parse summary JSON:", rawText);
@@ -262,6 +289,21 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Step 5: Save visual analysis as health_event (for video recordings)
+    if (visual_analysis) {
+      const { error: visualErr } = await supabase
+        .from("health_events")
+        .insert({
+          user_id: userId,
+          event_type: "visual_analysis",
+          value: { ...visual_analysis, memory_id: memoryRow.id },
+        });
+
+      if (visualErr) {
+        console.error("Failed to save visual analysis:", visualErr);
+      }
+    }
+
     return new Response(
       JSON.stringify({
         transcript,
@@ -269,6 +311,7 @@ Deno.serve(async (req) => {
         title,
         emotional_tone,
         voice_metrics,
+        visual_analysis,
         id: memoryRow.id,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }

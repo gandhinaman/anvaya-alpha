@@ -310,11 +310,65 @@ function WeeklyTrendChart({ healthEvents = [] }) {
 }
 
 // ─── MEMORY CARD ──────────────────────────────────────────────────────────────
-function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null, emotionalTone = null, promptQuestion = null, onDelete = null, deleting = false }) {
+function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null, emotionalTone = null, promptQuestion = null, onDelete = null, deleting = false, comments = [], memoryId = null, profileId = null, visualAnalysis = null }) {
   const toneColors = { joyful: "#C68B59", nostalgic: "#8D6E63", peaceful: "#5D4037", concerned: "#DC2626" };
   const tone = emotionalTone || "positive";
   const toneColor = toneColors[tone.toLowerCase()] || "#C68B59";
   const isVideo = audioUrl?.includes("/video_");
+  const [showComments, setShowComments] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const [sending, setSending] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const recorderRef = useRef(null);
+
+  const sendComment = async (mediaUrl = null, mediaType = null) => {
+    if (!commentText.trim() && !mediaUrl) return;
+    if (!memoryId || !profileId) return;
+    setSending(true);
+    try {
+      const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", profileId).maybeSingle();
+      await supabase.from("memory_comments").insert({
+        memory_id: memoryId,
+        user_id: profileId,
+        comment: commentText.trim() || (mediaType === "audio" ? "🎤 Voice reply" : "🎥 Video reply"),
+        media_url: mediaUrl,
+        media_type: mediaType,
+        author_name: prof?.full_name || "Caregiver",
+      });
+      setCommentText("");
+    } catch (err) { console.error("Comment error:", err); }
+    finally { setSending(false); }
+  };
+
+  const startAudioReply = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      const chunks = [];
+      recorder.ondataavailable = e => chunks.push(e.data);
+      recorder.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        const blob = new Blob(chunks, { type: "audio/webm" });
+        const path = `comment_audio_${Date.now()}.webm`;
+        const { data } = await supabase.storage.from("memories").upload(path, blob);
+        if (data) {
+          const { data: urlData } = supabase.storage.from("memories").getPublicUrl(data.path);
+          await sendComment(urlData.publicUrl, "audio");
+        }
+        setRecording(false);
+      };
+      recorderRef.current = recorder;
+      recorder.start();
+      setRecording(true);
+    } catch (err) { console.error("Audio record error:", err); }
+  };
+
+  const stopAudioReply = () => {
+    if (recorderRef.current && recorderRef.current.state === "recording") {
+      recorderRef.current.stop();
+    }
+  };
+
   return (
     <div className="gcard" style={{ padding: 18, animation: `fadeUp .5s ease ${.6 + index * .1}s both` }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
@@ -323,20 +377,20 @@ function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null
           <div style={{ display: "flex", gap: 6 }}>
              <span style={{ fontSize: 10, fontWeight: 600, color: "#6b6b6b", background: "rgba(93,64,55,0.07)", padding: "2px 8px", borderRadius: 100 }}>{date}</span>
              <span style={{ fontSize: 10, fontWeight: 600, color: "#6b6b6b", background: "rgba(93,64,55,0.07)", padding: "2px 8px", borderRadius: 100 }}>{duration}</span>
+             {comments.length > 0 && (
+               <span style={{ fontSize: 10, fontWeight: 600, color: "#C68B59", background: "rgba(198,139,89,0.1)", padding: "2px 8px", borderRadius: 100, display: "flex", alignItems: "center", gap: 3 }}>
+                 <MessageCircle size={10} /> {comments.length}
+               </span>
+             )}
           </div>
         </div>
       </div>
-      {/* Prompt question */}
       {promptQuestion && (
-        <div style={{
-          marginBottom: 10, padding: "8px 12px", borderRadius: 10,
-          background: "rgba(198,139,89,0.06)", border: "1px solid rgba(198,139,89,0.12)",
-        }}>
+        <div style={{ marginBottom: 10, padding: "8px 12px", borderRadius: 10, background: "rgba(198,139,89,0.06)", border: "1px solid rgba(198,139,89,0.12)" }}>
           <div style={{ fontSize: 9, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 3 }}>Question</div>
           <p style={{ fontSize: 12, color: "#8D6E63", fontStyle: "italic", margin: 0, lineHeight: 1.4 }}>"{promptQuestion}"</p>
         </div>
       )}
-      {/* Video or Audio player */}
       {isVideo ? (
         <div style={{ borderRadius: 12, overflow: "hidden", border: "1px solid rgba(93,64,55,0.12)", maxWidth: 300, marginBottom: 8 }}>
           <video src={audioUrl} controls playsInline style={{ width: "100%", display: "block", borderRadius: 10 }} />
@@ -344,37 +398,117 @@ function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null
       ) : (
         <AudioPlayer color="#5D4037" audioUrl={audioUrl} />
       )}
-      {summary && <p style={{
-        marginTop: 10, fontStyle: "italic",
-        fontFamily: "'Cormorant Garamond',serif", fontSize: 14,
-        color: "#6b6b6b", lineHeight: 1.65,
-        borderLeft: "2px solid rgba(93,64,55,0.2)", paddingLeft: 10
-      }}>
-        "{summary}"
-      </p>}
+      {summary && <p style={{ marginTop: 10, fontStyle: "italic", fontFamily: "'Cormorant Garamond',serif", fontSize: 14, color: "#6b6b6b", lineHeight: 1.65, borderLeft: "2px solid rgba(93,64,55,0.2)", paddingLeft: 10 }}>"{summary}"</p>}
+
+      {/* Visual Analysis Card for video */}
+      {visualAnalysis && (
+        <div style={{ marginTop: 12, padding: "12px 14px", borderRadius: 12, background: "rgba(93,64,55,0.04)", border: "1px solid rgba(93,64,55,0.1)" }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: "#5D4037", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8, display: "flex", alignItems: "center", gap: 5 }}>
+            <Brain size={12} /> Visual Insights
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 6 }}>
+            {visualAnalysis.facial_expression && <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 100, background: "rgba(198,139,89,0.1)", color: "#8D6E63", fontWeight: 600 }}>😊 {visualAnalysis.facial_expression}</span>}
+            {visualAnalysis.apparent_energy && <span style={{ fontSize: 10, padding: "3px 10px", borderRadius: 100, background: "rgba(93,64,55,0.08)", color: "#5D4037", fontWeight: 600 }}>⚡ {visualAnalysis.apparent_energy} energy</span>}
+          </div>
+          {visualAnalysis.environment_notes && <p style={{ fontSize: 11, color: "#6b6b6b", margin: "4px 0", lineHeight: 1.4 }}>🏠 {visualAnalysis.environment_notes}</p>}
+          {visualAnalysis.posture_mobility && <p style={{ fontSize: 11, color: "#6b6b6b", margin: "4px 0", lineHeight: 1.4 }}>🧍 {visualAnalysis.posture_mobility}</p>}
+          {visualAnalysis.concerns && <p style={{ fontSize: 11, color: "#DC2626", margin: "4px 0", lineHeight: 1.4, fontWeight: 600 }}>⚠️ {visualAnalysis.concerns}</p>}
+        </div>
+      )}
+
       <div style={{ marginTop: 10, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
           <div style={{ width: 6, height: 6, borderRadius: "50%", background: toneColor }} />
           <span style={{ fontSize: 10, color: toneColor, fontWeight: 600 }}>Emotional tone: {tone.charAt(0).toUpperCase() + tone.slice(1)}</span>
         </div>
-        {onDelete && (
-          <button
-            onClick={() => {
-              if (window.confirm("Delete this memory? This cannot be undone.")) onDelete();
-            }}
-            disabled={deleting}
-            style={{
+        <div style={{ display: "flex", gap: 6 }}>
+          {memoryId && (
+            <button onClick={() => setShowComments(!showComments)} style={{
+              display: "flex", alignItems: "center", gap: 4, padding: "4px 10px",
+              borderRadius: 8, border: "1px solid rgba(198,139,89,0.2)",
+              background: showComments ? "rgba(198,139,89,0.1)" : "rgba(198,139,89,0.04)",
+              color: "#C68B59", fontSize: 10, fontWeight: 600, cursor: "pointer",
+            }}>
+              <MessageCircle size={11} /> {comments.length || ""}
+            </button>
+          )}
+          {onDelete && (
+            <button onClick={() => { if (window.confirm("Delete this memory? This cannot be undone.")) onDelete(); }} disabled={deleting} style={{
               display: "flex", alignItems: "center", gap: 4, padding: "4px 10px",
               borderRadius: 8, border: "1px solid rgba(220,38,38,0.2)",
               background: "rgba(220,38,38,0.04)", color: "#DC2626",
               fontSize: 10, fontWeight: 600, cursor: "pointer", opacity: deleting ? 0.5 : 1,
-            }}
-          >
-            <Trash2 size={11} />
-            {deleting ? "…" : "Delete"}
-          </button>
-        )}
+            }}>
+              <Trash2 size={11} /> {deleting ? "…" : "Delete"}
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Collapsible Comments Section */}
+      {showComments && (
+        <div style={{ marginTop: 12, borderTop: "1px solid rgba(93,64,55,0.08)", paddingTop: 12 }}>
+          {comments.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
+              {comments.map(c => (
+                <div key={c.id} style={{ padding: "8px 12px", borderRadius: 10, background: "rgba(198,139,89,0.06)", border: "1px solid rgba(198,139,89,0.1)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: "#5D4037" }}>{c.author_name || "Family"}</span>
+                    <span style={{ fontSize: 9, color: "#9CA3AF" }}>{new Date(c.created_at).toLocaleDateString()}</span>
+                  </div>
+                  {c.media_url && c.media_type === "audio" && (
+                    <div style={{ marginBottom: 4 }}><AudioPlayer color="#8D6E63" audioUrl={c.media_url} /></div>
+                  )}
+                  {c.media_url && c.media_type === "video" && (
+                    <div style={{ borderRadius: 8, overflow: "hidden", maxWidth: 200, marginBottom: 4 }}>
+                      <video src={c.media_url} controls playsInline style={{ width: "100%", display: "block" }} />
+                    </div>
+                  )}
+                  <p style={{ fontSize: 12, color: "#3E2723", margin: 0, lineHeight: 1.4 }}>{c.comment}</p>
+                </div>
+              ))}
+            </div>
+          )}
+          {/* Comment input */}
+          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+            <input
+              value={commentText}
+              onChange={e => setCommentText(e.target.value)}
+              placeholder="Write a comment…"
+              onKeyDown={e => e.key === "Enter" && sendComment()}
+              style={{
+                flex: 1, padding: "8px 12px", borderRadius: 10,
+                border: "1px solid rgba(93,64,55,0.12)", background: "rgba(255,255,255,0.8)",
+                fontSize: 12, color: "#3E2723", outline: "none",
+                fontFamily: "'DM Sans',sans-serif",
+              }}
+            />
+            {recording ? (
+              <button onClick={stopAudioReply} style={{
+                width: 32, height: 32, borderRadius: "50%", border: "none", cursor: "pointer",
+                background: "#DC2626", display: "flex", alignItems: "center", justifyContent: "center",
+                animation: "callPulse 1.5s ease infinite",
+              }}>
+                <Pause size={14} color="#FFF8F0" />
+              </button>
+            ) : (
+              <button onClick={startAudioReply} style={{
+                width: 32, height: 32, borderRadius: "50%", border: "none", cursor: "pointer",
+                background: "rgba(93,64,55,0.1)", display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <Mic size={14} color="#5D4037" />
+              </button>
+            )}
+            <button onClick={() => sendComment()} disabled={sending || !commentText.trim()} style={{
+              padding: "8px 14px", borderRadius: 10, border: "none", cursor: "pointer",
+              background: "#5D4037", color: "#FFF8F0", fontSize: 11, fontWeight: 600,
+              opacity: sending || !commentText.trim() ? 0.5 : 1,
+            }}>
+              {sending ? "…" : "Send"}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -390,7 +524,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
   const [callOpen, setCallOpen] = useState(false);
   const [parentOnline, setParentOnline] = useState(false);
 
-  const { parentProfile, memories: realMemories, medications, healthEvents, stats: derivedStats, loading: dataLoading, lastUpdated, toggleMedication } = useParentData(profileId);
+  const { parentProfile, memories: realMemories, medications, healthEvents, stats: derivedStats, loading: dataLoading, lastUpdated, toggleMedication, memoryComments } = useParentData(profileId);
 
   // Request notification permission
   useEffect(() => {
@@ -638,6 +772,14 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
     }
   };
 
+  // Build visual analysis lookup from health events
+  const visualAnalysisMap = {};
+  healthEvents.forEach(e => {
+    if (e.event_type === "visual_analysis" && e.value?.memory_id) {
+      visualAnalysisMap[e.value.memory_id] = e.value;
+    }
+  });
+
   const memories = realMemories.length > 0
     ? realMemories.map(m => ({
       id: m.id,
@@ -649,8 +791,11 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
       audioUrl: m.audio_url || null,
       emotionalTone: m.emotional_tone || null,
       promptQuestion: m.prompt_question || null,
+      memoryId: m.id,
+      comments: memoryComments[m.id] || [],
+      visualAnalysis: visualAnalysisMap[m.id] || null,
     }))
-    : [{ id: null, title: "No memories yet", date: "—", duration: "—", summary: "Memories recorded by your parent will appear here.", transcript: "", audioUrl: null, emotionalTone: null, promptQuestion: null }];
+    : [{ id: null, title: "No memories yet", date: "—", duration: "—", summary: "Memories recorded by your parent will appear here.", transcript: "", audioUrl: null, emotionalTone: null, promptQuestion: null, memoryId: null, comments: [], visualAnalysis: null }];
 
   const Sidebar = ({ mobile = false }) => (
      <div style={{
@@ -1047,6 +1192,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                       key={m.id || i}
                       {...m}
                       index={i}
+                      profileId={profileId}
                       onDelete={m.id ? () => deleteMemory(m.id) : null}
                       deleting={deletingMemId === m.id}
                     />
