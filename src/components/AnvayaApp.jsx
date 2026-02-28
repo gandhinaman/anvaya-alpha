@@ -333,12 +333,91 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
   const [memoryOpen,setMemoryOpen]=useState(false);
   const [callOpen,setCallOpen]=useState(false);
   const [memoryLogOpen,setMemoryLogOpen]=useState(false);
+  const [profileOpen,setProfileOpen]=useState(false);
   const [inp,setInp]=useState("");
   const [pendingChatMsg, setPendingChatMsg]=useState(null);
   const [linkCode,setLinkCode]=useState(null);
   const [showCode,setShowCode]=useState(false);
   const [codeCopied,setCodeCopied]=useState(false);
   const isMock = inPanel;
+
+  // Profile state
+  const [profileData, setProfileData] = useState({
+    age: null, health_issues: [], language: "en", interests: [], location: "",
+    full_name: "", linked_user_id: null
+  });
+  const [profileMeds, setProfileMeds] = useState([]);
+  const [newMedName, setNewMedName] = useState("");
+  const [newMedDose, setNewMedDose] = useState("");
+  const [newMedTime, setNewMedTime] = useState("");
+  const [newInterest, setNewInterest] = useState("");
+  const [newIllness, setNewIllness] = useState("");
+  const [profileSaving, setProfileSaving] = useState(false);
+
+  // Load profile data
+  useEffect(() => {
+    if (!userId || profileOpen === false) return;
+    const load = async () => {
+      const { data: p } = await supabase.from("profiles")
+        .select("age, health_issues, language, interests, location, full_name, linked_user_id")
+        .eq("id", userId).maybeSingle();
+      if (p) setProfileData({
+        age: p.age, health_issues: p.health_issues || [], language: p.language || "en",
+        interests: p.interests || [], location: p.location || "", full_name: p.full_name || "",
+        linked_user_id: p.linked_user_id
+      });
+      const { data: meds } = await supabase.from("medications").select("*").eq("user_id", userId);
+      if (meds) setProfileMeds(meds);
+    };
+    load();
+  }, [userId, profileOpen]);
+
+  const saveProfile = async () => {
+    if (!userId) return;
+    setProfileSaving(true);
+    await supabase.from("profiles").update({
+      age: profileData.age, health_issues: profileData.health_issues,
+      interests: profileData.interests, location: profileData.location,
+      full_name: profileData.full_name
+    }).eq("id", userId);
+    setProfileSaving(false);
+  };
+
+  const addMedication = async () => {
+    if (!newMedName.trim() || !userId) return;
+    const { data } = await supabase.from("medications").insert({
+      user_id: userId, name: newMedName.trim(),
+      dose: newMedDose.trim() || null,
+      scheduled_time: newMedTime || null
+    }).select().single();
+    if (data) setProfileMeds(prev => [...prev, data]);
+    setNewMedName(""); setNewMedDose(""); setNewMedTime("");
+  };
+
+  const removeMedication = async (id) => {
+    await supabase.from("medications").delete().eq("id", id);
+    setProfileMeds(prev => prev.filter(m => m.id !== id));
+  };
+
+  const addInterest = () => {
+    if (!newInterest.trim()) return;
+    setProfileData(prev => ({ ...prev, interests: [...prev.interests, newInterest.trim()] }));
+    setNewInterest("");
+  };
+
+  const removeInterest = (idx) => {
+    setProfileData(prev => ({ ...prev, interests: prev.interests.filter((_, i) => i !== idx) }));
+  };
+
+  const addIllness = () => {
+    if (!newIllness.trim()) return;
+    setProfileData(prev => ({ ...prev, health_issues: [...prev.health_issues, newIllness.trim()] }));
+    setNewIllness("");
+  };
+
+  const removeIllness = (idx) => {
+    setProfileData(prev => ({ ...prev, health_issues: prev.health_issues.filter((_, i) => i !== idx) }));
+  };
 
   // ─── VOICE CONVERSATION STATE ──────────────────────────────────────────
   const [voicePhase, setVoicePhase] = useState("idle"); // idle | listening | thinking | speaking
@@ -876,6 +955,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
           {icon:<Mic size={24} color="#FFF8F0"/>,label:lang==="en"?"Record a Memory":"यादें रिकॉर्ड करें",sub:lang==="en"?"Your voice, preserved forever":"आपकी आवाज़, सदा के लिए",acc:"#C68B59",fn:()=>setMemoryOpen(true)},
           {icon:<BookOpen size={24} color="#FFF8F0"/>,label:lang==="en"?"Memory Log":"यादों की डायरी",sub:lang==="en"?"Your memories & family comments":"आपकी यादें और परिवार की टिप्पणियाँ",acc:"#C68B59",fn:()=>setMemoryLogOpen(true)},
           {icon:<MessageCircle size={24} color="#FFF8F0"/>,label:lang==="en"?"Ask Sathi":"साथी से पूछें",sub:lang==="en"?"Health · Reminders · Stories":"स्वास्थ्य · याद · कहानियाँ",acc:"#C68B59",fn:()=>setChatOpen(true)},
+          {icon:<User size={24} color="#FFF8F0"/>,label:lang==="en"?"My Profile":"मेरी प्रोफ़ाइल",sub:lang==="en"?"Health · Medicines · Preferences":"स्वास्थ्य · दवाइयाँ · पसंद",acc:"#8D6E63",fn:()=>setProfileOpen(true)},
           {icon:<Phone size={24} color="#FFF8F0"/>,label:lang==="en"?"Call Child":"बच्चे को कॉल करें",sub:linkedName||"Guardian",acc:"#C68B59",fn:()=>setCallOpen(true)},
         ].map((c,i)=>(
           <button key={i} onClick={c.fn} className="glass" style={{
@@ -965,6 +1045,201 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
       <MemoryRecorder open={memoryOpen} onClose={()=>setMemoryOpen(false)} lang={lang} userId={userId} linkedName={linkedName}/>
       <CallOverlay open={callOpen} onClose={()=>setCallOpen(false)} lang={lang} userId={userId} linkedUserId={linkedUserId} fromName={linkedName||"Child"}/>
       <MemoryLog open={memoryLogOpen} onClose={()=>setMemoryLogOpen(false)} lang={lang} userId={userId}/>
+
+      {/* ─── PROFILE OVERLAY ─── */}
+      {profileOpen && (
+        <div style={{
+          position:"absolute",inset:0,borderRadius:isMock?36:0,
+          background:"linear-gradient(160deg,#1A0F0A 0%,#2C1810 40%,#3E2723 70%,#2A1B14 100%)",
+          zIndex:50,display:"flex",flexDirection:"column",overflow:"hidden"
+        }}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"16px 20px",borderBottom:"1px solid rgba(255,248,240,.1)"}}>
+            <div style={{fontFamily:"'Playfair Display',serif",fontSize:24,color:"#FFF8F0",fontWeight:600}}>
+              {lang==="en"?"My Profile":"मेरी प्रोफ़ाइल"}
+            </div>
+            <button onClick={()=>{saveProfile();setProfileOpen(false);}} style={{
+              width:48,height:48,borderRadius:14,border:"1.5px solid rgba(255,248,240,.18)",
+              background:"rgba(255,248,240,.08)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"
+            }}>
+              <X size={22} color="#FFF8F0"/>
+            </button>
+          </div>
+
+          <div className="scr" style={{flex:1,overflowY:"auto",padding:"16px 20px",display:"flex",flexDirection:"column",gap:20}}>
+
+            {/* Name */}
+            <div>
+              <label style={{fontSize:13,color:"rgba(255,248,240,.5)",fontWeight:600,marginBottom:6,display:"block"}}>
+                {lang==="en"?"Full Name":"पूरा नाम"}
+              </label>
+              <input value={profileData.full_name} onChange={e=>setProfileData(p=>({...p,full_name:e.target.value}))}
+                style={{width:"100%",padding:"14px 16px",borderRadius:14,border:"1.5px solid rgba(255,248,240,.15)",
+                  background:"rgba(255,248,240,.06)",color:"#FFF8F0",fontSize:18,outline:"none"}}/>
+            </div>
+
+            {/* Age */}
+            <div>
+              <label style={{fontSize:13,color:"rgba(255,248,240,.5)",fontWeight:600,marginBottom:6,display:"block"}}>
+                {lang==="en"?"Age":"उम्र"}
+              </label>
+              <input type="number" value={profileData.age||""} onChange={e=>setProfileData(p=>({...p,age:parseInt(e.target.value)||null}))}
+                placeholder={lang==="en"?"Enter your age":"अपनी उम्र लिखें"}
+                style={{width:"100%",padding:"14px 16px",borderRadius:14,border:"1.5px solid rgba(255,248,240,.15)",
+                  background:"rgba(255,248,240,.06)",color:"#FFF8F0",fontSize:18,outline:"none"}}/>
+            </div>
+
+            {/* Location */}
+            <div>
+              <label style={{fontSize:13,color:"rgba(255,248,240,.5)",fontWeight:600,marginBottom:6,display:"block"}}>
+                {lang==="en"?"Location":"स्थान"}
+              </label>
+              <input value={profileData.location} onChange={e=>setProfileData(p=>({...p,location:e.target.value}))}
+                placeholder={lang==="en"?"City or town":"शहर या कस्बा"}
+                style={{width:"100%",padding:"14px 16px",borderRadius:14,border:"1.5px solid rgba(255,248,240,.15)",
+                  background:"rgba(255,248,240,.06)",color:"#FFF8F0",fontSize:18,outline:"none"}}/>
+            </div>
+
+            {/* Preferred Language */}
+            <div>
+              <label style={{fontSize:13,color:"rgba(255,248,240,.5)",fontWeight:600,marginBottom:6,display:"block"}}>
+                {lang==="en"?"Preferred Language":"पसंदीदा भाषा"}
+              </label>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                {[{v:"en",l:"English"},{v:"hi",l:"हिंदी"},{v:"bn",l:"বাংলা"},{v:"ta",l:"தமிழ்"},{v:"te",l:"తెలుగు"},{v:"mr",l:"मराठी"},{v:"gu",l:"ગુજરાતી"},{v:"kn",l:"ಕನ್ನಡ"}].map(opt=>(
+                  <button key={opt.v} onClick={()=>{setProfileData(p=>({...p,language:opt.v}));switchLang(opt.v);}}
+                    style={{padding:"10px 18px",borderRadius:100,border:`1.5px solid ${profileData.language===opt.v?"#C68B59":"rgba(255,248,240,.15)"}`,
+                      background:profileData.language===opt.v?"rgba(198,139,89,.2)":"rgba(255,248,240,.06)",
+                      color:profileData.language===opt.v?"#C68B59":"rgba(255,248,240,.6)",fontSize:15,fontWeight:600,cursor:"pointer"}}>
+                    {opt.l}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Health Issues / Illnesses */}
+            <div>
+              <label style={{fontSize:13,color:"rgba(255,248,240,.5)",fontWeight:600,marginBottom:6,display:"block"}}>
+                {lang==="en"?"Health Conditions":"स्वास्थ्य समस्याएं"}
+              </label>
+              <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:8}}>
+                {profileData.health_issues.map((h,i)=>(
+                  <span key={i} style={{padding:"8px 14px",borderRadius:100,background:"rgba(198,139,89,.15)",color:"#C68B59",fontSize:14,fontWeight:600,display:"flex",alignItems:"center",gap:6}}>
+                    {h}
+                    <button onClick={()=>removeIllness(i)} style={{background:"none",border:"none",cursor:"pointer",color:"#C68B59",fontSize:16,padding:0,lineHeight:1}}>×</button>
+                  </span>
+                ))}
+              </div>
+              <div style={{display:"flex",gap:8}}>
+                <input value={newIllness} onChange={e=>setNewIllness(e.target.value)}
+                  onKeyDown={e=>{if(e.key==="Enter")addIllness();}}
+                  placeholder={lang==="en"?"e.g. Diabetes, Arthritis":"जैसे मधुमेह, गठिया"}
+                  style={{flex:1,padding:"12px 16px",borderRadius:14,border:"1.5px solid rgba(255,248,240,.15)",
+                    background:"rgba(255,248,240,.06)",color:"#FFF8F0",fontSize:16,outline:"none"}}/>
+                <button onClick={addIllness} style={{padding:"12px 20px",borderRadius:14,border:"none",
+                  background:"rgba(198,139,89,.25)",color:"#C68B59",fontSize:14,fontWeight:700,cursor:"pointer"}}>+</button>
+              </div>
+            </div>
+
+            {/* Medications */}
+            <div>
+              <label style={{fontSize:13,color:"rgba(255,248,240,.5)",fontWeight:600,marginBottom:6,display:"block"}}>
+                💊 {lang==="en"?"Medications":"दवाइयाँ"}
+              </label>
+              {profileMeds.length > 0 && (
+                <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:10}}>
+                  {profileMeds.map(med=>(
+                    <div key={med.id} style={{display:"flex",alignItems:"center",gap:10,padding:"12px 14px",
+                      background:"rgba(255,248,240,.06)",borderRadius:14,border:"1px solid rgba(255,248,240,.1)"}}>
+                      <Pill size={18} color="#C68B59"/>
+                      <div style={{flex:1}}>
+                        <div style={{color:"#FFF8F0",fontSize:15,fontWeight:600}}>{med.name}</div>
+                        <div style={{color:"rgba(255,248,240,.45)",fontSize:12}}>
+                          {med.dose||""}{med.scheduled_time?` · ${med.scheduled_time}`:""}
+                        </div>
+                      </div>
+                      <button onClick={()=>removeMedication(med.id)} style={{background:"none",border:"none",cursor:"pointer",color:"rgba(255,248,240,.4)",fontSize:20}}>×</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div style={{display:"flex",flexDirection:"column",gap:8,padding:"14px",background:"rgba(255,248,240,.04)",borderRadius:16,border:"1px dashed rgba(255,248,240,.12)"}}>
+                <input value={newMedName} onChange={e=>setNewMedName(e.target.value)}
+                  placeholder={lang==="en"?"Medicine name":"दवा का नाम"}
+                  style={{padding:"12px 14px",borderRadius:12,border:"1px solid rgba(255,248,240,.12)",
+                    background:"rgba(255,248,240,.06)",color:"#FFF8F0",fontSize:16,outline:"none"}}/>
+                <div style={{display:"flex",gap:8}}>
+                  <input value={newMedDose} onChange={e=>setNewMedDose(e.target.value)}
+                    placeholder={lang==="en"?"Dose (e.g. 500mg)":"खुराक"}
+                    style={{flex:1,padding:"12px 14px",borderRadius:12,border:"1px solid rgba(255,248,240,.12)",
+                      background:"rgba(255,248,240,.06)",color:"#FFF8F0",fontSize:15,outline:"none"}}/>
+                  <input type="time" value={newMedTime} onChange={e=>setNewMedTime(e.target.value)}
+                    style={{padding:"12px 14px",borderRadius:12,border:"1px solid rgba(255,248,240,.12)",
+                      background:"rgba(255,248,240,.06)",color:"#FFF8F0",fontSize:15,outline:"none"}}/>
+                </div>
+                <button onClick={addMedication} style={{padding:"14px",borderRadius:14,border:"none",
+                  background:"linear-gradient(135deg,#C68B59,#8D6E63)",color:"#FFF8F0",fontSize:16,fontWeight:700,cursor:"pointer",
+                  opacity:newMedName.trim()?1:0.4}}>
+                  {lang==="en"?"+ Add Medication":"+ दवा जोड़ें"}
+                </button>
+              </div>
+            </div>
+
+            {/* Interests */}
+            <div>
+              <label style={{fontSize:13,color:"rgba(255,248,240,.5)",fontWeight:600,marginBottom:6,display:"block"}}>
+                {lang==="en"?"Interests & Hobbies":"रुचियाँ और शौक"}
+              </label>
+              <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:8}}>
+                {profileData.interests.map((h,i)=>(
+                  <span key={i} style={{padding:"8px 14px",borderRadius:100,background:"rgba(141,110,99,.2)",color:"#D4A574",fontSize:14,fontWeight:600,display:"flex",alignItems:"center",gap:6}}>
+                    {h}
+                    <button onClick={()=>removeInterest(i)} style={{background:"none",border:"none",cursor:"pointer",color:"#D4A574",fontSize:16,padding:0,lineHeight:1}}>×</button>
+                  </span>
+                ))}
+              </div>
+              <div style={{display:"flex",gap:8}}>
+                <input value={newInterest} onChange={e=>setNewInterest(e.target.value)}
+                  onKeyDown={e=>{if(e.key==="Enter")addInterest();}}
+                  placeholder={lang==="en"?"e.g. Gardening, Music, Cooking":"जैसे बागवानी, संगीत, खाना बनाना"}
+                  style={{flex:1,padding:"12px 16px",borderRadius:14,border:"1.5px solid rgba(255,248,240,.15)",
+                    background:"rgba(255,248,240,.06)",color:"#FFF8F0",fontSize:16,outline:"none"}}/>
+                <button onClick={addInterest} style={{padding:"12px 20px",borderRadius:14,border:"none",
+                  background:"rgba(141,110,99,.25)",color:"#D4A574",fontSize:14,fontWeight:700,cursor:"pointer"}}>+</button>
+              </div>
+            </div>
+
+            {/* Linking Code */}
+            {linkCode && (
+              <div style={{padding:"16px",background:"rgba(255,248,240,.06)",borderRadius:16,border:"1px solid rgba(255,248,240,.1)"}}>
+                <div style={{fontSize:13,color:"rgba(255,248,240,.5)",fontWeight:600,marginBottom:8}}>
+                  {lang==="en"?"Guardian Linking Code":"गार्डियन लिंकिंग कोड"}
+                </div>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                  <div style={{fontSize:28,fontWeight:700,color:"#D4A574",letterSpacing:"0.2em"}}>{linkCode}</div>
+                  <button onClick={copyCode} style={{background:"rgba(255,248,240,.1)",border:"1px solid rgba(255,248,240,.15)",borderRadius:10,padding:"10px 16px",cursor:"pointer",color:"#FFF8F0",fontSize:13,display:"flex",alignItems:"center",gap:5}}>
+                    {codeCopied?<><Check size={14}/>Copied</>:<><Copy size={14}/>Copy</>}
+                  </button>
+                </div>
+                <div style={{fontSize:12,color:"rgba(255,248,240,.35)",marginTop:6}}>
+                  {lang==="en"?"Share with your child to connect accounts":"अपने बच्चे को यह कोड दें"}
+                </div>
+              </div>
+            )}
+
+            {/* Save button */}
+            <button onClick={()=>{saveProfile();setProfileOpen(false);}} style={{
+              padding:"18px",borderRadius:18,border:"none",cursor:"pointer",
+              background:"linear-gradient(135deg,#C68B59,#8D6E63)",
+              color:"#FFF8F0",fontSize:18,fontWeight:700,
+              boxShadow:"0 8px 28px rgba(198,139,89,.35)",marginBottom:20
+            }}>
+              {profileSaving ? (lang==="en"?"Saving…":"सहेज रहा हूँ…") : (lang==="en"?"Save Profile":"प्रोफ़ाइल सहेजें")}
+            </button>
+
+            <div style={{height:"env(safe-area-inset-bottom,20px)"}}/>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
