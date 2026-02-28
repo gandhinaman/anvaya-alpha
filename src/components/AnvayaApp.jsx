@@ -861,10 +861,10 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
 
       <div style={{padding:"16px 16px",display:"flex",flexDirection:"column",gap:14,flex:1,justifyContent:"flex-end"}}>
         {[
-          {icon:<Mic size={24} color="#FFF8F0"/>,label:lang==="en"?"Record a Memory":"यादें रिकॉर्ड करें",sub:lang==="en"?"Your voice, preserved forever":"आपकी आवाज़, सदा के लिए",acc:"#C68B59",fn:()=>setMemoryOpen(true)},
-          {icon:<BookOpen size={24} color="#FFF8F0"/>,label:lang==="en"?"Memory Log":"यादों की डायरी",sub:lang==="en"?"Your memories & family comments":"आपकी यादें और परिवार की टिप्पणियाँ",acc:"#8D6E63",fn:()=>setMemoryLogOpen(true)},
-          {icon:<MessageCircle size={24} color="#FFF8F0"/>,label:lang==="en"?"Ask Sathi":"साथी से पूछें",sub:lang==="en"?"Health · Reminders · Stories":"स्वास्थ्य · याद · कहानियाँ",acc:"#5D4037",fn:()=>setChatOpen(true)},
-          {icon:<Phone size={24} color="#FFF8F0"/>,label:lang==="en"?"Call Child":"बच्चे को कॉल करें",sub:linkedName||"Guardian",acc:"#A1887F",fn:()=>setCallOpen(true)},
+          {icon:<Mic size={24} color="#2C1810"/>,label:lang==="en"?"Record a Memory":"यादें रिकॉर्ड करें",sub:lang==="en"?"Your voice, preserved forever":"आपकी आवाज़, सदा के लिए",acc:"rgba(255,248,240,.18)",fn:()=>setMemoryOpen(true)},
+          {icon:<BookOpen size={24} color="#2C1810"/>,label:lang==="en"?"Memory Log":"यादों की डायरी",sub:lang==="en"?"Your memories & family comments":"आपकी यादें और परिवार की टिप्पणियाँ",acc:"rgba(255,248,240,.18)",fn:()=>setMemoryLogOpen(true)},
+          {icon:<MessageCircle size={24} color="#2C1810"/>,label:lang==="en"?"Ask Sathi":"साथी से पूछें",sub:lang==="en"?"Health · Reminders · Stories":"स्वास्थ्य · याद · कहानियाँ",acc:"rgba(255,248,240,.18)",fn:()=>setChatOpen(true)},
+          {icon:<Phone size={24} color="#2C1810"/>,label:lang==="en"?"Call Child":"बच्चे को कॉल करें",sub:linkedName||"Guardian",acc:"rgba(255,248,240,.18)",fn:()=>setCallOpen(true)},
         ].map((c,i)=>(
           <button key={i} onClick={c.fn} className="glass" style={{
             display:"flex",alignItems:"center",gap:14,padding:"16px 18px",
@@ -873,7 +873,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
             borderRadius:20
           }}>
             <div style={{width:52,height:52,borderRadius:14,flexShrink:0,background:c.acc,
-              display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 4px 14px ${c.acc}55`}}>
+              display:"flex",alignItems:"center",justifyContent:"center",border:"1.5px solid rgba(255,248,240,.2)"}}>
               {c.icon}
             </div>
             <div style={{flex:1,minWidth:0}}>
