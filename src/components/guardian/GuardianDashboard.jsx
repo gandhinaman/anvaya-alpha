@@ -961,7 +961,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
             <div style={{
               display: "grid",
               gridTemplateColumns: isMobile ? "1fr" : inPanel ? "1fr" : "2fr 1fr",
-              gap: 14, marginBottom: 14
+              gap: 14, marginBottom: 14, alignItems: "start"
             }}>
               <div className="gcard s5" style={{ padding: 20 }}>
                 <div style={{ marginBottom: 14 }}>
@@ -1179,7 +1179,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
             <div style={{
               display: "grid",
               gridTemplateColumns: isMobile ? "1fr" : inPanel ? "1fr" : "2fr 1fr",
-              gap: 14, marginBottom: 14
+              gap: 14, marginBottom: 14, alignItems: "start"
             }}>
               <div className="gcard s5" style={{ padding: 20 }}>
                 <div style={{ marginBottom: 14 }}>
@@ -1189,12 +1189,12 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                 <AcousticHeatmap healthEvents={healthEvents} />
               </div>
 
-              <div className="gcard s6" style={{ padding: 20 }}>
-                <div style={{ marginBottom: 14 }}>
+              <div className="gcard s6" style={{ padding: 20, maxHeight: 340, display: "flex", flexDirection: "column" }}>
+                <div style={{ marginBottom: 14, flexShrink: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Recent Alerts</div>
                   <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Latest health & activity events</div>
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 9, overflowY: "auto", flex: 1, paddingRight: 4 }}>
                   {alerts.map((a, i) => (
                     <div key={i} className="gcard" style={{
                       padding: "10px 12px",
