@@ -60,7 +60,6 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
   const speakPrompt = useCallback(async (text) => {
     try {
       setIsSpeakingPrompt(true);
-      // Stop any previous prompt audio
       if (promptAudioRef.current) {
         promptAudioRef.current.pause();
         promptAudioRef.current = null;
@@ -105,7 +104,6 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
     }
   }, [speakWithBrowserFallback]);
 
-  // Read prompt aloud when component opens
   useEffect(() => {
     if (open && phase === "idle") {
       speakPrompt(currentPrompt);
@@ -119,7 +117,6 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
     speakPrompt(prompts[newIndex]);
   };
 
-  // Cleanup on unmount or close
   useEffect(() => {
     if (!open) {
       stopEverything();
@@ -162,11 +159,9 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
         if (e.data.size > 0) chunks.current.push(e.data);
       };
 
-      recorder.onstop = () => {
-        // handled by stopRecording
-      };
+      recorder.onstop = () => {};
 
-      recorder.start(250); // collect in 250ms chunks
+      recorder.start(250);
       mediaRecorder.current = recorder;
       setPhase("recording");
       setSeconds(0);
@@ -191,13 +186,11 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
     clearInterval(timerRef.current);
     const duration = seconds;
 
-    // Wait for final data
     await new Promise((resolve) => {
       mediaRecorder.current.onstop = resolve;
       mediaRecorder.current.stop();
     });
 
-    // Stop mic stream
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
@@ -207,7 +200,6 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
     setPhase("processing");
 
     try {
-      // Upload to storage
       const fileName = `${userId}/${Date.now()}.webm`;
       const { error: uploadErr } = await supabase.storage
         .from("memories")
@@ -221,7 +213,6 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
 
       const audioUrl = urlData.publicUrl;
 
-      // Convert blob to base64
       const arrayBuffer = await blob.arrayBuffer();
       const base64 = btoa(
         new Uint8Array(arrayBuffer).reduce(
@@ -230,7 +221,6 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
         )
       );
 
-      // Call process-memory edge function
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
@@ -286,89 +276,92 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
         position: "absolute",
         inset: 0,
         zIndex: 20,
-        background: "rgba(2,18,14,.88)",
+        background: "rgba(2,18,14,.92)",
         backdropFilter: "blur(20px)",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        padding: 32,
+        padding: 28,
         gap: 20,
         borderRadius: "inherit",
       }}
     >
-      {/* Close button */}
+      {/* Close button — large, red-tinted, high contrast for seniors */}
       <button
         onClick={() => {
           stopEverything();
           onClose();
         }}
+        aria-label={lang === "hi" ? "बंद करें" : "Close"}
         style={{
           position: "absolute",
-          top: 18,
-          right: 18,
-          width: 34,
-          height: 34,
-          borderRadius: 10,
-          border: "1px solid rgba(255,255,255,.12)",
-          background: "rgba(255,255,255,.06)",
+          top: 14,
+          right: 14,
+          width: 54,
+          height: 54,
+          borderRadius: 16,
+          border: "2.5px solid rgba(255,100,100,.55)",
+          background: "rgba(220,38,38,.22)",
           cursor: "pointer",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           zIndex: 5,
+          boxShadow: "0 4px 18px rgba(220,38,38,.3)",
         }}
       >
-        <X size={16} color="rgba(249,249,247,.6)" />
+        <X size={28} color="#fca5a5" strokeWidth={3} />
       </button>
 
       {/* ── IDLE: Start prompt ── */}
       {phase === "idle" && (
-        <div style={{ textAlign: "center", animation: "fadeUp .5s ease both" }}>
+        <div style={{ textAlign: "center", animation: "fadeUp .5s ease both", maxWidth: 340 }}>
           <div
             style={{
-              width: 80,
-              height: 80,
+              width: 88,
+              height: 88,
               borderRadius: "50%",
               background: "rgba(217,119,6,.15)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               margin: "0 auto 18px",
-              border: "1px solid rgba(217,119,6,.25)",
+              border: "2px solid rgba(217,119,6,.3)",
             }}
           >
-            <Mic size={32} color="#d97706" />
+            <Mic size={38} color="#d97706" />
           </div>
           <div
             style={{
               fontFamily: "'Cormorant Garamond',serif",
-              fontSize: 26,
+              fontSize: 30,
               color: "#F9F9F7",
-              fontWeight: 400,
-              marginBottom: 6,
+              fontWeight: 600,
+              marginBottom: 10,
             }}
           >
-           {lang === "hi" ? "यादें रिकॉर्ड करें" : "Record a Memory"}
+            {lang === "hi" ? "यादें रिकॉर्ड करें" : "Record a Memory"}
           </div>
 
           {/* Prompt question */}
           <div style={{
-            background: "rgba(217,119,6,.08)",
-            border: "1px solid rgba(217,119,6,.2)",
+            background: "rgba(217,119,6,.1)",
+            border: "1.5px solid rgba(217,119,6,.25)",
             borderRadius: 16,
-            padding: "14px 18px",
-            marginBottom: 8,
+            padding: "16px 20px",
+            marginBottom: 10,
             position: "relative",
           }}>
             <p style={{
               color: "#F9F9F7",
-              fontSize: 15,
+              fontSize: 18,
               fontWeight: 500,
               lineHeight: 1.5,
               fontStyle: "italic",
               fontFamily: "'Cormorant Garamond',serif",
               margin: 0,
+              paddingRight: 36,
             }}>
               "{currentPrompt}"
             </p>
@@ -376,13 +369,13 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
               onClick={shufflePrompt}
               style={{
                 position: "absolute",
-                top: 10,
-                right: 10,
-                background: "rgba(217,119,6,.15)",
-                border: "1px solid rgba(217,119,6,.25)",
-                borderRadius: 8,
-                width: 28,
-                height: 28,
+                top: 12,
+                right: 12,
+                background: "rgba(217,119,6,.2)",
+                border: "1px solid rgba(217,119,6,.35)",
+                borderRadius: 10,
+                width: 38,
+                height: 38,
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
@@ -390,11 +383,11 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
               }}
               title={lang === "hi" ? "अगला सवाल" : "Next question"}
             >
-              <RefreshCw size={13} color="#d97706" />
+              <RefreshCw size={18} color="#d97706" />
             </button>
           </div>
 
-          <p style={{ color: "rgba(249,249,247,.4)", fontSize: 12, lineHeight: 1.6, marginBottom: 20 }}>
+          <p style={{ color: "rgba(249,249,247,.5)", fontSize: 15, lineHeight: 1.6, marginBottom: 22 }}>
             {lang === "hi"
               ? "इस सवाल का जवाब दें, या कुछ भी बोलें। साथी सुन रहा है।"
               : "Answer this prompt, or share anything on your mind. Sathi is listening."}
@@ -403,31 +396,32 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
             onClick={startRecording}
             style={{
               width: "100%",
-              padding: "17px",
+              padding: "20px",
               borderRadius: 18,
               border: "none",
               cursor: "pointer",
               background: "linear-gradient(135deg,#d97706,#B45309)",
               color: "#F9F9F7",
-              fontSize: 16,
+              fontSize: 20,
               fontWeight: 700,
               boxShadow: "0 8px 28px rgba(217,119,6,.35)",
               fontFamily: "'DM Sans', sans-serif",
+              letterSpacing: "0.02em",
             }}
           >
             {lang === "hi" ? "🎙 रिकॉर्डिंग शुरू करें" : "🎙 Start Recording"}
-           </button>
+          </button>
         </div>
       )}
 
       {/* ── RECORDING: Live timer + stop ── */}
       {phase === "recording" && (
-        <div style={{ textAlign: "center", animation: "fadeUp .4s ease both" }}>
+        <div style={{ textAlign: "center", animation: "fadeUp .4s ease both", maxWidth: 340 }}>
           {/* Pulsing record indicator */}
           <div
             style={{
-              width: 100,
-              height: 100,
+              width: 110,
+              height: 110,
               borderRadius: "50%",
               background: "rgba(217,119,6,.12)",
               display: "flex",
@@ -440,11 +434,11 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
           >
             <div
               style={{
-                width: 20,
-                height: 20,
+                width: 24,
+                height: 24,
                 borderRadius: "50%",
                 background: "#d97706",
-                boxShadow: "0 0 20px rgba(217,119,6,.6)",
+                boxShadow: "0 0 24px rgba(217,119,6,.6)",
               }}
             />
           </div>
@@ -452,7 +446,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
           <div
             style={{
               fontFamily: "'DM Sans', sans-serif",
-              fontSize: 36,
+              fontSize: 48,
               color: "#F9F9F7",
               fontWeight: 300,
               letterSpacing: "0.08em",
@@ -462,7 +456,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
           >
             {formatTime(seconds)}
           </div>
-          <p style={{ color: "rgba(249,249,247,.4)", fontSize: 12, marginBottom: 28 }}>
+          <p style={{ color: "rgba(249,249,247,.5)", fontSize: 16, marginBottom: 28 }}>
             {lang === "hi" ? "रिकॉर्डिंग… बोलते रहें" : "Recording… keep speaking"}
           </p>
 
@@ -470,23 +464,23 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
             onClick={stopRecording}
             style={{
               width: "100%",
-              padding: "17px",
+              padding: "20px",
               borderRadius: 18,
               border: "none",
               cursor: "pointer",
               background: "linear-gradient(135deg,#dc2626,#b91c1c)",
               color: "#F9F9F7",
-              fontSize: 16,
+              fontSize: 20,
               fontWeight: 700,
               boxShadow: "0 8px 28px rgba(220,38,38,.3)",
               fontFamily: "'DM Sans', sans-serif",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: 8,
+              gap: 10,
             }}
           >
-            <Square size={14} fill="#F9F9F7" />
+            <Square size={18} fill="#F9F9F7" />
             {lang === "hi" ? "रिकॉर्डिंग बंद करें" : "Stop Recording"}
           </button>
         </div>
@@ -497,8 +491,8 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
         <div style={{ textAlign: "center", animation: "fadeUp .4s ease both" }}>
           <div
             style={{
-              width: 64,
-              height: 64,
+              width: 72,
+              height: 72,
               margin: "0 auto 18px",
               display: "flex",
               alignItems: "center",
@@ -506,7 +500,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
             }}
           >
             <Loader
-              size={36}
+              size={42}
               color="#d97706"
               style={{
                 animation: "spin 1.2s linear infinite",
@@ -517,7 +511,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
           <div
             style={{
               fontFamily: "'Cormorant Garamond',serif",
-              fontSize: 22,
+              fontSize: 26,
               color: "#F9F9F7",
               fontWeight: 400,
               marginBottom: 6,
@@ -525,7 +519,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
           >
             {lang === "hi" ? "आपकी यादें सहेज रहे हैं…" : "Processing your memory…"}
           </div>
-          <p style={{ color: "rgba(249,249,247,.4)", fontSize: 12, lineHeight: 1.6 }}>
+          <p style={{ color: "rgba(249,249,247,.5)", fontSize: 15, lineHeight: 1.6 }}>
             {lang === "hi"
               ? "साथी आपकी कहानी को समझ रहा है"
               : "Sathi is understanding your story"}
@@ -535,29 +529,29 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
 
       {/* ── SUCCESS ── */}
       {phase === "success" && (
-        <div style={{ textAlign: "center", animation: "fadeUp .4s ease both" }}>
+        <div style={{ textAlign: "center", animation: "fadeUp .4s ease both", maxWidth: 340 }}>
           <div
             style={{
-              width: 64,
-              height: 64,
+              width: 72,
+              height: 72,
               borderRadius: "50%",
               background: "rgba(5,150,105,.2)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               margin: "0 auto 18px",
-              border: "1px solid rgba(5,150,105,.35)",
+              border: "2px solid rgba(5,150,105,.4)",
             }}
           >
-            <Check size={30} color="#059669" />
+            <Check size={36} color="#059669" />
           </div>
           <div
             style={{
               fontFamily: "'Cormorant Garamond',serif",
-              fontSize: 24,
+              fontSize: 28,
               color: "#F9F9F7",
               fontWeight: 400,
-              marginBottom: 4,
+              marginBottom: 6,
             }}
           >
             {lang === "hi" ? "याद सहेज ली गई!" : "Memory saved!"}
@@ -565,20 +559,20 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
           {savedTitle && (
             <div
               style={{
-                fontSize: 13,
+                fontSize: 16,
                 color: "#d97706",
                 fontWeight: 600,
                 marginBottom: 8,
-                padding: "4px 12px",
+                padding: "6px 14px",
                 borderRadius: 100,
-                background: "rgba(217,119,6,.1)",
+                background: "rgba(217,119,6,.12)",
                 display: "inline-block",
               }}
             >
               "{savedTitle}"
             </div>
           )}
-          <p style={{ color: "rgba(249,249,247,.5)", fontSize: 13, lineHeight: 1.6, marginTop: 6 }}>
+          <p style={{ color: "rgba(249,249,247,.5)", fontSize: 16, lineHeight: 1.6, marginTop: 6 }}>
             {lang === "hi"
               ? `${linkedName||"Guardian"} इसे सुन सकेगा।`
               : `${linkedName||"Your guardian"} will be able to hear this.`}
@@ -588,13 +582,13 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
             style={{
               marginTop: 24,
               width: "100%",
-              padding: "15px",
+              padding: "20px",
               borderRadius: 16,
               border: "none",
               cursor: "pointer",
               background: "linear-gradient(135deg,#059669,#065f46)",
               color: "#F9F9F7",
-              fontSize: 15,
+              fontSize: 18,
               fontWeight: 700,
               boxShadow: "0 8px 28px rgba(5,150,105,.35)",
               fontFamily: "'DM Sans', sans-serif",
@@ -607,26 +601,26 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
 
       {/* ── ERROR ── */}
       {phase === "error" && (
-        <div style={{ textAlign: "center", animation: "fadeUp .4s ease both" }}>
+        <div style={{ textAlign: "center", animation: "fadeUp .4s ease both", maxWidth: 340 }}>
           <div
             style={{
-              width: 60,
-              height: 60,
+              width: 68,
+              height: 68,
               borderRadius: "50%",
               background: "rgba(220,38,38,.12)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               margin: "0 auto 16px",
-              border: "1px solid rgba(220,38,38,.25)",
+              border: "2px solid rgba(220,38,38,.3)",
             }}
           >
-            <Mic size={26} color="#fca5a5" />
+            <Mic size={30} color="#fca5a5" />
           </div>
           <div
             style={{
               fontFamily: "'Cormorant Garamond',serif",
-              fontSize: 22,
+              fontSize: 26,
               color: "#F9F9F7",
               fontWeight: 400,
               marginBottom: 8,
@@ -634,7 +628,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
           >
             {lang === "hi" ? "कुछ गड़बड़ हो गई" : "Something went wrong"}
           </div>
-          <p style={{ color: "rgba(249,249,247,.5)", fontSize: 12, lineHeight: 1.6, marginBottom: 20, maxWidth: 280 }}>
+          <p style={{ color: "rgba(249,249,247,.5)", fontSize: 15, lineHeight: 1.6, marginBottom: 20 }}>
             {errorMsg}
           </p>
           <div style={{ display: "flex", gap: 10, width: "100%" }}>
@@ -645,13 +639,13 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
               }}
               style={{
                 flex: 1,
-                padding: "13px",
+                padding: "18px",
                 borderRadius: 14,
                 border: "none",
                 cursor: "pointer",
                 background: "linear-gradient(135deg,#d97706,#B45309)",
                 color: "#F9F9F7",
-                fontSize: 13,
+                fontSize: 17,
                 fontWeight: 600,
                 fontFamily: "'DM Sans', sans-serif",
               }}
@@ -661,12 +655,12 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
             <button
               onClick={onClose}
               style={{
-                padding: "13px 20px",
+                padding: "18px 24px",
                 borderRadius: 14,
-                border: "1px solid rgba(255,255,255,.15)",
+                border: "2px solid rgba(255,255,255,.2)",
                 background: "transparent",
-                color: "rgba(249,249,247,.5)",
-                fontSize: 13,
+                color: "rgba(249,249,247,.65)",
+                fontSize: 17,
                 cursor: "pointer",
                 fontFamily: "'DM Sans', sans-serif",
               }}
