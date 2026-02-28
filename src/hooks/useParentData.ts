@@ -200,6 +200,11 @@ export function useParentData(profileId: string | null) {
         { event: "UPDATE", schema: "public", table: "medications" },
         () => fetchAll()
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "memory_comments" },
+        () => fetchAll()
+      )
       .subscribe();
 
     return () => { supabase.removeChannel(ch); };
@@ -255,5 +260,26 @@ export function useParentData(profileId: string | null) {
     fetchAll();
   };
 
-  return { parentProfile, memories, medications, healthEvents, stats, loading, lastUpdated, toggleMedication };
+  // Fetch memory comments for all loaded memories
+  const [memoryComments, setMemoryComments] = useState<Record<string, any[]>>({});
+
+  useEffect(() => {
+    if (memories.length === 0) return;
+    const ids = memories.map(m => m.id);
+    supabase
+      .from("memory_comments")
+      .select("*")
+      .in("memory_id", ids)
+      .order("created_at", { ascending: true })
+      .then(({ data }) => {
+        const grouped: Record<string, any[]> = {};
+        (data || []).forEach((c: any) => {
+          if (!grouped[c.memory_id]) grouped[c.memory_id] = [];
+          grouped[c.memory_id].push(c);
+        });
+        setMemoryComments(grouped);
+      });
+  }, [memories]);
+
+  return { parentProfile, memories, medications, healthEvents, stats, loading, lastUpdated, toggleMedication, memoryComments };
 }
