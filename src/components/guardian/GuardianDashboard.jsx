@@ -156,14 +156,34 @@ function CognitiveRing({ value = 0, label = "" }) {
 }
 
 // ─── ACOUSTIC HEATMAP ─────────────────────────────────────────────────────────
-function AcousticHeatmap() {
+function AcousticHeatmap({ healthEvents = [] }) {
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const hours = ["12a", "2a", "4a", "6a", "8a", "10a", "12p", "2p", "4p", "6p", "8p", "10p"];
-  const seed = (r, c) => {
-    const base = [0, 0, 0, 1, 2, 3, 4, 3, 3, 2, 1, 0];
-    const v = base[c] + (Math.sin(r * 3.7 + c * 1.3) * 1.2);
-    return Math.max(0, Math.min(4, Math.round(v)));
+
+  // Build a 7x12 grid from real vocal_energy events in the last 7 days
+  const grid = Array.from({ length: 7 }, () => Array(12).fill(null));
+  const now = new Date();
+  healthEvents.forEach(ev => {
+    if (ev.event_type !== "vocal_energy" || !ev.recorded_at || ev.value?.score == null) return;
+    const d = new Date(ev.recorded_at);
+    const diff = Math.floor((now - d) / 86400000);
+    if (diff > 6 || diff < 0) return;
+    const dayIdx = (d.getDay() + 6) % 7; // 0=Mon
+    const hourIdx = Math.floor(d.getHours() / 2); // 0-11 for 2-hour buckets
+    const existing = grid[dayIdx][hourIdx];
+    grid[dayIdx][hourIdx] = existing != null ? Math.round((existing + ev.value.score) / 2) : ev.value.score;
+  });
+
+  // Map score (0-100) to intensity level (0-4)
+  const toLevel = (score) => {
+    if (score == null) return 0;
+    if (score < 20) return 0;
+    if (score < 40) return 1;
+    if (score < 60) return 2;
+    if (score < 80) return 3;
+    return 4;
   };
+
   const colors = ["rgba(93,64,55,0.06)", "rgba(93,64,55,0.18)", "rgba(198,139,89,0.35)", "rgba(198,139,89,0.6)", "rgba(198,139,89,0.9)"];
   return (
     <div>
@@ -176,13 +196,14 @@ function AcousticHeatmap() {
           <React.Fragment key={`row-${r}`}>
             <div style={{ fontSize: 10, color: "#6b6b6b", fontWeight: 500, textAlign: "right", paddingRight: 6 }}>{day}</div>
             {hours.map((_, c) => {
-              const v = seed(r, c);
+              const score = grid[r][c];
+              const v = toLevel(score);
               return (
                 <div key={`${r}-${c}`} style={{
                   height: 18, borderRadius: 4,
                   background: colors[v],
                   transition: "background .3s"
-                }} title={`${day} ${hours[c]}: activity ${v}`} />
+                }} title={score != null ? `${day} ${hours[c]}: ${score}%` : `${day} ${hours[c]}: no data`} />
               );
             })}
           </React.Fragment>
@@ -845,7 +866,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                   <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Acoustic Insights</div>
                   <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>24-hour vocal and acoustic analysis</div>
                 </div>
-                <AcousticHeatmap />
+                <AcousticHeatmap healthEvents={healthEvents} />
               </div>
 
               <div className="gcard s6" style={{ padding: 20 }}>
@@ -1011,7 +1032,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                   <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Acoustic Insights</div>
                   <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>24-hour vocal and acoustic analysis</div>
                 </div>
-                <AcousticHeatmap />
+                <AcousticHeatmap healthEvents={healthEvents} />
               </div>
 
               <div className="gcard s6" style={{ padding: 20 }}>
