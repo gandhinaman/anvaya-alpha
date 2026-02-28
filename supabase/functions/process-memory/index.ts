@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
       }),
     });
 
-    let title = "Untitled Memory";
+    let title = promptQuestion || "Untitled Memory";
     let summary = transcript;
     let emotional_tone = "peaceful";
 
