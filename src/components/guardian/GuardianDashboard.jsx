@@ -430,6 +430,32 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
   const [signingOut, setSigningOut] = useState(false);
   const [memorySearch, setMemorySearch] = useState("");
 
+  // Guardian profile state
+  const [guardianProfile, setGuardianProfile] = useState({ full_name: "", phone: "", location: "" });
+  const [guardianProfileLoading, setGuardianProfileLoading] = useState(false);
+  const [guardianProfileSaved, setGuardianProfileSaved] = useState(false);
+
+  useEffect(() => {
+    if (!profileId) return;
+    supabase.from("profiles").select("full_name, phone, location").eq("id", profileId).maybeSingle()
+      .then(({ data }) => {
+        if (data) setGuardianProfile({ full_name: data.full_name || "", phone: data.phone || "", location: data.location || "" });
+      });
+  }, [profileId]);
+
+  const saveGuardianProfile = async () => {
+    if (!profileId) return;
+    setGuardianProfileLoading(true);
+    await supabase.from("profiles").update({
+      full_name: guardianProfile.full_name,
+      phone: guardianProfile.phone,
+      location: guardianProfile.location,
+    }).eq("id", profileId);
+    setGuardianProfileLoading(false);
+    setGuardianProfileSaved(true);
+    setTimeout(() => setGuardianProfileSaved(false), 2000);
+  };
+
   const handleLinkAccount = async () => {
     setLinkError(""); setLinkSuccess("");
     if (linkCodeInput.length !== 6) { setLinkError("Please enter a 6-digit code."); return; }
@@ -704,6 +730,43 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
         {/* ══ SETTINGS VIEW ══ */}
         {nav === "settings" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 14, maxWidth: 500 }}>
+            {/* My Profile */}
+            <div className="gcard" style={{ padding: 20 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a", marginBottom: 4 }}>My Profile</div>
+              <div style={{ fontSize: 11, color: "#6b6b6b", marginBottom: 14 }}>Your contact details — visible to your linked parent</div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: "#6b6b6b", marginBottom: 4, display: "block" }}>Full Name</label>
+                  <input value={guardianProfile.full_name} onChange={e => setGuardianProfile(p => ({ ...p, full_name: e.target.value }))}
+                    placeholder="Your name"
+                    style={{ width: "100%", padding: "11px 14px", borderRadius: 12, border: "1px solid rgba(93,64,55,0.15)", fontSize: 14, outline: "none", color: "#3E2723", fontFamily: "'DM Sans',sans-serif" }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: "#6b6b6b", marginBottom: 4, display: "block" }}>Phone Number</label>
+                  <input value={guardianProfile.phone} onChange={e => setGuardianProfile(p => ({ ...p, phone: e.target.value }))}
+                    placeholder="+91 98765 43210" type="tel"
+                    style={{ width: "100%", padding: "11px 14px", borderRadius: 12, border: "1px solid rgba(93,64,55,0.15)", fontSize: 14, outline: "none", color: "#3E2723", fontFamily: "'DM Sans',sans-serif" }} />
+                  <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 3 }}>Your parent can use this to call you directly</div>
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: "#6b6b6b", marginBottom: 4, display: "block" }}>Location</label>
+                  <input value={guardianProfile.location} onChange={e => setGuardianProfile(p => ({ ...p, location: e.target.value }))}
+                    placeholder="City, Country"
+                    style={{ width: "100%", padding: "11px 14px", borderRadius: 12, border: "1px solid rgba(93,64,55,0.15)", fontSize: 14, outline: "none", color: "#3E2723", fontFamily: "'DM Sans',sans-serif" }} />
+                </div>
+                <button onClick={saveGuardianProfile} disabled={guardianProfileLoading} style={{
+                  width: "100%", padding: "12px", borderRadius: 12, border: "none", cursor: guardianProfileLoading ? "wait" : "pointer",
+                  background: guardianProfileSaved ? "#22C55E" : "linear-gradient(135deg,#8D6E63,#5D4037)",
+                  color: "#FFF8F0", fontSize: 13, fontWeight: 600, opacity: guardianProfileLoading ? .6 : 1,
+                  transition: "all .3s", display: "flex", alignItems: "center", justifyContent: "center", gap: 6
+                }}>
+                  {guardianProfileLoading ? <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> : guardianProfileSaved ? <Check size={14} /> : null}
+                  {guardianProfileLoading ? "Saving…" : guardianProfileSaved ? "Saved!" : "Save Profile"}
+                </button>
+              </div>
+            </div>
+
             {/* Link Account */}
             <div className="gcard" style={{ padding: 20 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a", marginBottom: 4 }}>Link Parent Account</div>
