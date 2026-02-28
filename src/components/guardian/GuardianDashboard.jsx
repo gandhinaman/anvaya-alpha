@@ -931,21 +931,44 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
             }}>
               <div className="gcard s3" style={{ padding: 20 }}>
                 <div style={{ marginBottom: 14 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Emotional Wellbeing</div>
-                  <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Tone & mood from recent conversations</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Memory Highlights</div>
+                  <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>{realMemories.length} memories shared</div>
                 </div>
-                <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
-                  <CognitiveRing value={parseInt(derivedStats.emotionalTone.value) || 0} label={derivedStats.emotionalTone.trend} />
-                </div>
-                <div style={{
-                  display: "flex", alignItems: "flex-start", gap: 8, padding: "10px 12px",
-                  background: "rgba(198,139,89,0.06)", borderRadius: 12, border: "1px solid rgba(198,139,89,0.12)"
-                }}>
-                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#C68B59", marginTop: 4, flexShrink: 0 }} />
-                  <p style={{ fontSize: 11, color: "#6b6b6b", lineHeight: 1.5 }}>
-                    Emotional state derived from voice tone, breathing patterns, and conversation sentiment
-                  </p>
-                </div>
+                {realMemories.length === 0 ? (
+                  <p style={{ fontSize: 12, color: "#9CA3AF", fontStyle: "italic" }}>No memories recorded yet</p>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {/* Emotional breakdown */}
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                      {Object.entries(realMemories.reduce((acc, m) => {
+                        const tone = m.emotional_tone || "unknown";
+                        acc[tone] = (acc[tone] || 0) + 1;
+                        return acc;
+                      }, {})).sort((a, b) => b[1] - a[1]).map(([tone, count]) => (
+                        <span key={tone} style={{
+                          fontSize: 10, fontWeight: 600, padding: "3px 10px", borderRadius: 100,
+                          background: tone === "joyful" ? "rgba(76,175,80,0.1)" : tone === "nostalgic" ? "rgba(198,139,89,0.1)" : tone === "peaceful" ? "rgba(141,110,99,0.1)" : "rgba(93,64,55,0.08)",
+                          color: tone === "joyful" ? "#4CAF50" : tone === "nostalgic" ? "#C68B59" : tone === "peaceful" ? "#8D6E63" : "#5D4037"
+                        }}>
+                          {tone} · {count}
+                        </span>
+                      ))}
+                    </div>
+                    {/* Latest memory */}
+                    <div style={{
+                      padding: "10px 12px", background: "rgba(198,139,89,0.06)",
+                      borderRadius: 12, border: "1px solid rgba(198,139,89,0.12)"
+                    }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: "#3E2723", marginBottom: 3 }}>
+                        Latest: "{realMemories[0]?.title || "Untitled"}"
+                      </div>
+                      <p style={{ fontSize: 10.5, color: "#6b6b6b", lineHeight: 1.5, margin: 0 }}>
+                        {realMemories[0]?.ai_summary?.slice(0, 100) || realMemories[0]?.transcript?.slice(0, 100) || ""}
+                        {(realMemories[0]?.ai_summary?.length > 100 || realMemories[0]?.transcript?.length > 100) ? "…" : ""}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="gcard s4" style={{ padding: 20 }}>
@@ -1145,21 +1168,42 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
             }}>
               <div className="gcard s3" style={{ padding: 20 }}>
                 <div style={{ marginBottom: 14 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Emotional Wellbeing</div>
-                  <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Tone & mood from recent conversations</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Memory Highlights</div>
+                  <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>{realMemories.length} memories shared</div>
                 </div>
-                <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
-                  <CognitiveRing value={parseInt(derivedStats.emotionalTone.value) || 0} label={derivedStats.emotionalTone.trend} />
-                </div>
-                <div style={{
-                  display: "flex", alignItems: "flex-start", gap: 8, padding: "10px 12px",
-                  background: "rgba(198,139,89,0.06)", borderRadius: 12, border: "1px solid rgba(198,139,89,0.12)"
-                }}>
-                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#C68B59", marginTop: 4, flexShrink: 0 }} />
-                  <p style={{ fontSize: 11, color: "#6b6b6b", lineHeight: 1.5 }}>
-                    Emotional state derived from voice tone, breathing patterns, and conversation sentiment
-                  </p>
-                </div>
+                {realMemories.length === 0 ? (
+                  <p style={{ fontSize: 12, color: "#9CA3AF", fontStyle: "italic" }}>No memories recorded yet</p>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                      {Object.entries(realMemories.reduce((acc, m) => {
+                        const tone = m.emotional_tone || "unknown";
+                        acc[tone] = (acc[tone] || 0) + 1;
+                        return acc;
+                      }, {})).sort((a, b) => b[1] - a[1]).map(([tone, count]) => (
+                        <span key={tone} style={{
+                          fontSize: 10, fontWeight: 600, padding: "3px 10px", borderRadius: 100,
+                          background: tone === "joyful" ? "rgba(76,175,80,0.1)" : tone === "nostalgic" ? "rgba(198,139,89,0.1)" : tone === "peaceful" ? "rgba(141,110,99,0.1)" : "rgba(93,64,55,0.08)",
+                          color: tone === "joyful" ? "#4CAF50" : tone === "nostalgic" ? "#C68B59" : tone === "peaceful" ? "#8D6E63" : "#5D4037"
+                        }}>
+                          {tone} · {count}
+                        </span>
+                      ))}
+                    </div>
+                    <div style={{
+                      padding: "10px 12px", background: "rgba(198,139,89,0.06)",
+                      borderRadius: 12, border: "1px solid rgba(198,139,89,0.12)"
+                    }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: "#3E2723", marginBottom: 3 }}>
+                        Latest: "{realMemories[0]?.title || "Untitled"}"
+                      </div>
+                      <p style={{ fontSize: 10.5, color: "#6b6b6b", lineHeight: 1.5, margin: 0 }}>
+                        {realMemories[0]?.ai_summary?.slice(0, 100) || realMemories[0]?.transcript?.slice(0, 100) || ""}
+                        {(realMemories[0]?.ai_summary?.length > 100 || realMemories[0]?.transcript?.length > 100) ? "…" : ""}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="gcard s4" style={{ padding: 20 }}>
