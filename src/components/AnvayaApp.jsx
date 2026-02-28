@@ -1026,10 +1026,11 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
     ? {width:360,height:760,position:"relative",overflow:"hidden",
        background:"linear-gradient(160deg,#1A0F0A 0%,#2C1810 40%,#3E2723 70%,#2A1B14 100%)",
        borderRadius:36,boxShadow:"0 32px 64px rgba(0,0,0,.5)",flexShrink:0,display:"flex",flexDirection:"column"}
-    : {width:"100%",height:"100dvh",maxHeight:"100dvh",position:"relative",overflow:"hidden",
+    : {width:"100%",height:"100dvh",maxHeight:"100dvh",position:"relative",overflowX:"hidden",overflowY:"auto",
        background:"linear-gradient(160deg,#1A0F0A 0%,#2C1810 40%,#3E2723 70%,#2A1B14 100%)",
        display:"flex",flexDirection:"column",
-       paddingTop:"env(safe-area-inset-top, 0px)",paddingBottom:"env(safe-area-inset-bottom, 0px)"};
+       paddingTop:"env(safe-area-inset-top, 0px)",paddingBottom:"env(safe-area-inset-bottom, 0px)",
+       WebkitOverflowScrolling:"touch"};
 
   return (
     <div style={wrap}>
