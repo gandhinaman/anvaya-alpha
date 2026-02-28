@@ -283,10 +283,34 @@ function CallOverlay({ open, onClose, lang, userId, linkedUserId, fromName }) {
   );
 }
 
-function SathiScreen({inPanel=false, userId=null, linkedUserId=null, fullName=null, savedLang=null}) {
+function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLinkedUserId=null, fullName:propFullName=null, savedLang=null}) {
   const {w}=useWindowSize();
   const [lang,setLang]=useState(savedLang||"en");
   const [linkedName, setLinkedName]=useState(null);
+  const [autoUserId, setAutoUserId]=useState(null);
+  const [autoLinkedUserId, setAutoLinkedUserId]=useState(null);
+  const [autoFullName, setAutoFullName]=useState(null);
+
+  const userId = propUserId || autoUserId;
+  const linkedUserId = propLinkedUserId || autoLinkedUserId;
+  const fullName = propFullName || autoFullName;
+
+  // Auto-fetch profile from auth when no props provided
+  useEffect(()=>{
+    if(propUserId) return;
+    supabase.auth.getUser().then(({data:{user}})=>{
+      if(!user) return;
+      setAutoUserId(user.id);
+      supabase.from("profiles").select("full_name,linked_user_id,language").eq("id",user.id).maybeSingle()
+        .then(({data})=>{
+          if(data){
+            if(data.full_name) setAutoFullName(data.full_name);
+            if(data.linked_user_id) setAutoLinkedUserId(data.linked_user_id);
+            if(data.language) setLang(data.language);
+          }
+        });
+    });
+  },[propUserId]);
 
   // Fetch linked user's name
   useEffect(()=>{
