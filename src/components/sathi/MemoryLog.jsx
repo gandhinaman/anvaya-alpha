@@ -172,24 +172,39 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
                         </p>
                       )}
 
-                      {/* Audio playback */}
+                      {/* Media playback */}
                       {m.audio_url && (
-                        <button
-                          onClick={() => togglePlay(m.audio_url, m.id)}
-                          style={{
-                            marginTop: 10, display: "flex", alignItems: "center", gap: 8,
-                            padding: "8px 14px", borderRadius: 10,
-                            background: playingId === m.id ? "rgba(79,70,229,.25)" : "rgba(249,249,247,.06)",
-                            border: playingId === m.id ? "1.5px solid rgba(79,70,229,.4)" : "1.5px solid rgba(255,255,255,.1)",
-                            color: playingId === m.id ? "#a5b4fc" : "rgba(249,249,247,.5)",
-                            fontSize: 13, fontWeight: 500, cursor: "pointer",
-                          }}
-                        >
-                          {playingId === m.id ? <Pause size={15} /> : <Play size={15} />}
-                          {playingId === m.id
-                            ? (lang === "en" ? "Pause" : "रोकें")
-                            : (lang === "en" ? "Play recording" : "रिकॉर्डिंग सुनें")}
-                        </button>
+                        m.audio_url.includes("video_") ? (
+                          <div style={{
+                            marginTop: 10, borderRadius: 14, overflow: "hidden",
+                            border: "1.5px solid rgba(79,70,229,.3)",
+                            maxWidth: 300,
+                          }}>
+                            <video
+                              src={m.audio_url}
+                              controls
+                              playsInline
+                              style={{ width: "100%", display: "block", borderRadius: 12 }}
+                            />
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => togglePlay(m.audio_url, m.id)}
+                            style={{
+                              marginTop: 10, display: "flex", alignItems: "center", gap: 8,
+                              padding: "8px 14px", borderRadius: 10,
+                              background: playingId === m.id ? "rgba(79,70,229,.25)" : "rgba(249,249,247,.06)",
+                              border: playingId === m.id ? "1.5px solid rgba(79,70,229,.4)" : "1.5px solid rgba(255,255,255,.1)",
+                              color: playingId === m.id ? "#a5b4fc" : "rgba(249,249,247,.5)",
+                              fontSize: 13, fontWeight: 500, cursor: "pointer",
+                            }}
+                          >
+                            {playingId === m.id ? <Pause size={15} /> : <Play size={15} />}
+                            {playingId === m.id
+                              ? (lang === "en" ? "Pause" : "रोकें")
+                              : (lang === "en" ? "Play recording" : "रिकॉर्डिंग सुनें")}
+                          </button>
+                        )
                       )}
 
                       {/* Transcript */}

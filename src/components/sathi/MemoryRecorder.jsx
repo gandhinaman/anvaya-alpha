@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { Mic, Square, Check, X, Loader, RefreshCw } from "lucide-react";
+import { Mic, Video, Square, Check, X, Loader, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const PROMPTS_EN = [
@@ -30,6 +30,7 @@ const PROMPTS_HI = [
 
 export default function MemoryRecorder({ open, onClose, lang = "en", userId, linkedName }) {
   const [phase, setPhase] = useState("idle"); // idle | recording | processing | success | error
+  const [recordingMode, setRecordingMode] = useState(null); // "audio" | "video"
   const [seconds, setSeconds] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
   const [savedTitle, setSavedTitle] = useState("");
@@ -40,6 +41,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
   const timerRef = useRef(null);
   const streamRef = useRef(null);
   const promptAudioRef = useRef(null);
+  const videoPreviewRef = useRef(null);
 
   const currentPrompt = useMemo(() => {
     const prompts = lang === "hi" ? PROMPTS_HI : PROMPTS_EN;
@@ -126,6 +128,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
       }
       setIsSpeakingPrompt(false);
       setPhase("idle");
+      setRecordingMode(null);
       setSeconds(0);
       setErrorMsg("");
       setSavedTitle("");
@@ -143,26 +146,36 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
     }
   };
 
-  const startRecording = useCallback(async () => {
+  const startRecording = useCallback(async (mode) => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const constraints = mode === "video"
+        ? { audio: true, video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } } }
+        : { audio: true };
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
 
-      const recorder = new MediaRecorder(stream, {
-        mimeType: MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-          ? "audio/webm;codecs=opus"
-          : "audio/webm",
-      });
+      // Show video preview if recording video
+      if (mode === "video" && videoPreviewRef.current) {
+        videoPreviewRef.current.srcObject = stream;
+        videoPreviewRef.current.play().catch(() => {});
+      }
+
+      const mimeType = mode === "video"
+        ? (MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus") ? "video/webm;codecs=vp9,opus" : "video/webm")
+        : (MediaRecorder.isTypeSupported("audio/webm;codecs=opus") ? "audio/webm;codecs=opus" : "audio/webm");
+
+      const recorder = new MediaRecorder(stream, { mimeType });
 
       chunks.current = [];
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) chunks.current.push(e.data);
       };
-
       recorder.onstop = () => {};
 
       recorder.start(250);
       mediaRecorder.current = recorder;
+      setRecordingMode(mode);
       setPhase("recording");
       setSeconds(0);
 
@@ -170,12 +183,16 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
         setSeconds((s) => s + 1);
       }, 1000);
     } catch (err) {
-      console.error("Mic error:", err);
+      console.error("Recording error:", err);
       setPhase("error");
       setErrorMsg(
         lang === "hi"
-          ? "माइक्रोफ़ोन की अनुमति नहीं मिली। कृपया ब्राउज़र सेटिंग्स में माइक्रोफ़ोन एक्सेस दें।"
-          : "Microphone permission was denied. Please allow microphone access in your browser settings."
+          ? (mode === "video"
+            ? "कैमरा/माइक्रोफ़ोन की अनुमति नहीं मिली। कृपया ब्राउज़र सेटिंग्स में एक्सेस दें।"
+            : "माइक्रोफ़ोन की अनुमति नहीं मिली। कृपया ब्राउज़र सेटिंग्स में माइक्रोफ़ोन एक्सेस दें।")
+          : (mode === "video"
+            ? "Camera/microphone permission was denied. Please allow access in your browser settings."
+            : "Microphone permission was denied. Please allow microphone access in your browser settings.")
       );
     }
   }, [lang]);
@@ -185,6 +202,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
 
     clearInterval(timerRef.current);
     const duration = seconds;
+    const mode = recordingMode;
 
     await new Promise((resolve) => {
       mediaRecorder.current.onstop = resolve;
@@ -196,14 +214,18 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
       streamRef.current = null;
     }
 
-    const blob = new Blob(chunks.current, { type: "audio/webm" });
+    const isVideo = mode === "video";
+    const blobType = isVideo ? "video/webm" : "audio/webm";
+    const blob = new Blob(chunks.current, { type: blobType });
     setPhase("processing");
 
     try {
-      const fileName = `${userId}/${Date.now()}.webm`;
+      const ext = isVideo ? "webm" : "webm";
+      const prefix = isVideo ? "video" : "audio";
+      const fileName = `${userId}/${prefix}_${Date.now()}.${ext}`;
       const { error: uploadErr } = await supabase.storage
         .from("memories")
-        .upload(fileName, blob, { contentType: "audio/webm" });
+        .upload(fileName, blob, { contentType: blobType });
 
       if (uploadErr) throw uploadErr;
 
@@ -211,8 +233,9 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
         .from("memories")
         .getPublicUrl(fileName);
 
-      const audioUrl = urlData.publicUrl;
+      const mediaUrl = urlData.publicUrl;
 
+      // Extract audio for transcription (send base64 of the blob regardless)
       const arrayBuffer = await blob.arrayBuffer();
       const base64 = btoa(
         new Uint8Array(arrayBuffer).reduce(
@@ -236,9 +259,10 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
           body: JSON.stringify({
             audioBase64: base64,
             userId,
-            audioUrl,
+            audioUrl: mediaUrl,
             durationSeconds: duration,
             promptQuestion: currentPrompt,
+            mediaType: isVideo ? "video" : "audio",
           }),
         }
       );
@@ -260,7 +284,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
           : "There was a problem saving your memory. Please try again."
       );
     }
-  }, [seconds, userId, lang]);
+  }, [seconds, userId, lang, recordingMode, currentPrompt]);
 
   const formatTime = (s) => {
     const m = Math.floor(s / 60);
@@ -274,29 +298,24 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
     <div
       className="fadein"
       style={{
-        position: "absolute",
+        position: "fixed",
         inset: 0,
-        zIndex: 20,
-        background: "rgba(2,18,14,.92)",
-        backdropFilter: "blur(20px)",
+        zIndex: 200,
+        background: "linear-gradient(160deg,#022c22 0%,#064E3B 40%,#065f46 70%,#0a3f34 100%)",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
         padding: 28,
         gap: 20,
-        borderRadius: "inherit",
       }}
     >
-      {/* Close button — large, red-tinted, high contrast for seniors */}
+      {/* Close button */}
       <button
-        onClick={() => {
-          stopEverything();
-          onClose();
-        }}
+        onClick={() => { stopEverything(); onClose(); }}
         aria-label={lang === "hi" ? "बंद करें" : "Close"}
         style={{
-          position: "absolute",
+          position: "fixed",
           top: 14,
           right: 14,
           width: 54,
@@ -308,14 +327,14 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          zIndex: 5,
+          zIndex: 210,
           boxShadow: "0 4px 18px rgba(220,38,38,.3)",
         }}
       >
         <X size={28} color="#fca5a5" strokeWidth={3} />
       </button>
 
-      {/* ── IDLE: Start prompt ── */}
+      {/* ── IDLE: Prompt + two recording buttons ── */}
       {phase === "idle" && (
         <div style={{ textAlign: "center", animation: "fadeUp .5s ease both", maxWidth: 340 }}>
           <div
@@ -393,56 +412,111 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
               ? "इस सवाल का जवाब दें, या कुछ भी बोलें। साथी सुन रहा है।"
               : "Answer this prompt, or share anything on your mind. Sathi is listening."}
           </p>
-          <button
-            onClick={startRecording}
-            style={{
-              width: "100%",
-              padding: "20px",
-              borderRadius: 18,
-              border: "none",
-              cursor: "pointer",
-              background: "linear-gradient(135deg,#d97706,#B45309)",
-              color: "#F9F9F7",
-              fontSize: 20,
-              fontWeight: 700,
-              boxShadow: "0 8px 28px rgba(217,119,6,.35)",
-              fontFamily: "'DM Sans', sans-serif",
-              letterSpacing: "0.02em",
-            }}
-          >
-            {lang === "hi" ? "🎙 रिकॉर्डिंग शुरू करें" : "🎙 Start Recording"}
-          </button>
+
+          {/* Two recording buttons */}
+          <div style={{ display: "flex", gap: 12, width: "100%" }}>
+            <button
+              onClick={() => startRecording("audio")}
+              style={{
+                flex: 1,
+                padding: "20px 10px",
+                borderRadius: 18,
+                border: "none",
+                cursor: "pointer",
+                background: "linear-gradient(135deg,#d97706,#B45309)",
+                color: "#F9F9F7",
+                fontSize: 18,
+                fontWeight: 700,
+                boxShadow: "0 8px 28px rgba(217,119,6,.35)",
+                fontFamily: "'DM Sans', sans-serif",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
+              <Mic size={28} />
+              {lang === "hi" ? "ऑडियो" : "Audio"}
+            </button>
+            <button
+              onClick={() => startRecording("video")}
+              style={{
+                flex: 1,
+                padding: "20px 10px",
+                borderRadius: 18,
+                border: "none",
+                cursor: "pointer",
+                background: "linear-gradient(135deg,#4F46E5,#3730A3)",
+                color: "#F9F9F7",
+                fontSize: 18,
+                fontWeight: 700,
+                boxShadow: "0 8px 28px rgba(79,70,229,.35)",
+                fontFamily: "'DM Sans', sans-serif",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
+              <Video size={28} />
+              {lang === "hi" ? "वीडियो" : "Video"}
+            </button>
+          </div>
         </div>
       )}
 
       {/* ── RECORDING: Live timer + stop ── */}
       {phase === "recording" && (
-        <div style={{ textAlign: "center", animation: "fadeUp .4s ease both", maxWidth: 340 }}>
-          {/* Pulsing record indicator */}
-          <div
-            style={{
-              width: 110,
-              height: 110,
-              borderRadius: "50%",
-              background: "rgba(217,119,6,.12)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+        <div style={{ textAlign: "center", animation: "fadeUp .4s ease both", maxWidth: 380, width: "100%" }}>
+          {/* Video preview when recording video */}
+          {recordingMode === "video" && (
+            <div style={{
+              width: "100%",
+              maxWidth: 320,
               margin: "0 auto 18px",
-              border: "2px solid rgba(217,119,6,.4)",
-              animation: "breathe 2s ease-in-out infinite",
-            }}
-          >
+              borderRadius: 20,
+              overflow: "hidden",
+              border: "2.5px solid rgba(79,70,229,.45)",
+              boxShadow: "0 8px 32px rgba(79,70,229,.25)",
+              aspectRatio: "4/3",
+              background: "#000",
+            }}>
+              <video
+                ref={videoPreviewRef}
+                muted
+                playsInline
+                style={{ width: "100%", height: "100%", objectFit: "cover", transform: "scaleX(-1)" }}
+              />
+            </div>
+          )}
+
+          {/* Pulsing record indicator (audio only) */}
+          {recordingMode === "audio" && (
             <div
               style={{
-                width: 24,
-                height: 24,
+                width: 110,
+                height: 110,
                 borderRadius: "50%",
-                background: "#d97706",
-                boxShadow: "0 0 24px rgba(217,119,6,.6)",
+                background: "rgba(217,119,6,.12)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 18px",
+                border: "2px solid rgba(217,119,6,.4)",
+                animation: "breathe 2s ease-in-out infinite",
               }}
-            />
-          </div>
+            >
+              <div
+                style={{
+                  width: 24,
+                  height: 24,
+                  borderRadius: "50%",
+                  background: "#d97706",
+                  boxShadow: "0 0 24px rgba(217,119,6,.6)",
+                }}
+              />
+            </div>
+          )}
 
           <div
             style={{
@@ -457,9 +531,22 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
           >
             {formatTime(seconds)}
           </div>
-          <p style={{ color: "rgba(249,249,247,.5)", fontSize: 16, marginBottom: 28 }}>
-            {lang === "hi" ? "रिकॉर्डिंग… बोलते रहें" : "Recording… keep speaking"}
-          </p>
+
+          <div style={{
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 6,
+          }}>
+            <div style={{
+              width: 10, height: 10, borderRadius: "50%",
+              background: recordingMode === "video" ? "#818CF8" : "#d97706",
+              boxShadow: `0 0 10px ${recordingMode === "video" ? "rgba(129,140,248,.6)" : "rgba(217,119,6,.6)"}`,
+              animation: "breathe 1.5s ease-in-out infinite",
+            }} />
+            <p style={{ color: "rgba(249,249,247,.5)", fontSize: 16, margin: 0 }}>
+              {recordingMode === "video"
+                ? (lang === "hi" ? "वीडियो रिकॉर्डिंग… बोलते रहें" : "Video recording… keep speaking")
+                : (lang === "hi" ? "ऑडियो रिकॉर्डिंग… बोलते रहें" : "Audio recording… keep speaking")}
+            </p>
+          </div>
 
           <button
             onClick={stopRecording}
@@ -479,6 +566,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
               alignItems: "center",
               justifyContent: "center",
               gap: 10,
+              marginTop: 16,
             }}
           >
             <Square size={18} fill="#F9F9F7" />
@@ -487,7 +575,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
         </div>
       )}
 
-      {/* ── PROCESSING: Loading state ── */}
+      {/* ── PROCESSING ── */}
       {phase === "processing" && (
         <div style={{ textAlign: "center", animation: "fadeUp .4s ease both" }}>
           <div
@@ -503,9 +591,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
             <Loader
               size={42}
               color="#d97706"
-              style={{
-                animation: "spin 1.2s linear infinite",
-              }}
+              style={{ animation: "spin 1.2s linear infinite" }}
             />
           </div>
           <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
@@ -576,7 +662,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
           <p style={{ color: "rgba(249,249,247,.5)", fontSize: 16, lineHeight: 1.6, marginTop: 6 }}>
             {lang === "hi"
               ? `${linkedName||"Guardian"} इसे सुन सकेगा।`
-              : `${linkedName||"Your guardian"} will be able to hear this.`}
+              : `${linkedName||"Your guardian"} will be able to ${recordingMode === "video" ? "watch" : "hear"} this.`}
           </p>
           <button
             onClick={onClose}
@@ -634,10 +720,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
           </p>
           <div style={{ display: "flex", gap: 10, width: "100%" }}>
             <button
-              onClick={() => {
-                setPhase("idle");
-                setErrorMsg("");
-              }}
+              onClick={() => { setPhase("idle"); setRecordingMode(null); setErrorMsg(""); }}
               style={{
                 flex: 1,
                 padding: "18px",
