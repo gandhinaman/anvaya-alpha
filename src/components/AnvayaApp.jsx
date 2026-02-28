@@ -191,11 +191,33 @@ function AudioPlayer({color="#4F46E5", audioUrl=null}) {
 // ─── CALL OVERLAY ─────────────────────────────────────────────────────────────
 function CallOverlay({ open, onClose, lang, userId, linkedUserId, fromName }) {
   const [phase, setPhase] = useState("calling");
+  const [childPhone, setChildPhone] = useState(null);
   const [timer, setTimer] = useState(0);
   const channelRef = useRef(null);
 
+  // Fetch linked caregiver's phone number
+  useEffect(() => {
+    if (!linkedUserId) return;
+    supabase.from("profiles").select("phone").eq("id", linkedUserId).maybeSingle()
+      .then(({ data }) => {
+        if (data?.phone) setChildPhone(data.phone);
+      });
+  }, [linkedUserId]);
+
   useEffect(() => {
     if (!open) { setPhase("calling"); setTimer(0); return; }
+
+    // If we have a phone number, initiate a real phone call
+    if (childPhone) {
+      // Clean up the phone number for tel: link
+      const cleanPhone = childPhone.replace(/\s+/g, "");
+      window.location.href = `tel:${cleanPhone}`;
+      // Close the overlay after a brief delay to let the dialer open
+      setTimeout(() => onClose(), 1500);
+      return;
+    }
+
+    // Fallback: in-app notification to caregiver
     if (linkedUserId) {
       const ch = supabase.channel(`user:${linkedUserId}`);
       ch.subscribe((status) => {
@@ -207,7 +229,7 @@ function CallOverlay({ open, onClose, lang, userId, linkedUserId, fromName }) {
     }
     const t = setTimeout(() => setPhase("connected"), 3000);
     return () => { clearTimeout(t); if (channelRef.current) { supabase.removeChannel(channelRef.current); channelRef.current = null; } };
-  }, [open, linkedUserId]);
+  }, [open, linkedUserId, childPhone]);
 
   useEffect(() => {
     if (phase !== "connected") return;
@@ -244,11 +266,13 @@ function CallOverlay({ open, onClose, lang, userId, linkedUserId, fromName }) {
 
       <div style={{ textAlign: "center" }}>
         <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 28, color: "#FFF8F0", fontWeight: 600 }}>
-          {phase === "calling"
+          {childPhone
+            ? (lang === "en" ? `Calling ${fromName || "…"}` : `${fromName || ""} को कॉल कर रहे हैं…`)
+            : phase === "calling"
             ? (lang === "en" ? `Calling ${fromName || "…"}` : `${fromName || ""} को कॉल कर रहे हैं…`)
             : (lang === "en" ? "Connected" : "कनेक्टेड")}
         </div>
-        {phase === "calling" ? (
+        {!childPhone && phase === "calling" ? (
           <div style={{ display: "flex", justifyContent: "center", gap: 4, marginTop: 10 }}>
             {[0, 1, 2].map(i => (
               <div key={i} style={{
@@ -257,9 +281,13 @@ function CallOverlay({ open, onClose, lang, userId, linkedUserId, fromName }) {
               }} />
             ))}
           </div>
-        ) : (
+        ) : !childPhone ? (
           <div style={{ color: "rgba(255,248,240,.6)", fontSize: 18, marginTop: 8, fontFamily: "'DM Sans',sans-serif", fontWeight: 500 }}>
             {fmt(timer)}
+          </div>
+        ) : (
+          <div style={{ color: "rgba(255,248,240,.5)", fontSize: 14, marginTop: 8 }}>
+            {lang === "en" ? "Opening phone dialer…" : "फ़ोन डायलर खुल रहा है…"}
           </div>
         )}
       </div>

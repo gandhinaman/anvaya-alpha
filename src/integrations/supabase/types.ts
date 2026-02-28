@@ -204,6 +204,7 @@ export type Database = {
           linked_user_id: string | null
           location: string | null
           onboarding_completed: boolean | null
+          phone: string | null
           role: string
         }
         Insert: {
@@ -217,6 +218,7 @@ export type Database = {
           linked_user_id?: string | null
           location?: string | null
           onboarding_completed?: boolean | null
+          phone?: string | null
           role: string
         }
         Update: {
@@ -230,6 +232,7 @@ export type Database = {
           linked_user_id?: string | null
           location?: string | null
           onboarding_completed?: boolean | null
+          phone?: string | null
           role?: string
         }
         Relationships: [
