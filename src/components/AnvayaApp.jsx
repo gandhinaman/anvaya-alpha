@@ -388,10 +388,14 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
 
       const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
         ? "audio/webm;codecs=opus" : "audio/webm";
+      console.log("Recording with mimeType:", mimeType);
       const recorder = new MediaRecorder(stream, { mimeType });
 
       recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) voiceChunksRef.current.push(e.data);
+        if (e.data.size > 0) {
+          voiceChunksRef.current.push(e.data);
+          console.log("Audio chunk received, size:", e.data.size);
+        }
       };
 
       recorder.onstop = async () => {
@@ -401,7 +405,17 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
         }
         setRec(false);
 
+        console.log("Recording stopped, chunks:", voiceChunksRef.current.length);
         const blob = new Blob(voiceChunksRef.current, { type: "audio/webm" });
+        console.log("Audio blob size:", blob.size);
+        
+        if (blob.size < 1000) {
+          console.warn("Audio too short, ignoring");
+          setVoicePhase("idle");
+          setVoiceText("");
+          return;
+        }
+        
         setVoiceText(lang === "hi" ? "प्रोसेस हो रहा है…" : "Processing speech…");
 
         try {
@@ -410,6 +424,8 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
           let binary = "";
           for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
           const base64 = btoa(binary);
+
+          console.log("Sending to STT, base64 length:", base64.length);
 
           const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
           const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -425,20 +441,23 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
               },
               body: JSON.stringify({
                 audioBase64: base64,
-                contentType: "audio/webm",
+                contentType: mimeType,
                 languageCode: lang === "hi" ? "hi-IN" : "en-IN",
               }),
             }
           );
 
-          if (!res.ok) throw new Error("STT failed");
-          const { transcript } = await res.json();
+          const data = await res.json();
+          console.log("STT response:", JSON.stringify(data));
+          
+          if (!res.ok) throw new Error(data.error || "STT failed");
+          const transcript = data.transcript;
 
           if (transcript && transcript.trim()) {
             sendVoiceToLLM(transcript.trim());
           } else {
-            setVoicePhase("idle");
-            setVoiceText("");
+            setVoiceText(lang === "hi" ? "कुछ सुनाई नहीं दिया, फिर कोशिश करें" : "Couldn't hear anything. Tap and try again.");
+            setTimeout(() => { setVoicePhase("idle"); setVoiceText(""); }, 2500);
           }
         } catch (err) {
           console.error("Sarvam STT error:", err);
@@ -449,6 +468,14 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
 
       recorder.start(250);
       voiceRecorderRef.current = recorder;
+      
+      // Auto-stop after 8 seconds
+      setTimeout(() => {
+        if (voiceRecorderRef.current && voiceRecorderRef.current.state !== "inactive") {
+          console.log("Auto-stopping recording after 8s");
+          voiceRecorderRef.current.stop();
+        }
+      }, 8000);
     } catch (err) {
       console.error("Mic access error:", err);
       setRec(false);
