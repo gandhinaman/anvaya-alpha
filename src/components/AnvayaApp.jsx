@@ -739,7 +739,7 @@ function SathiScreen({inPanel=false, userId=null, linkedUserId=null, fullName=nu
         {[
           {icon:<Mic size={19} color="#F9F9F7"/>,label:lang==="en"?"Record a Memory":"यादें रिकॉर्ड करें",sub:lang==="en"?"Your voice, preserved forever":"आपकी आवाज़, सदा के लिए",acc:"#d97706",fn:()=>setMemoryOpen(true)},
           {icon:<MessageCircle size={19} color="#F9F9F7"/>,label:lang==="en"?"Ask Sathi":"साथी से पूछें",sub:lang==="en"?"Health · Reminders · Stories":"स्वास्थ्य · याद · कहानियाँ",acc:"#4F46E5",fn:()=>setChatOpen(true)},
-          {icon:<Phone size={19} color="#F9F9F7"/>,label:lang==="en"?"Call Son / Daughter":"बेटे को कॉल करें",sub:lang==="en"?`${linkedName||"Guardian"}`:`${linkedName||"Guardian"}`,acc:"#059669",fn:()=>setCallOpen(true)},
+          {icon:<Phone size={19} color="#F9F9F7"/>,label:lang==="en"?"Call Child":"बच्चे को कॉल करें",sub:linkedName||"Guardian",acc:"#059669",fn:()=>setCallOpen(true)},
         ].map((c,i)=>(
           <button key={i} onClick={c.fn} className="glass" style={{
             display:"flex",alignItems:"center",gap:12,padding:"12px 14px",
@@ -825,7 +825,7 @@ function SathiScreen({inPanel=false, userId=null, linkedUserId=null, fullName=nu
 
       <SathiChat open={chatOpen} onClose={()=>setChatOpen(false)} lang={lang} userId={userId}/>
       <MemoryRecorder open={memoryOpen} onClose={()=>setMemoryOpen(false)} lang={lang} userId={userId} linkedName={linkedName}/>
-      <CallOverlay open={callOpen} onClose={()=>setCallOpen(false)} lang={lang} userId={userId} linkedUserId={linkedUserId} fromName={fullName}/>
+      <CallOverlay open={callOpen} onClose={()=>setCallOpen(false)} lang={lang} userId={userId} linkedUserId={linkedUserId} fromName={linkedName||"Child"}/>
     </div>
   );
 }
