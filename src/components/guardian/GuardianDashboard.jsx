@@ -115,7 +115,7 @@ function AudioPlayer({ color = "#064E3B", audioUrl = null }) {
         width: 36, height: 36, borderRadius: "50%", background: color,
         border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
       }}>
-        {playing ? <Pause size={13} color="#fff" fill="#fff" /> : <Play size={13} color="#fff" fill="#fff" />}
+        {playing ? <Pause size={13} color="#FFF8F0" fill="#FFF8F0" /> : <Play size={13} color="#FFF8F0" fill="#FFF8F0" />}
       </button>
       <div style={{ flex: 1, height: 4, background: "#E5E7EB", borderRadius: 4, cursor: "pointer" }} onClick={seek}>
         <div style={{ height: "100%", width: `${progress}%`, background: color, borderRadius: 4, transition: "width .1s" }} />
@@ -440,14 +440,14 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
           <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 11, color: "rgba(6,78,59,0.35)", letterSpacing: "0.3em", fontWeight: 300 }}>ANVAYA</div>
           <div className="gtxt" style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 24, fontWeight: 600 }}>Guardian</div>
         </div>
-        {mobile && <button onClick={() => setDrawer(false)} style={{ background: "transparent", border: "none", cursor: "pointer" }}><X size={18} color="#9CA3AF" /></button>}
+        {mobile && <button onClick={() => setDrawer(false)} style={{ background: "transparent", border: "none", cursor: "pointer" }}><X size={18} color="#FFF8F0" /></button>}
       </div>
 
       {/* Parent status */}
       <div style={{ padding: "12px 14px", margin: "12px 10px", background: "rgba(6,78,59,0.05)", borderRadius: 14, border: "1px solid rgba(6,78,59,0.12)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
           <div style={{ width: 34, height: 34, borderRadius: "50%", background: "linear-gradient(135deg,#064E3B,#059669)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <User size={15} color="#fff" />
+            <User size={15} color="#FFF8F0" />
           </div>
           <div>
             <div style={{ fontSize: 12, fontWeight: 700, color: "#064E3B" }}>{parentProfile?.full_name || "Parent"}</div>

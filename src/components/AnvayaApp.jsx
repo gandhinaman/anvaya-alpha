@@ -178,7 +178,7 @@ function AudioPlayer({color="#4F46E5", audioUrl=null}) {
         width:36,height:36,borderRadius:"50%",background:color,
         border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0
       }}>
-        {playing?<Pause size={13} color="#fff" fill="#fff"/>:<Play size={13} color="#fff" fill="#fff"/>}
+        {playing?<Pause size={13} color="#FFF8F0" fill="#FFF8F0"/>:<Play size={13} color="#FFF8F0" fill="#FFF8F0"/>}
       </button>
       <div style={{flex:1,height:4,background:"#E5E7EB",borderRadius:4,cursor:"pointer"}} onClick={seek}>
         <div style={{height:"100%",width:`${progress}%`,background:color,borderRadius:4,transition:"width .1s"}}/>
@@ -270,7 +270,7 @@ function CallOverlay({ open, onClose, lang, userId, linkedUserId, fromName }) {
         display: "flex", alignItems: "center", justifyContent: "center",
         boxShadow: "0 8px 24px rgba(220,38,38,.4)", marginTop: 20
       }}>
-        <PhoneOff size={26} color="#fff" />
+        <PhoneOff size={26} color="#FFF8F0" />
       </button>
       <span style={{ color: "rgba(255,248,240,.4)", fontSize: 12 }}>
         {lang === "en" ? "End Call" : "कॉल समाप्त करें"}
@@ -919,7 +919,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
 
           {overlayPhase==="alerting"&&(<>
             <div style={{width:70,height:70,borderRadius:"50%",background:"rgba(198,139,89,.2)",display:"flex",alignItems:"center",justifyContent:"center",animation:"callPulse 1.5s ease-in-out infinite"}}>
-              <Phone size={30} color="#D4A574"/>
+              <Phone size={30} color="#FFF8F0"/>
             </div>
             <div style={{fontFamily:"'Playfair Display',serif",fontSize:22,color:"#FFF8F0",fontWeight:400,textAlign:"center"}}>
               {lang==="en"?`Alerting ${linkedName||"guardian"}…`:`${linkedName||"guardian"} को सूचित कर रहे हैं…`}
@@ -931,7 +931,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
 
           {overlayPhase==="confirmed"&&(<>
             <div style={{width:80,height:80,borderRadius:"50%",background:"rgba(198,139,89,.25)",display:"flex",alignItems:"center",justifyContent:"center",animation:"callPulse 2s ease-in-out infinite"}}>
-              <Check size={36} color="#D4A574"/>
+              <Check size={36} color="#FFF8F0"/>
             </div>
             <div style={{textAlign:"center"}}>
               <div style={{fontFamily:"'Playfair Display',serif",fontSize:24,color:"#FFF8F0",fontWeight:400,lineHeight:1.4}}>
@@ -1300,14 +1300,14 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
           <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:11,color:"rgba(6,78,59,0.35)",letterSpacing:"0.3em",fontWeight:300}}>ANVAYA</div>
           <div className="gtxt" style={{fontFamily:"'Cormorant Garamond',serif",fontSize:24,fontWeight:600}}>Guardian</div>
         </div>
-        {mobile&&<button onClick={()=>setDrawer(false)} style={{background:"transparent",border:"none",cursor:"pointer"}}><X size={18} color="#9CA3AF"/></button>}
+        {mobile&&<button onClick={()=>setDrawer(false)} style={{background:"transparent",border:"none",cursor:"pointer"}}><X size={18} color="#FFF8F0"/></button>}
       </div>
 
       {/* Parent status */}
       <div style={{padding:"12px 14px",margin:"12px 10px",background:"rgba(6,78,59,0.05)",borderRadius:14,border:"1px solid rgba(6,78,59,0.12)"}}>
         <div style={{display:"flex",alignItems:"center",gap:9}}>
           <div style={{width:34,height:34,borderRadius:"50%",background:"linear-gradient(135deg,#064E3B,#059669)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-            <User size={15} color="#fff"/>
+            <User size={15} color="#FFF8F0"/>
           </div>
           <div>
             <div style={{fontSize:12,fontWeight:700,color:"#064E3B"}}>{parentProfile?.full_name || "Parent"}</div>
@@ -1495,7 +1495,7 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
                 <div style={{fontSize:13,fontWeight:700,color:"#1a1a1a",marginBottom:12}}>Linked Parent</div>
                 <div style={{display:"flex",alignItems:"center",gap:12}}>
                   <div style={{width:44,height:44,borderRadius:"50%",background:"linear-gradient(135deg,#064E3B,#059669)",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                    <User size={20} color="#fff"/>
+                    <User size={20} color="#FFF8F0"/>
                   </div>
                   <div>
                     <div style={{fontSize:14,fontWeight:700,color:"#064E3B"}}>{parentProfile.full_name||"Parent"}</div>
@@ -1652,7 +1652,7 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
                         background:med.taken_today?"#059669":"transparent",
                         display:"flex",alignItems:"center",justifyContent:"center"
                       }}>
-                        {med.taken_today && <Check size={13} color="#fff"/>}
+                        {med.taken_today && <Check size={13} color="#FFF8F0"/>}
                       </div>
                       <div style={{flex:1,minWidth:0}}>
                         <div style={{fontSize:12,fontWeight:600,color:med.taken_today?"#059669":"#1a1a1a",
@@ -1683,7 +1683,7 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
               </div>
               {realMemories.length === 0 ? (
                 <div className="gcard" style={{padding:28,textAlign:"center"}}>
-                  <Headphones size={28} color="#9CA3AF" style={{margin:"0 auto 10px"}}/>
+                  <Headphones size={28} color="#FFF8F0" style={{margin:"0 auto 10px"}}/>
                   <p style={{fontSize:13,color:"#6b6b6b",lineHeight:1.6}}>
                     No memories recorded yet.<br/>
                     <span style={{color:"#9CA3AF",fontSize:12}}>Tap "Record a Memory" on the Sathi app to begin.</span>
@@ -1776,7 +1776,7 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
             display: "flex", alignItems: "center", justifyContent: "center",
             animation: "callPulse 1.5s ease-in-out infinite"
           }}>
-            <AlertTriangle size={42} color="#fff" />
+            <AlertTriangle size={42} color="#FFF8F0" />
           </div>
           <div style={{ textAlign: "center" }}>
             <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 32, color: "#fff", fontWeight: 700, lineHeight: 1.3 }}>
