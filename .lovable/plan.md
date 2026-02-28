@@ -1,74 +1,69 @@
 
 
-## Fix Orb Audio on Mobile
+## Fix 3-Second Audio Delay
 
-### Problem Analysis
-The orb voice flow breaks on mobile (especially iOS in Capacitor WebView) due to several issues:
-
-1. **Web Speech API unavailable** in iOS WebView — falls back to WAV recorder, but that has its own problems
-2. **AudioContext not resumed** — iOS requires an `AudioContext.resume()` call inside a user gesture before audio capture works
-3. **WAV recorder sample rate** — `new AudioContext({ sampleRate: 16000 })` is often ignored on iOS; the actual sample rate may be 48000, producing garbled audio sent to STT
-4. **TTS playback blocked** — `audio.play()` called after an async fetch (no user gesture context) is blocked by iOS autoplay policy
-5. **ScriptProcessorNode deprecated** — unreliable on some mobile browsers
+### Root Causes
+1. **Full blob download before playback** — Both `AnvayaApp.jsx` and `SathiChat.jsx` do `await response.blob()` which waits for the entire TTS audio to download before playing. The edge function streams ElevenLabs audio, but the client buffers it all.
+2. **`unlockAudio()` on every orb tap** — Creates a new AudioContext, resumes, plays silent audio, and waits — adds ~500ms+ on every tap, not just the first.
 
 ### Changes
 
-**1. Fix `src/lib/wavRecorder.js` — Resample properly**
-- Remove forced `sampleRate: 16000` from AudioContext constructor (let the device pick its native rate)
-- After recording, resample from the actual `audioCtx.sampleRate` down to 16000 using linear interpolation
-- This ensures the WAV sent to Sarvam STT is always valid 16kHz audio regardless of device
+**1. Stream audio playback in `AnvayaApp.jsx` `speakResponse()`**
+- Replace `await response.blob()` with piping the response `ReadableStream` into a `MediaSource` (Chrome/Android) or fall back to blob for Safari/iOS
+- Simpler cross-browser approach: Use `response.blob()` but start audio `.load()` earlier, or use a `Blob` stream reader with `URL.createObjectURL` on partial data
+- **Simplest reliable fix**: Use `audio.src` with a service-worker-free approach — create a blob URL from a `new Response(response.body)` blob, but kick off the fetch and audio setup in parallel
 
-**2. Fix `src/components/AnvayaApp.jsx` — AudioContext + playback**
-- **Pre-warm AudioContext on orb tap**: Create and `.resume()` an AudioContext on the user's click, before starting async operations — this "unlocks" audio on iOS
-- **Pre-warm Audio element for TTS**: Create an `Audio` element and call `.play()` with a silent data URI during the initial tap gesture, so later programmatic playback isn't blocked
-- **Better error handling**: If WAV fallback also fails, show a clear message instead of silently failing
+**2. Stream audio playback in `SathiChat.jsx` `speakText()`**
+- Same fix as above
 
-**3. Add audio unlock utility `src/lib/audioUnlock.ts`**
-- Small helper that creates a silent AudioContext + silent Audio element on user gesture
-- Returns the unlocked AudioContext for reuse by the WAV recorder
-- Called once on orb tap before any async work
+**3. Only unlock audio once in `AnvayaApp.jsx`**
+- Move `unlockAudio()` behind a guard: skip if `preWarmedAudioRef.current` already exists
+- This eliminates repeated ~500ms overhead on subsequent taps
 
-### Technical Details
+**4. Optimize edge function: add `Cache-Control` header**
+- Won't help first load but prevents re-fetching identical responses
 
-**wavRecorder.js resampling fix:**
+### Implementation Detail
+
+The most impactful and reliable cross-browser fix:
+
+**`AnvayaApp.jsx` — skip unlock if already done:**
 ```javascript
-// Use device's native sample rate
-const audioCtx = new AudioContext(); // no forced sampleRate
-// ... record at native rate ...
-// On stop: resample from audioCtx.sampleRate → 16000
-function resample(samples, fromRate, toRate) {
-  const ratio = fromRate / toRate;
-  const newLength = Math.round(samples.length / ratio);
-  const result = new Float32Array(newLength);
-  for (let i = 0; i < newLength; i++) {
-    const srcIndex = i * ratio;
-    const low = Math.floor(srcIndex);
-    const high = Math.min(low + 1, samples.length - 1);
-    const frac = srcIndex - low;
-    result[i] = samples[low] * (1 - frac) + samples[high] * frac;
-  }
-  return result;
+if (!preWarmedAudioRef.current) {
+  const { unlockAudio } = await import("@/lib/audioUnlock");
+  preWarmedAudioRef.current = await unlockAudio();
 }
 ```
 
-**AnvayaApp.jsx orb tap — unlock audio first:**
+**`AnvayaApp.jsx` `speakResponse()` — stream via MediaSource where supported, blob fallback:**
 ```javascript
-const startVoiceConversation = async () => {
-  // Unlock audio on iOS — must happen synchronously in gesture handler
-  const silentCtx = new (window.AudioContext || window.webkitAudioContext)();
-  await silentCtx.resume();
-  silentCtx.close();
-  
-  // Pre-warm an Audio element for later TTS playback
-  const warmup = new Audio("data:audio/wav;base64,UklGR...");
-  warmup.play().catch(() => {});
-  
-  // ... rest of existing logic
-};
+// Try streaming playback first (Chrome/Android)
+if (window.MediaSource && MediaSource.isTypeSupported('audio/mpeg')) {
+  const mediaSource = new MediaSource();
+  audio.src = URL.createObjectURL(mediaSource);
+  mediaSource.addEventListener('sourceopen', async () => {
+    const sourceBuffer = mediaSource.addSourceBuffer('audio/mpeg');
+    const reader = response.body.getReader();
+    const pump = async () => {
+      const { done, value } = await reader.read();
+      if (done) { mediaSource.endOfStream(); return; }
+      sourceBuffer.appendBuffer(value);
+      sourceBuffer.addEventListener('updateend', pump, { once: true });
+    };
+    pump();
+  });
+  audio.play();
+} else {
+  // iOS/Safari fallback — blob approach (no MediaSource for mp3)
+  const blob = await response.blob();
+  audio.src = URL.createObjectURL(blob);
+  await audio.play();
+}
 ```
 
-**TTS playback fix — reuse pre-created Audio element:**
-- Create the Audio element during the tap gesture and store in ref
-- When TTS response arrives, set `.src` on the existing element instead of creating a new `Audio()`
-- This bypasses iOS autoplay restrictions since the element was user-gesture-activated
+**`SathiChat.jsx` `speakText()` — same streaming approach**
+
+**Files to change:**
+- `src/components/AnvayaApp.jsx` — guard `unlockAudio`, stream TTS playback
+- `src/components/sathi/SathiChat.jsx` — stream TTS playback
 
