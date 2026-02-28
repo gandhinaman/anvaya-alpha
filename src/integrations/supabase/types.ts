@@ -78,6 +78,7 @@ export type Database = {
       medications: {
         Row: {
           dose: string | null
+          frequency: string
           id: string
           last_taken: string | null
           name: string
@@ -87,6 +88,7 @@ export type Database = {
         }
         Insert: {
           dose?: string | null
+          frequency?: string
           id?: string
           last_taken?: string | null
           name: string
@@ -96,6 +98,7 @@ export type Database = {
         }
         Update: {
           dose?: string | null
+          frequency?: string
           id?: string
           last_taken?: string | null
           name?: string

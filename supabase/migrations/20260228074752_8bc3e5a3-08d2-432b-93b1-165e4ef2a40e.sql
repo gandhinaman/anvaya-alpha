@@ -1,0 +1,1 @@
+ALTER TABLE public.medications ADD COLUMN frequency text NOT NULL DEFAULT 'daily';

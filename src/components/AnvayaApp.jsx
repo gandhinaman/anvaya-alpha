@@ -378,6 +378,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
   const [newMedName, setNewMedName] = useState("");
   const [newMedDose, setNewMedDose] = useState("");
   const [newMedTime, setNewMedTime] = useState("");
+  const [newMedFreq, setNewMedFreq] = useState("daily");
   const [newInterest, setNewInterest] = useState("");
   const [newIllness, setNewIllness] = useState("");
   const [illnessDropOpen, setIllnessDropOpen] = useState(false);
@@ -385,11 +386,39 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
   const [profileSaving, setProfileSaving] = useState(false);
 
   // Load meds always on mount + profile data when overlay opens
+  // Auto-reset taken_today based on frequency and last_taken
+  const shouldResetMed = (med) => {
+    if (!med.taken_today || !med.last_taken) return false;
+    const lastTaken = new Date(med.last_taken);
+    const now = new Date();
+    const freq = med.frequency || "daily";
+    if (freq === "daily") {
+      return lastTaken.toDateString() !== now.toDateString();
+    } else if (freq === "weekly") {
+      const diffMs = now - lastTaken;
+      const diffDays = diffMs / (1000 * 60 * 60 * 24);
+      return diffDays >= 7;
+    } else if (freq === "monthly") {
+      return now.getMonth() !== lastTaken.getMonth() || now.getFullYear() !== lastTaken.getFullYear();
+    }
+    return false;
+  };
+
   useEffect(() => {
     if (!userId) return;
     const loadMeds = async () => {
       const { data: meds } = await supabase.from("medications").select("*").eq("user_id", userId);
-      if (meds) setProfileMeds(meds);
+      if (!meds) return;
+      // Reset any meds whose reminder period has elapsed
+      const toReset = meds.filter(shouldResetMed);
+      if (toReset.length > 0) {
+        await Promise.all(toReset.map(m =>
+          supabase.from("medications").update({ taken_today: false }).eq("id", m.id)
+        ));
+        setProfileMeds(meds.map(m => toReset.find(r => r.id === m.id) ? { ...m, taken_today: false } : m));
+      } else {
+        setProfileMeds(meds);
+      }
     };
     loadMeds();
   }, [userId]);
@@ -469,10 +498,11 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
     const { data } = await supabase.from("medications").insert({
       user_id: userId, name: newMedName.trim(),
       dose: newMedDose.trim() || null,
-      scheduled_time: newMedTime || null
+      scheduled_time: newMedTime || null,
+      frequency: newMedFreq
     }).select().single();
     if (data) setProfileMeds(prev => [...prev, data]);
-    setNewMedName(""); setNewMedDose(""); setNewMedTime("");
+    setNewMedName(""); setNewMedDose(""); setNewMedTime(""); setNewMedFreq("daily");
   };
 
   const removeMedication = async (id) => {
@@ -1166,9 +1196,9 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
                     textDecoration:med.taken_today?"line-through":"none",
                     transition:"all .3s"
                   }}>{med.name}</div>
-                  {(med.dose || med.scheduled_time) && (
+                  {(med.dose || med.scheduled_time || (med.frequency && med.frequency !== "daily")) && (
                     <div style={{fontSize:12,color:"rgba(255,248,240,.35)",marginTop:1}}>
-                      {med.dose||""}{med.scheduled_time?` · ${med.scheduled_time}`:""}
+                      {med.dose||""}{med.scheduled_time?` · ${med.scheduled_time}`:""}{med.frequency && med.frequency !== "daily" ? ` · ${med.frequency}` : ""}
                     </div>
                   )}
                 </div>
@@ -1432,6 +1462,16 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
                   <input type="time" value={newMedTime} onChange={e=>setNewMedTime(e.target.value)}
                     style={{padding:"12px 14px",borderRadius:12,border:"1px solid rgba(255,248,240,.12)",
                       background:"rgba(255,248,240,.06)",color:"#FFF8F0",fontSize:15,outline:"none"}}/>
+                </div>
+                <div style={{display:"flex",gap:8}}>
+                  {["daily","weekly","monthly"].map(f=>(
+                    <button key={f} type="button" onClick={()=>setNewMedFreq(f)} style={{
+                      flex:1,padding:"10px",borderRadius:12,border:`1.5px solid ${newMedFreq===f?"#C68B59":"rgba(255,248,240,.12)"}`,
+                      background:newMedFreq===f?"rgba(198,139,89,.15)":"rgba(255,248,240,.04)",
+                      color:newMedFreq===f?"#C68B59":"rgba(255,248,240,.5)",fontSize:13,fontWeight:600,cursor:"pointer",
+                      textTransform:"capitalize",transition:"all .2s"
+                    }}>{f}</button>
+                  ))}
                 </div>
                 <button onClick={addMedication} style={{padding:"14px",borderRadius:14,border:"none",
                   background:"linear-gradient(135deg,#C68B59,#8D6E63)",color:"#FFF8F0",fontSize:16,fontWeight:700,cursor:"pointer",
