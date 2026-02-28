@@ -437,7 +437,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 20px 18px", borderBottom: "1px solid rgba(93,64,55,0.07)" }}>
         <div>
-           <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 11, color: "rgba(93,64,55,0.35)", letterSpacing: "0.3em", fontWeight: 300 }}>ANVAYA</div>
+           <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 13, color: "#3E2723", letterSpacing: "0.3em", fontWeight: 600 }}>ANVAYA</div>
            <div className="gtxt" style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 24, fontWeight: 600 }}>Guardian</div>
         </div>
         {mobile && <button onClick={() => setDrawer(false)} style={{ background: "transparent", border: "none", cursor: "pointer" }}><X size={18} color="#FFF8F0" /></button>}
