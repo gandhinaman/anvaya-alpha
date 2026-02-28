@@ -614,6 +614,9 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
   const speechRecRef = useRef(null);
   const wavRecorderRef = useRef(null);
 
+  // Ref for a pre-warmed Audio element (survives across TTS calls)
+  const preWarmedAudioRef = useRef(null);
+
   const startVoiceConversation = async () => {
     if (voicePhase === "listening") {
       // Stop listening
@@ -660,6 +663,15 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
     if (voicePhase !== "idle") {
       stopVoiceConversation();
       return;
+    }
+
+    // Unlock audio on iOS — must run in user gesture context
+    try {
+      const { unlockAudio } = await import("@/lib/audioUnlock");
+      const warmedAudio = await unlockAudio();
+      preWarmedAudioRef.current = warmedAudio;
+    } catch (e) {
+      console.warn("Audio unlock failed:", e);
     }
 
     // Try Web Speech API first (works on desktop Chrome, Android Chrome)
@@ -865,7 +877,15 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
 
       const audioBlob = await response.blob();
       const audioUrl = URL.createObjectURL(audioBlob);
-      const audio = new Audio(audioUrl);
+      
+      // Reuse pre-warmed Audio element if available (bypasses iOS autoplay)
+      let audio;
+      if (preWarmedAudioRef.current) {
+        audio = preWarmedAudioRef.current;
+        audio.src = audioUrl;
+      } else {
+        audio = new Audio(audioUrl);
+      }
       ttsAudioRef.current = audio;
 
       audio.onended = () => {
