@@ -2,15 +2,16 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 
-// Disable PWA service worker when running inside Capacitor native shell
-const isCapacitor = !!(window as any).Capacitor?.isNativePlatform?.() || !!(window as any).Capacitor?.isPluginAvailable;
-
-if (isCapacitor) {
-  // Unregister any existing service workers to avoid PWA conflicts in native app
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(registrations => {
-      registrations.forEach(reg => reg.unregister());
-    });
+// Aggressively clean up any PWA service workers and caches.
+// This runs unconditionally so that Capacitor WebView (even loading a remote URL)
+// never gets stuck with stale PWA artefacts.
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    registrations.forEach(reg => reg.unregister());
+  });
+  // Clear all caches left by workbox / service workers
+  if ('caches' in window) {
+    caches.keys().then(names => names.forEach(name => caches.delete(name)));
   }
 }
 
