@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { X, Mic, MicOff, Send, MessageCircle } from "lucide-react";
+import { X, Mic, MicOff, Send, MessageCircle, Volume2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const SUGGESTED_EN = [
@@ -24,9 +24,14 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
   const [streaming, setStreaming] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [speakingIdx, setSpeakingIdx] = useState(-1);
   const scrollRef = useRef(null);
   const recognitionRef = useRef(null);
   const ttsAudioRef = useRef(null);
+  const pendingSendRef = useRef(null);
+  const messagesRef = useRef(messages);
+  messagesRef.current = messages;
+
   const suggested = lang === "hi" ? SUGGESTED_HI : SUGGESTED_EN;
   const greeting = lang === "hi" ? GREETING_HI : GREETING_EN;
 
@@ -36,14 +41,19 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
       loadConversationHistory();
     }
     if (!open) {
-      // Cleanup voice on close
       stopListening();
-      if (ttsAudioRef.current) {
-        ttsAudioRef.current.pause();
-        ttsAudioRef.current = null;
-      }
+      stopTTS();
     }
   }, [open, userId]);
+
+  const stopTTS = useCallback(() => {
+    if (ttsAudioRef.current) {
+      ttsAudioRef.current.pause();
+      ttsAudioRef.current = null;
+    }
+    window.speechSynthesis.cancel();
+    setSpeakingIdx(-1);
+  }, []);
 
   const loadConversationHistory = async () => {
     setLoadingHistory(true);
@@ -61,20 +71,21 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
       if (data?.messages && Array.isArray(data.messages) && data.messages.length > 0) {
         setMessages(data.messages);
       } else {
-        // No history — show greeting
         setMessages([{ role: "assistant", content: greeting }]);
-        speakGreeting(greeting);
+        speakText(greeting);
       }
     } catch {
-      // No conversation found for today, show greeting
       setMessages([{ role: "assistant", content: greeting }]);
-      speakGreeting(greeting);
+      speakText(greeting);
     } finally {
       setLoadingHistory(false);
     }
   };
 
-  const speakGreeting = async (text) => {
+  const speakText = async (text, idx = -1) => {
+    stopTTS();
+    setSpeakingIdx(idx);
+
     try {
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -93,10 +104,10 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
       );
 
       if (!res.ok) {
-        // Fallback to browser speech
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = lang === "hi" ? "hi-IN" : "en-US";
         utterance.rate = 0.95;
+        utterance.onend = () => setSpeakingIdx(-1);
         window.speechSynthesis.speak(utterance);
         return;
       }
@@ -105,9 +116,10 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
       const url = URL.createObjectURL(blob);
       const audio = new Audio(url);
       ttsAudioRef.current = audio;
-      audio.play().catch(() => {});
+      audio.onended = () => setSpeakingIdx(-1);
+      audio.play().catch(() => setSpeakingIdx(-1));
     } catch {
-      // Silent fail
+      setSpeakingIdx(-1);
     }
   };
 
@@ -119,12 +131,7 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
       return;
     }
 
-    // Stop any playing TTS
-    if (ttsAudioRef.current) {
-      ttsAudioRef.current.pause();
-      ttsAudioRef.current = null;
-    }
-    window.speechSynthesis.cancel();
+    stopTTS();
 
     const recognition = new SpeechRecognition();
     recognition.lang = lang === "hi" ? "hi-IN" : "en-US";
@@ -150,12 +157,10 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
     recognition.onend = () => {
       setIsListening(false);
       recognitionRef.current = null;
-      // Auto-send if we got speech
       if (finalTranscript.trim()) {
-        // Small delay to let state update
-        setTimeout(() => {
-          sendMessage(finalTranscript.trim());
-        }, 100);
+        // Store the transcript and trigger send via ref
+        pendingSendRef.current = finalTranscript.trim();
+        setInput("");
       }
     };
 
@@ -167,7 +172,7 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
 
     setIsListening(true);
     recognition.start();
-  }, [lang]);
+  }, [lang, stopTTS]);
 
   const stopListening = useCallback(() => {
     if (recognitionRef.current) {
@@ -191,23 +196,30 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
     }
   }, [messages, streaming]);
 
+  // Process pending voice sends
+  useEffect(() => {
+    if (pendingSendRef.current && !streaming) {
+      const text = pendingSendRef.current;
+      pendingSendRef.current = null;
+      sendMessage(text);
+    }
+  });
+
   const sendMessage = async (text) => {
     if (!text.trim() || streaming) return;
 
     const userMsg = { role: "user", content: text.trim() };
-    const newMessages = [...messages, userMsg];
+    const newMessages = [...messagesRef.current, userMsg];
     setMessages(newMessages);
     setInput("");
     setStreaming(true);
 
-    // Add empty assistant message for streaming
     setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
     try {
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-      // Filter out the initial greeting from messages sent to AI if it matches
       const messagesForAI = newMessages.filter((m, i) => {
         if (i === 0 && m.role === "assistant" && (m.content === GREETING_EN || m.content === GREETING_HI)) {
           return false;
@@ -431,7 +443,6 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
                 : "Ask Sathi anything…"}
             </p>
 
-            {/* Suggested prompts */}
             <div
               style={{
                 display: "flex",
@@ -474,45 +485,85 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
               animation: "fadeUp .3s ease both",
             }}
           >
-            <div
-              style={{
-                maxWidth: "82%",
-                padding: "10px 14px",
-                borderRadius:
-                  msg.role === "user"
-                    ? "16px 16px 4px 16px"
-                    : "16px 16px 16px 4px",
-                background:
-                  msg.role === "user"
-                    ? "rgba(79,70,229,.35)"
-                    : "rgba(249,249,247,.08)",
-                border:
-                  msg.role === "user"
-                    ? "1px solid rgba(79,70,229,.4)"
-                    : "1px solid rgba(255,255,255,.08)",
-                color: "#F9F9F7",
-                fontSize: 13,
-                lineHeight: 1.55,
-              }}
-            >
-              {msg.content}
-              {/* Typing indicator for empty streaming assistant message */}
-              {msg.role === "assistant" && msg.content === "" && streaming && (
-                <span style={{ display: "inline-flex", gap: 3 }}>
-                  {[0, 1, 2].map((d) => (
-                    <span
-                      key={d}
-                      style={{
-                        width: 5,
-                        height: 5,
-                        borderRadius: "50%",
-                        background: "rgba(249,249,247,.5)",
-                        display: "inline-block",
-                        animation: `fadeIn .4s ease ${d * 0.15}s infinite alternate`,
-                      }}
-                    />
-                  ))}
-                </span>
+            <div style={{ maxWidth: "82%", display: "flex", flexDirection: "column", gap: 4 }}>
+              <div
+                style={{
+                  padding: "10px 14px",
+                  borderRadius:
+                    msg.role === "user"
+                      ? "16px 16px 4px 16px"
+                      : "16px 16px 16px 4px",
+                  background:
+                    msg.role === "user"
+                      ? "rgba(79,70,229,.35)"
+                      : "rgba(249,249,247,.08)",
+                  border:
+                    msg.role === "user"
+                      ? "1px solid rgba(79,70,229,.4)"
+                      : "1px solid rgba(255,255,255,.08)",
+                  color: "#F9F9F7",
+                  fontSize: 13,
+                  lineHeight: 1.55,
+                }}
+              >
+                {msg.content}
+                {msg.role === "assistant" && msg.content === "" && streaming && (
+                  <span style={{ display: "inline-flex", gap: 3 }}>
+                    {[0, 1, 2].map((d) => (
+                      <span
+                        key={d}
+                        style={{
+                          width: 5,
+                          height: 5,
+                          borderRadius: "50%",
+                          background: "rgba(249,249,247,.5)",
+                          display: "inline-block",
+                          animation: `fadeIn .4s ease ${d * 0.15}s infinite alternate`,
+                        }}
+                      />
+                    ))}
+                  </span>
+                )}
+              </div>
+
+              {/* Read aloud button for assistant messages with content */}
+              {msg.role === "assistant" && msg.content && !streaming && (
+                <button
+                  onClick={() => {
+                    if (speakingIdx === i) {
+                      stopTTS();
+                    } else {
+                      speakText(msg.content, i);
+                    }
+                  }}
+                  style={{
+                    alignSelf: "flex-start",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 5,
+                    padding: "5px 10px",
+                    borderRadius: 8,
+                    border: speakingIdx === i
+                      ? "1px solid rgba(79,70,229,.4)"
+                      : "1px solid rgba(255,255,255,.1)",
+                    background: speakingIdx === i
+                      ? "rgba(79,70,229,.2)"
+                      : "rgba(249,249,247,.04)",
+                    color: speakingIdx === i
+                      ? "#a5b4fc"
+                      : "rgba(249,249,247,.45)",
+                    fontSize: 11,
+                    cursor: "pointer",
+                    fontFamily: "'DM Sans', sans-serif",
+                    transition: "all .2s",
+                  }}
+                >
+                  <Volume2 size={13} />
+                  {speakingIdx === i
+                    ? (lang === "hi" ? "रोकें" : "Stop")
+                    : (lang === "hi" ? "सुनें" : "Read aloud")
+                  }
+                </button>
               )}
             </div>
           </div>
