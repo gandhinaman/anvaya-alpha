@@ -198,20 +198,52 @@ function AcousticHeatmap() {
 }
 
 // ─── WEEKLY TREND CHART ───────────────────────────────────────────────────────
-function WeeklyTrendChart() {
-  const mood = [72, 78, 85, 80, 88, 92, 90];
-  const energy = [65, 70, 80, 75, 82, 88, 85];
+function WeeklyTrendChart({ healthEvents = [] }) {
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+  // Build daily averages from real health events (last 7 days)
+  const buckets = { emotional_state: {}, vocal_energy: {} };
+  const now = new Date();
+  healthEvents.forEach(ev => {
+    if (!ev.recorded_at || !ev.value?.score) return;
+    if (ev.event_type !== "emotional_state" && ev.event_type !== "vocal_energy") return;
+    const d = new Date(ev.recorded_at);
+    const diff = Math.floor((now - d) / 86400000);
+    if (diff > 6 || diff < 0) return;
+    const dayIdx = (d.getDay() + 6) % 7; // 0=Mon
+    if (!buckets[ev.event_type][dayIdx]) buckets[ev.event_type][dayIdx] = [];
+    buckets[ev.event_type][dayIdx].push(ev.value.score);
+  });
+
+  const avg = arr => arr && arr.length ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : null;
+  const mood = days.map((_, i) => avg(buckets.emotional_state[i]));
+  const energy = days.map((_, i) => avg(buckets.vocal_energy[i]));
+
+  const allVals = [...mood, ...energy].filter(v => v != null);
+  const hasData = allVals.length > 0;
+  const minV = hasData ? Math.max(0, Math.min(...allVals) - 10) : 50;
+  const maxV = hasData ? Math.min(100, Math.max(...allVals) + 10) : 100;
+  const range = maxV - minV || 1;
+
   const W = 100, H = 60, pad = 4;
   const toX = (i) => pad + i * (W - pad * 2) / 6;
-  const toY = (v) => H - pad - ((v - 50) / (100 - 50)) * (H - pad * 2);
-  const pathD = (arr) => {
-    const pts = arr.map((v, i) => `${toX(i)},${toY(v)}`);
-    const area = `M${toX(0)},${H} L${pts.join(" L")} L${toX(6)},${H} Z`;
-    const line = `M${pts.join(" L")}`;
-    return { area, line };
+  const toY = (v) => H - pad - ((v - minV) / range) * (H - pad * 2);
+
+  const buildPath = (arr) => {
+    const valid = arr.map((v, i) => v != null ? { x: toX(i), y: toY(v), i } : null).filter(Boolean);
+    if (valid.length < 2) return null;
+    const line = "M" + valid.map(p => `${p.x},${p.y}`).join(" L");
+    const area = `M${valid[0].x},${H} L${valid.map(p => `${p.x},${p.y}`).join(" L")} L${valid[valid.length - 1].x},${H} Z`;
+    return { line, area, points: valid };
   };
-  const m = pathD(mood), e = pathD(energy);
+
+  const m = buildPath(mood);
+  const e = buildPath(energy);
+
+  const gridLines = hasData
+    ? [minV, minV + range * 0.25, minV + range * 0.5, minV + range * 0.75, maxV].map(Math.round)
+    : [60, 70, 80, 90, 100];
+
   return (
     <div>
       <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: 120, overflow: "visible" }}>
@@ -225,16 +257,17 @@ function WeeklyTrendChart() {
              <stop offset="100%" stopColor="#C68B59" stopOpacity={0} />
            </linearGradient>
          </defs>
-         {[60, 70, 80, 90, 100].map(v => (
+         {gridLines.map(v => (
            <line key={v} x1={pad} y1={toY(v)} x2={W - pad} y2={toY(v)}
              stroke="rgba(93,64,55,0.07)" strokeWidth={0.5} strokeDasharray="2 2" />
          ))}
-         <path d={m.area} fill="url(#mg)" />
-         <path d={e.area} fill="url(#eg)" />
-         <path d={m.line} fill="none" stroke="#5D4037" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
-         <path d={e.line} fill="none" stroke="#C68B59" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
-         {mood.map((v, i) => (<circle key={i} cx={toX(i)} cy={toY(v)} r={1.5} fill="#5D4037" />))}
-         {energy.map((v, i) => (<circle key={i} cx={toX(i)} cy={toY(v)} r={1.5} fill="#C68B59" />))}
+         {!hasData && (
+           <text x={W / 2} y={H / 2} textAnchor="middle" fontSize={6} fill="#9CA3AF">No data yet</text>
+         )}
+         {m && <><path d={m.area} fill="url(#mg)" /><path d={m.line} fill="none" stroke="#5D4037" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" /></>}
+         {e && <><path d={e.area} fill="url(#eg)" /><path d={e.line} fill="none" stroke="#C68B59" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" /></>}
+         {m && m.points.map((p, i) => (<circle key={`m${i}`} cx={p.x} cy={p.y} r={1.5} fill="#5D4037" />))}
+         {e && e.points.map((p, i) => (<circle key={`e${i}`} cx={p.x} cy={p.y} r={1.5} fill="#C68B59" />))}
       </svg>
       <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
         {days.map(d => <span key={d} style={{ fontSize: 9, color: "#9CA3AF", fontWeight: 500 }}>{d}</span>)}
@@ -242,11 +275,11 @@ function WeeklyTrendChart() {
       <div style={{ display: "flex", gap: 14, marginTop: 8 }}>
          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
            <div style={{ width: 16, height: 2, borderRadius: 2, background: "#5D4037" }} />
-           <span style={{ fontSize: 11, color: "#6b6b6b" }}>Mood</span>
+           <span style={{ fontSize: 11, color: "#6b6b6b" }}>Emotional State</span>
          </div>
          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
            <div style={{ width: 16, height: 2, borderRadius: 2, background: "#C68B59" }} />
-          <span style={{ fontSize: 11, color: "#6b6b6b" }}>Energy</span>
+          <span style={{ fontSize: 11, color: "#6b6b6b" }}>Vocal Energy</span>
         </div>
       </div>
     </div>
@@ -795,9 +828,9 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               <div className="gcard s4" style={{ padding: 20 }}>
                 <div style={{ marginBottom: 14 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Weekly Wellness Trends</div>
-                  <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Mood and energy levels over the past week</div>
+                  <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Emotional state & vocal energy over the past week</div>
                 </div>
-                <WeeklyTrendChart />
+                <WeeklyTrendChart healthEvents={healthEvents} />
               </div>
             </div>
 
@@ -958,13 +991,13 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Weekly Wellness Trends</div>
-                    <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Mood and energy levels over the past week</div>
+                    <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Emotional state & vocal energy over the past week</div>
                   </div>
                   <button onClick={() => setNav("health")} style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, fontWeight: 600, color: "#5D4037", background: "transparent", border: "none", cursor: "pointer" }}>
                     View all <ChevronRight size={12} />
                   </button>
                 </div>
-                <WeeklyTrendChart />
+                <WeeklyTrendChart healthEvents={healthEvents} />
               </div>
             </div>
 
