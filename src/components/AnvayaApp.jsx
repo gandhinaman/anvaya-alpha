@@ -4,7 +4,7 @@ import {
   Home, Bell, Settings, ChevronRight, Play, Pause, BookOpen,
   Circle, User, LogOut, Headphones, Brain, Check, Menu, X,
   TrendingUp, Zap, BarChart2, PhoneOff, AlertTriangle, ShieldCheck,
-  Loader2, Link2, BellRing, Copy
+  Loader2, Link2, BellRing, Copy, Send
 } from "lucide-react";
 import SathiChat from "./sathi/SathiChat";
 import MemoryRecorder from "./sathi/MemoryRecorder";
@@ -776,10 +776,20 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
       </div>
 
       <div style={{padding:"12px 18px 0"}}>
-        <div style={{background:"rgba(255,248,240,.1)",border:"1.5px solid rgba(255,248,240,.15)",borderRadius:16,padding:"14px 18px"}}>
+        <div style={{background:"rgba(255,248,240,.1)",border:"1.5px solid rgba(255,248,240,.15)",borderRadius:16,padding:"10px 10px 10px 18px",display:"flex",alignItems:"center",gap:8}}>
           <input value={inp} onChange={e=>{setInp(e.target.value);if(checkTrigger(e.target.value)){setOverlay(true);setOverlayPhase("ask");}}}
+            onKeyDown={e=>{if(e.key==="Enter"&&inp.trim()){setChatOpen(true);}}  }
             placeholder={lang==="en"?"Type anything… say 'help' if in trouble":"कुछ भी लिखें… मुश्किल में 'help' बोलें"}
-            style={{width:"100%",background:"transparent",border:"none",outline:"none",color:"#FFF8F0",fontSize:17}}/>
+            style={{flex:1,background:"transparent",border:"none",outline:"none",color:"#FFF8F0",fontSize:17}}/>
+          <button onClick={()=>{if(inp.trim())setChatOpen(true);}} style={{
+            width:48,height:48,borderRadius:14,border:"none",flexShrink:0,cursor:inp.trim()?"pointer":"default",
+            background:inp.trim()?"linear-gradient(135deg,#C68B59,#8D6E63)":"rgba(255,248,240,.06)",
+            display:"flex",alignItems:"center",justifyContent:"center",
+            transition:"all .2s",
+            boxShadow:inp.trim()?"0 4px 14px rgba(198,139,89,.35)":"none"
+          }}>
+            <Send size={20} color={inp.trim()?"#FFF8F0":"rgba(255,248,240,.25)"}/>
+          </button>
         </div>
       </div>
 
