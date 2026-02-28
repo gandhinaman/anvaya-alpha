@@ -314,6 +314,30 @@ function SathiScreen({inPanel=false, userId=null, linkedUserId=null, fullName=nu
   const synthRef = useRef(null);
   const voiceHistoryRef = useRef([]); // conversation history for context
 
+  // Load today's conversation history for voice context
+  useEffect(() => {
+    if (!userId) return;
+    const loadVoiceHistory = async () => {
+      try {
+        const today = new Date().toISOString().split("T")[0];
+        const { data } = await supabase
+          .from("conversations")
+          .select("messages")
+          .eq("user_id", userId)
+          .gte("created_at", today)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single();
+        if (data?.messages && Array.isArray(data.messages)) {
+          voiceHistoryRef.current = data.messages;
+        }
+      } catch {
+        // No history yet
+      }
+    };
+    loadVoiceHistory();
+  }, [userId]);
+
   const startVoiceConversation = () => {
     if (voicePhase !== "idle") {
       stopVoiceConversation();
