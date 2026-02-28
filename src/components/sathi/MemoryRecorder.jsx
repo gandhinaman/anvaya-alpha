@@ -235,15 +235,6 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
 
       const mediaUrl = urlData.publicUrl;
 
-      // Extract audio for transcription (send base64 of the blob regardless)
-      const arrayBuffer = await blob.arrayBuffer();
-      const base64 = btoa(
-        new Uint8Array(arrayBuffer).reduce(
-          (data, byte) => data + String.fromCharCode(byte),
-          ""
-        )
-      );
-
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
@@ -257,7 +248,6 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
             Authorization: `Bearer ${anonKey}`,
           },
           body: JSON.stringify({
-            audioBase64: base64,
             userId,
             audioUrl: mediaUrl,
             durationSeconds: duration,

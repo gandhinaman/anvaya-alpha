@@ -15,59 +15,77 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { audioBase64, userId, audioUrl, durationSeconds, promptQuestion } = await req.json();
+    const { userId, audioUrl, durationSeconds, promptQuestion, mediaType } = await req.json();
     const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
 
     if (!apiKey) {
       throw new Error("ANTHROPIC_API_KEY not configured");
     }
 
-    // Step 1: Transcribe audio using Claude's vision/audio capability
-    // We send the audio as base64 and ask Claude to transcribe it
-    const transcribeRes = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 2048,
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: "Please transcribe this audio recording accurately. The speaker may use English, Hindi, or a mix of both. Return only the transcription text, nothing else.",
-              },
-              {
-                type: "image",
-                source: {
-                  type: "base64",
-                  media_type: "audio/webm",
-                  data: audioBase64,
-                },
-              },
-            ],
-          },
-        ],
-      }),
-    });
+    // Step 1: Fetch the audio/video file from storage URL and convert to base64
+    let transcript = "[Audio recording - transcription unavailable]";
+    
+    try {
+      const fileRes = await fetch(audioUrl);
+      if (fileRes.ok) {
+        const fileBuffer = await fileRes.arrayBuffer();
+        const bytes = new Uint8Array(fileBuffer);
+        
+        // Only attempt transcription if file is under 10MB
+        if (bytes.length < 10 * 1024 * 1024) {
+          const base64 = btoa(String.fromCharCode(...bytes));
+          const mimeType = mediaType === "video" ? "video/webm" : "audio/webm";
 
-    let transcript = "";
-    if (transcribeRes.ok) {
-      const transcribeData = await transcribeRes.json();
-      transcript = transcribeData.content
-        ?.filter((b: { type: string }) => b.type === "text")
-        .map((b: { text: string }) => b.text)
-        .join("") || "";
-    } else {
-      // If transcription fails (e.g., audio not supported), use a fallback
-      const errBody = await transcribeRes.text();
-      console.error("Transcription failed:", errBody);
-      transcript = "[Audio recording - transcription unavailable]";
+          const transcribeRes = await fetch("https://api.anthropic.com/v1/messages", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-api-key": apiKey,
+              "anthropic-version": "2023-06-01",
+            },
+            body: JSON.stringify({
+              model: "claude-sonnet-4-20250514",
+              max_tokens: 2048,
+              messages: [
+                {
+                  role: "user",
+                  content: [
+                    {
+                      type: "text",
+                      text: "Please transcribe this audio recording accurately. The speaker may use English, Hindi, or a mix of both. Return only the transcription text, nothing else.",
+                    },
+                    {
+                      type: "image",
+                      source: {
+                        type: "base64",
+                        media_type: mimeType,
+                        data: base64,
+                      },
+                    },
+                  ],
+                },
+              ],
+            }),
+          });
+
+          if (transcribeRes.ok) {
+            const transcribeData = await transcribeRes.json();
+            transcript = transcribeData.content
+              ?.filter((b: { type: string }) => b.type === "text")
+              .map((b: { text: string }) => b.text)
+              .join("") || transcript;
+          } else {
+            const errBody = await transcribeRes.text();
+            console.error("Transcription failed:", errBody);
+          }
+        } else {
+          console.error("File too large for transcription:", bytes.length);
+        }
+      } else {
+        console.error("Failed to fetch audio file:", fileRes.status);
+      }
+    } catch (fetchErr) {
+      console.error("Error fetching/transcribing audio:", fetchErr);
     }
 
     // Step 2: Generate summary, title, and emotional tone
@@ -102,7 +120,6 @@ Deno.serve(async (req) => {
         .join("") || "";
 
       try {
-        // Extract JSON from the response
         const jsonMatch = rawText.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0]);
