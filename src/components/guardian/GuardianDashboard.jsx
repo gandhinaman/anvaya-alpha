@@ -691,7 +691,6 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
       await supabase.from("memory_reactions").insert({ memory_id: memoryId, user_id: profileId, reaction_type: "heart" });
     }
   };
-  };
 
   const navItems = [
     { id: "home", icon: <Home size={17} />, label: "Overview" },
