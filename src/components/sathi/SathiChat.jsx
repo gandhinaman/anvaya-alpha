@@ -369,19 +369,21 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
         </div>
         <button
           onClick={onClose}
+          aria-label="Close"
           style={{
-            width: 34,
-            height: 34,
-            borderRadius: 10,
-            border: "1px solid rgba(255,255,255,.12)",
-            background: "rgba(255,255,255,.06)",
+            width: 54,
+            height: 54,
+            borderRadius: 16,
+            border: "2.5px solid rgba(255,100,100,.55)",
+            background: "rgba(220,38,38,.22)",
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            boxShadow: "0 4px 18px rgba(220,38,38,.3)",
           }}
         >
-          <X size={16} color="rgba(249,249,247,.6)" />
+          <X size={28} color="#fca5a5" strokeWidth={3} />
         </button>
       </div>
 
