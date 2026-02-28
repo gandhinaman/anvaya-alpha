@@ -6,7 +6,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SUMMARY_PROMPT = `Summarize this personal memory in 2 warm sentences. Identify the emotional tone (one of: joyful, nostalgic, peaceful, concerned). Extract a short title (max 5 words). Respond in this exact JSON format only, no other text:
+const SUMMARY_PROMPT = `Summarize this personal memory in 2 warm sentences. Identify the emotional tone (one of: joyful, nostalgic, peaceful, concerned). Extract a short title (max 5 words) that reflects the topic of the conversation prompt. Respond in this exact JSON format only, no other text:
 {"title": "...", "summary": "...", "emotional_tone": "..."}`;
 
 Deno.serve(async (req) => {
@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { audioBase64, userId, audioUrl, durationSeconds } = await req.json();
+    const { audioBase64, userId, audioUrl, durationSeconds, promptQuestion } = await req.json();
     const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
 
     if (!apiKey) {
@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
         messages: [
           {
             role: "user",
-            content: `Here is a transcribed personal memory from an elderly person:\n\n"${transcript}"\n\n${SUMMARY_PROMPT}`,
+            content: `The person was asked this prompt: "${promptQuestion || 'Share a memory'}"\n\nHere is their transcribed response:\n\n"${transcript}"\n\n${SUMMARY_PROMPT}`,
           },
         ],
       }),

@@ -238,6 +238,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
             userId,
             audioUrl,
             durationSeconds: duration,
+            promptQuestion: currentPrompt,
           }),
         }
       );
