@@ -328,133 +328,133 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
 
       {/* ── IDLE: Prompt + two recording buttons ── */}
       {phase === "idle" && (
-        <div style={{ textAlign: "center", animation: "fadeUp .5s ease both", maxWidth: 340 }}>
-          <div
-            style={{
-              width: 88,
-              height: 88,
-              borderRadius: "50%",
-              background: "rgba(217,119,6,.15)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              margin: "0 auto 18px",
-              border: "2px solid rgba(217,119,6,.3)",
-            }}
-          >
-            <Mic size={38} color="#d97706" />
-          </div>
-          <div
-            style={{
-              fontFamily: "'Cormorant Garamond',serif",
-              fontSize: 30,
-              color: "#FFF8F0",
-              fontWeight: 600,
-              marginBottom: 10,
-            }}
-          >
-            {lang === "hi" ? "यादें रिकॉर्ड करें" : "Record a Memory"}
-          </div>
-
-          {/* Prompt question */}
-          <div style={{
-            background: "rgba(217,119,6,.1)",
-            border: "1.5px solid rgba(217,119,6,.25)",
-            borderRadius: 16,
-            padding: "16px 20px",
-            marginBottom: 10,
-            position: "relative",
-          }}>
-            <p style={{
-              color: "#FFF8F0",
-              fontSize: 18,
-              fontWeight: 500,
-              lineHeight: 1.5,
-              fontStyle: "italic",
-              fontFamily: "'Cormorant Garamond',serif",
-              margin: 0,
-              paddingRight: 36,
-            }}>
-              "{currentPrompt}"
-            </p>
-            <button
-              onClick={shufflePrompt}
+          <div style={{ textAlign: "center", animation: "fadeUp .5s ease both", maxWidth: 360 }}>
+            <div
               style={{
-                position: "absolute",
-                top: 12,
-                right: 12,
-                background: "rgba(217,119,6,.2)",
-                border: "1px solid rgba(217,119,6,.35)",
-                borderRadius: 10,
-                width: 38,
-                height: 38,
-                cursor: "pointer",
+                width: 100,
+                height: 100,
+                borderRadius: "50%",
+                background: "rgba(198,139,89,.18)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                margin: "0 auto 20px",
+                border: "2.5px solid rgba(198,139,89,.35)",
               }}
-              title={lang === "hi" ? "अगला सवाल" : "Next question"}
             >
-              <RefreshCw size={18} color="#d97706" />
-            </button>
-          </div>
-
-          <p style={{ color: "rgba(255,248,240,.5)", fontSize: 15, lineHeight: 1.6, marginBottom: 22 }}>
-            {lang === "hi"
-              ? "इस सवाल का जवाब दें, या कुछ भी बोलें। साथी सुन रहा है।"
-              : "Answer this prompt, or share anything on your mind. Sathi is listening."}
-          </p>
-
-          {/* Two recording buttons */}
-          <div style={{ display: "flex", gap: 12, width: "100%" }}>
-            <button
-              onClick={() => startRecording("audio")}
+              <Mic size={44} color="#C68B59" />
+            </div>
+            <div
               style={{
-                flex: 1,
-                padding: "20px 10px",
-                borderRadius: 18,
-                border: "none",
-                cursor: "pointer",
-                background: "linear-gradient(135deg,#C68B59,#A1724A)",
+                fontFamily: "'Playfair Display',serif",
+                fontSize: 32,
                 color: "#FFF8F0",
-                fontSize: 18,
-                fontWeight: 700,
-                boxShadow: "0 8px 28px rgba(198,139,89,.35)",
-                fontFamily: "'DM Sans', sans-serif",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 8,
+                fontWeight: 600,
+                marginBottom: 12,
               }}
             >
-              <Mic size={28} />
-              {lang === "hi" ? "ऑडियो" : "Audio"}
-            </button>
-            <button
-              onClick={() => startRecording("video")}
-              style={{
-                flex: 1,
-                padding: "20px 10px",
-                borderRadius: 18,
-                border: "none",
-                cursor: "pointer",
-                background: "linear-gradient(135deg,#5D4037,#3E2723)",
+              {lang === "hi" ? "यादें रिकॉर्ड करें" : "Record a Memory"}
+            </div>
+
+            {/* Prompt question */}
+            <div style={{
+              background: "rgba(198,139,89,.12)",
+              border: "1.5px solid rgba(198,139,89,.28)",
+              borderRadius: 18,
+              padding: "18px 22px",
+              marginBottom: 12,
+              position: "relative",
+            }}>
+              <p style={{
                 color: "#FFF8F0",
-                fontSize: 18,
-                fontWeight: 700,
-                boxShadow: "0 8px 28px rgba(93,64,55,.35)",
-                fontFamily: "'DM Sans', sans-serif",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 8,
-              }}
-            >
-              <Video size={28} />
-              {lang === "hi" ? "वीडियो" : "Video"}
-            </button>
+                fontSize: 20,
+                fontWeight: 500,
+                lineHeight: 1.6,
+                fontStyle: "italic",
+                fontFamily: "'Playfair Display',serif",
+                margin: 0,
+                paddingRight: 44,
+              }}>
+                "{currentPrompt}"
+              </p>
+              <button
+                onClick={shufflePrompt}
+                style={{
+                  position: "absolute",
+                  top: 14,
+                  right: 14,
+                  background: "rgba(198,139,89,.22)",
+                  border: "1.5px solid rgba(198,139,89,.4)",
+                  borderRadius: 12,
+                  width: 48,
+                  height: 48,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+                title={lang === "hi" ? "अगला सवाल" : "Next question"}
+              >
+                <RefreshCw size={22} color="#C68B59" />
+              </button>
+            </div>
+
+            <p style={{ color: "rgba(255,248,240,.6)", fontSize: 17, lineHeight: 1.7, marginBottom: 24 }}>
+              {lang === "hi"
+                ? "इस सवाल का जवाब दें, या कुछ भी बोलें। साथी सुन रहा है।"
+                : "Answer this prompt, or share anything on your mind. Sathi is listening."}
+            </p>
+
+            {/* Two recording buttons */}
+            <div style={{ display: "flex", gap: 14, width: "100%" }}>
+              <button
+                onClick={() => startRecording("audio")}
+                style={{
+                  flex: 1,
+                  padding: "22px 12px",
+                  borderRadius: 20,
+                  border: "none",
+                  cursor: "pointer",
+                  background: "linear-gradient(135deg,#C68B59,#A1724A)",
+                  color: "#FFF8F0",
+                  fontSize: 20,
+                  fontWeight: 700,
+                  boxShadow: "0 8px 28px rgba(198,139,89,.35)",
+                  fontFamily: "'DM Sans', sans-serif",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 10,
+                }}
+              >
+                <Mic size={32} />
+                {lang === "hi" ? "ऑडियो" : "Audio"}
+              </button>
+              <button
+                onClick={() => startRecording("video")}
+                style={{
+                  flex: 1,
+                  padding: "22px 12px",
+                  borderRadius: 20,
+                  border: "none",
+                  cursor: "pointer",
+                  background: "linear-gradient(135deg,#5D4037,#3E2723)",
+                  color: "#FFF8F0",
+                  fontSize: 20,
+                  fontWeight: 700,
+                  boxShadow: "0 8px 28px rgba(93,64,55,.35)",
+                  fontFamily: "'DM Sans', sans-serif",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 10,
+                }}
+              >
+                <Video size={32} />
+                {lang === "hi" ? "वीडियो" : "Video"}
+              </button>
+            </div>
           </div>
-        </div>
       )}
 
       {/* ── RECORDING: Live timer + stop ── */}
