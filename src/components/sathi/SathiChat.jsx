@@ -267,19 +267,32 @@ export default function SathiChat({ open, onClose, lang = "en", userId, initialM
 
   // Auto-send initial message from search bar
   const initialSentRef = useRef(false);
+  const initialMessageRef = useRef(null);
+  
+  // Track the initialMessage prop
   useEffect(() => {
-    if (open && initialMessage && !streaming && !loadingHistory && messages.length > 0 && !initialSentRef.current) {
+    if (initialMessage) {
+      initialMessageRef.current = initialMessage;
+      initialSentRef.current = false;
+    }
+  }, [initialMessage]);
+
+  useEffect(() => {
+    if (open && initialMessageRef.current && !streaming && !loadingHistory && messages.length > 0 && !initialSentRef.current) {
       initialSentRef.current = true;
-      // Small delay to ensure state is fully settled after history load
-      setTimeout(() => {
-        sendMessage(initialMessage);
+      const msg = initialMessageRef.current;
+      initialMessageRef.current = null;
+      // Use requestAnimationFrame to ensure React state is flushed
+      requestAnimationFrame(() => {
+        sendMessage(msg);
         if (onInitialMessageConsumed) onInitialMessageConsumed();
-      }, 100);
+      });
     }
     if (!open) {
       initialSentRef.current = false;
+      initialMessageRef.current = null;
     }
-  }, [open, initialMessage, streaming, loadingHistory, messages.length]);
+  }, [open, streaming, loadingHistory, messages.length]);
 
   // Process pending voice sends
   useEffect(() => {
