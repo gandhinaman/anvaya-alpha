@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import {
   Phone, Mic, MessageCircle, Heart, Activity, Pill,
-  Home, Bell, Settings, ChevronRight, Play, Pause,
+  Home, Bell, Settings, ChevronRight, Play, Pause, BookOpen,
   Circle, User, LogOut, Headphones, Brain, Check, Menu, X,
   TrendingUp, Zap, BarChart2, PhoneOff, AlertTriangle, ShieldCheck,
   Loader2, Link2, BellRing, Copy
 } from "lucide-react";
 import SathiChat from "./sathi/SathiChat";
 import MemoryRecorder from "./sathi/MemoryRecorder";
+import MemoryLog from "./sathi/MemoryLog";
 import { supabase } from "@/integrations/supabase/client";
 import { useParentData } from "@/hooks/useParentData";
 
@@ -324,6 +325,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
   const [chatOpen,setChatOpen]=useState(false);
   const [memoryOpen,setMemoryOpen]=useState(false);
   const [callOpen,setCallOpen]=useState(false);
+  const [memoryLogOpen,setMemoryLogOpen]=useState(false);
   const [inp,setInp]=useState("");
   const [linkCode,setLinkCode]=useState(null);
   const [showCode,setShowCode]=useState(false);
@@ -762,6 +764,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
       <div style={{padding:"14px 16px",display:"flex",flexDirection:"column",gap:10,flex:1,justifyContent:"flex-end"}}>
         {[
           {icon:<Mic size={19} color="#F9F9F7"/>,label:lang==="en"?"Record a Memory":"यादें रिकॉर्ड करें",sub:lang==="en"?"Your voice, preserved forever":"आपकी आवाज़, सदा के लिए",acc:"#d97706",fn:()=>setMemoryOpen(true)},
+          {icon:<BookOpen size={19} color="#F9F9F7"/>,label:lang==="en"?"Memory Log":"यादों की डायरी",sub:lang==="en"?"Your memories & family comments":"आपकी यादें और परिवार की टिप्पणियाँ",acc:"#b45309",fn:()=>setMemoryLogOpen(true)},
           {icon:<MessageCircle size={19} color="#F9F9F7"/>,label:lang==="en"?"Ask Sathi":"साथी से पूछें",sub:lang==="en"?"Health · Reminders · Stories":"स्वास्थ्य · याद · कहानियाँ",acc:"#4F46E5",fn:()=>setChatOpen(true)},
           {icon:<Phone size={19} color="#F9F9F7"/>,label:lang==="en"?"Call Child":"बच्चे को कॉल करें",sub:linkedName||"Guardian",acc:"#059669",fn:()=>setCallOpen(true)},
         ].map((c,i)=>(
@@ -850,6 +853,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
       <SathiChat open={chatOpen} onClose={()=>setChatOpen(false)} lang={lang} userId={userId}/>
       <MemoryRecorder open={memoryOpen} onClose={()=>setMemoryOpen(false)} lang={lang} userId={userId} linkedName={linkedName}/>
       <CallOverlay open={callOpen} onClose={()=>setCallOpen(false)} lang={lang} userId={userId} linkedUserId={linkedUserId} fromName={linkedName||"Child"}/>
+      <MemoryLog open={memoryLogOpen} onClose={()=>setMemoryLogOpen(false)} lang={lang} userId={userId}/>
     </div>
   );
 }

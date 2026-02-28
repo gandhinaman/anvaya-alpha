@@ -160,6 +160,38 @@ export type Database = {
           },
         ]
       }
+      memory_comments: {
+        Row: {
+          comment: string
+          created_at: string
+          id: string
+          memory_id: string
+          user_id: string
+        }
+        Insert: {
+          comment: string
+          created_at?: string
+          id?: string
+          memory_id: string
+          user_id: string
+        }
+        Update: {
+          comment?: string
+          created_at?: string
+          id?: string
+          memory_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "memory_comments_memory_id_fkey"
+            columns: ["memory_id"]
+            isOneToOne: false
+            referencedRelation: "memories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           age: number | null
