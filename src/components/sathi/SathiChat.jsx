@@ -122,71 +122,131 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
     }
   };
 
-  // ─── VOICE INPUT (Web Speech API) ───
+  // ─── VOICE INPUT (Web Speech API with WAV fallback) ───
   const speechRecRef = useRef(null);
+  const wavRecorderRef = useRef(null);
 
-  const startListening = useCallback(() => {
+  const startListening = useCallback(async () => {
     stopTTS();
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      setInput("Speech recognition not supported in this browser.");
-      return;
+    
+    if (SpeechRecognition) {
+      try {
+        const recognition = new SpeechRecognition();
+        recognition.lang = lang === "hi" ? "hi-IN" : "en-IN";
+        recognition.interimResults = true;
+        recognition.continuous = false;
+        recognition.maxAlternatives = 1;
+        speechRecRef.current = recognition;
+
+        let finalTranscript = "";
+
+        recognition.onresult = (event) => {
+          let interim = "";
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
+            else interim += event.results[i][0].transcript;
+          }
+          setInput(finalTranscript || interim || "");
+        };
+
+        recognition.onend = () => {
+          speechRecRef.current = null;
+          setIsListening(false);
+          if (finalTranscript.trim()) {
+            pendingSendRef.current = finalTranscript.trim();
+            setInput("");
+          }
+        };
+
+        recognition.onerror = (event) => {
+          console.error("Speech recognition error:", event.error);
+          speechRecRef.current = null;
+          if (event.error === "not-allowed" || event.error === "permission-denied") {
+            setIsListening(false);
+            setInput("");
+          } else {
+            // Fall back to WAV recording
+            startWavFallbackChat();
+          }
+        };
+
+        recognition.start();
+        setIsListening(true);
+        return;
+      } catch {
+        // Fall through to WAV fallback
+      }
     }
 
-    const recognition = new SpeechRecognition();
-    recognition.lang = lang === "hi" ? "hi-IN" : "en-IN";
-    recognition.interimResults = true;
-    recognition.continuous = false;
-    recognition.maxAlternatives = 1;
-    speechRecRef.current = recognition;
+    // WAV fallback for mobile PWA / unsupported browsers
+    startWavFallbackChat();
+  }, [lang, stopTTS]);
 
-    let finalTranscript = "";
+  const startWavFallbackChat = useCallback(async () => {
+    try {
+      const { startWavRecording } = await import("@/lib/wavRecorder.js");
+      const recorder = await startWavRecording();
+      wavRecorderRef.current = recorder;
+      setIsListening(true);
+      setInput(lang === "hi" ? "बोलिए… फिर माइक दबाएं" : "Speak… tap mic when done");
 
-    recognition.onresult = (event) => {
-      let interim = "";
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        if (event.results[i].isFinal) {
-          finalTranscript += event.results[i][0].transcript;
-        } else {
-          interim += event.results[i][0].transcript;
-        }
-      }
-      setInput(finalTranscript || interim || "");
-    };
-
-    recognition.onend = () => {
-      speechRecRef.current = null;
+      // Auto-stop after 10s
+      setTimeout(() => {
+        if (wavRecorderRef.current) stopListeningWav();
+      }, 10000);
+    } catch (err) {
+      console.error("WAV recording error:", err);
       setIsListening(false);
-      if (finalTranscript.trim()) {
-        pendingSendRef.current = finalTranscript.trim();
+    }
+  }, [lang]);
+
+  const stopListeningWav = useCallback(async () => {
+    if (!wavRecorderRef.current) return;
+    const { base64, byteLength } = wavRecorderRef.current.stop();
+    wavRecorderRef.current = null;
+    setIsListening(false);
+
+    if (byteLength < 5000) { setInput(""); return; }
+
+    setInput(lang === "hi" ? "प्रोसेस हो रहा है…" : "Processing…");
+    try {
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/sarvam-stt`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", apikey: anonKey, Authorization: `Bearer ${anonKey}` },
+          body: JSON.stringify({ audioBase64: base64, contentType: "audio/wav", languageCode: lang === "hi" ? "hi-IN" : "en-IN" }),
+        }
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "STT failed");
+      if (data.transcript?.trim()) {
+        pendingSendRef.current = data.transcript.trim();
+        setInput("");
+      } else {
         setInput("");
       }
-    };
-
-    recognition.onerror = (event) => {
-      console.error("Speech recognition error:", event.error);
-      speechRecRef.current = null;
-      setIsListening(false);
-      setInput("");
-    };
-
-    try {
-      recognition.start();
-      setIsListening(true);
     } catch (err) {
-      console.error("Speech recognition start error:", err);
-      setIsListening(false);
+      console.error("Sarvam STT error:", err);
+      setInput("");
     }
-  }, [lang, stopTTS]);
+  }, [lang]);
 
   const stopListening = useCallback(() => {
     if (speechRecRef.current) {
       try { speechRecRef.current.stop(); } catch {}
       speechRecRef.current = null;
     }
+    if (wavRecorderRef.current) {
+      stopListeningWav();
+      return;
+    }
     setIsListening(false);
-  }, []);
+  }, [stopListeningWav]);
 
   const toggleVoice = useCallback(() => {
     if (isListening) {
