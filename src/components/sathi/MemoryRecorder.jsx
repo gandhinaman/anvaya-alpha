@@ -1,64 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Mic, Video, Square, Check, X, Loader, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-
-const PROMPTS_EN = [
-  "What's your happiest childhood memory?",
-  "Tell us about a meal your mother used to make.",
-  "What's the best advice someone gave you?",
-  "Describe a place you loved visiting as a child.",
-  "What's a family tradition you cherish?",
-  "Tell us about the day you got married.",
-  "What song always makes you smile?",
-  "Who was your closest friend growing up?",
-  "What's something you're really proud of?",
-  "Tell us about a festival you'll never forget.",
-  // Indian culture additions
-  "What was Diwali like in your childhood home?",
-  "Tell us about your favorite temple or holy place.",
-  "What did your grandmother teach you about life?",
-  "Describe the rangoli your family used to make.",
-  "What was your favorite street food growing up?",
-  "Tell us about a train journey you remember.",
-  "What's a folk song or lullaby from your childhood?",
-  "How did your family celebrate Holi?",
-  "What was your school like as a child?",
-  "Tell us about your village or mohalla.",
-  "What's a recipe passed down in your family?",
-  "Describe a monsoon memory that makes you happy.",
-  "Who was a teacher that changed your life?",
-  "What games did you play as a child?",
-  "Tell us about a wedding you'll never forget.",
-];
-
-const PROMPTS_HI = [
-  "आपकी सबसे खुशी की बचपन की याद क्या है?",
-  "अपनी माँ के हाथ का कोई खाना बताइए।",
-  "किसी ने आपको सबसे अच्छी सलाह क्या दी?",
-  "बचपन में आप कहाँ जाना सबसे ज़्यादा पसंद करते थे?",
-  "कोई पारिवारिक परंपरा बताइए जो आपको प्रिय है।",
-  "अपनी शादी के दिन के बारे में बताइए।",
-  "कौन सा गाना सुनकर आप हमेशा मुस्कुराते हैं?",
-  "बड़े होते हुए आपका सबसे करीबी दोस्त कौन था?",
-  "किस बात पर आपको सबसे ज़्यादा गर्व है?",
-  "कोई त्योहार बताइए जो आप कभी नहीं भूलेंगे।",
-  // Indian culture additions
-  "बचपन में दिवाली कैसी होती थी?",
-  "अपने पसंदीदा मंदिर या पवित्र स्थान के बारे में बताइए।",
-  "दादी-नानी ने ज़िंदगी के बारे में क्या सिखाया?",
-  "आपके घर में कैसी रंगोली बनती थी?",
-  "बचपन का पसंदीदा स्ट्रीट फ़ूड क्या था?",
-  "कोई ट्रेन का सफ़र बताइए जो याद है।",
-  "बचपन का कोई लोकगीत या लोरी सुनाइए।",
-  "आपके परिवार में होली कैसे मनाते थे?",
-  "बचपन में आपका स्कूल कैसा था?",
-  "अपने गाँव या मोहल्ले के बारे में बताइए।",
-  "परिवार में पीढ़ियों से चली आ रही कोई रेसिपी बताइए।",
-  "बारिश की कोई ऐसी याद जो खुश कर दे।",
-  "कौन से गुरु ने आपकी ज़िंदगी बदल दी?",
-  "बचपन में कौन से खेल खेलते थे?",
-  "कोई शादी बताइए जो आप कभी नहीं भूलेंगे।",
-];
+import { MEMORY_PROMPTS, getNextPromptIndex } from "@/lib/memoryPrompts";
 
 export default function MemoryRecorder({ open, onClose, lang = "en", userId, linkedName }) {
   const [phase, setPhase] = useState("idle"); // idle | recording | processing | success | error
@@ -66,7 +9,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
   const [seconds, setSeconds] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
   const [savedTitle, setSavedTitle] = useState("");
-  const [promptIndex, setPromptIndex] = useState(() => Math.floor(Math.random() * PROMPTS_EN.length));
+  const [promptIndex, setPromptIndex] = useState(() => getNextPromptIndex());
   const [isSpeakingPrompt, setIsSpeakingPrompt] = useState(false);
   const mediaRecorder = useRef(null);
   const chunks = useRef([]);
@@ -76,8 +19,8 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
   const videoPreviewRef = useRef(null);
 
   const currentPrompt = useMemo(() => {
-    const prompts = lang === "hi" ? PROMPTS_HI : PROMPTS_EN;
-    return prompts[promptIndex % prompts.length];
+    const pair = MEMORY_PROMPTS[promptIndex % MEMORY_PROMPTS.length];
+    return lang === "hi" ? pair.hi : pair.en;
   }, [lang, promptIndex]);
 
   const speakWithBrowserFallback = useCallback((text) => {
@@ -145,10 +88,10 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
   }, [open]);
 
   const shufflePrompt = () => {
-    const newIndex = (promptIndex + 1) % PROMPTS_EN.length;
+    const newIndex = getNextPromptIndex(promptIndex);
     setPromptIndex(newIndex);
-    const prompts = lang === "hi" ? PROMPTS_HI : PROMPTS_EN;
-    speakPrompt(prompts[newIndex]);
+    const pair = MEMORY_PROMPTS[newIndex];
+    speakPrompt(lang === "hi" ? pair.hi : pair.en);
   };
 
   useEffect(() => {
