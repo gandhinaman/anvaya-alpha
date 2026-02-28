@@ -126,7 +126,7 @@ function AudioPlayer({ color = "#5D4037", audioUrl = null }) {
 }
 
 // ─── COGNITIVE RING ───────────────────────────────────────────────────────────
-function CognitiveRing({ value = 94 }) {
+function CognitiveRing({ value = 0, label = "" }) {
   const r = 56, cx = 72, cy = 72, circ = 2 * Math.PI * r;
   const offset = circ - (value / 100) * circ;
   return (
@@ -148,7 +148,7 @@ function CognitiveRing({ value = 94 }) {
            transform={`rotate(-90 ${cx} ${cy})`} filter="url(#crglow)"
            style={{ transition: "stroke-dashoffset 1.2s ease" }} />
          <text x={cx} y={cy - 6} textAnchor="middle" fontSize={30} fontWeight={700} fill="#3E2723" fontFamily="DM Sans">{value}</text>
-         <text x={cx} y={cy + 12} textAnchor="middle" fontSize={11} fill="#C68B59" fontFamily="DM Sans" fontWeight={500}>Stable</text>
+         <text x={cx} y={cy + 12} textAnchor="middle" fontSize={11} fill="#C68B59" fontFamily="DM Sans" fontWeight={500}>{label || "—"}</text>
        </svg>
        <span style={{ fontSize: 12, color: "#6b6b6b", fontWeight: 500 }}>Cognitive Vitality</span>
     </div>
@@ -779,7 +779,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                   <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Real-time cognitive assessment</div>
                 </div>
                 <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
-                  <CognitiveRing value={94} />
+                  <CognitiveRing value={parseInt(derivedStats.cognitiveClarity.value) || 0} label={derivedStats.cognitiveClarity.trend} />
                 </div>
                 <div style={{
                   display: "flex", alignItems: "flex-start", gap: 8, padding: "10px 12px",
@@ -941,7 +941,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                   <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Real-time cognitive assessment</div>
                 </div>
                 <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
-                  <CognitiveRing value={94} />
+                  <CognitiveRing value={parseInt(derivedStats.cognitiveClarity.value) || 0} label={derivedStats.cognitiveClarity.trend} />
                 </div>
                 <div style={{
                   display: "flex", alignItems: "flex-start", gap: 8, padding: "10px 12px",
