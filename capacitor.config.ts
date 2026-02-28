@@ -5,12 +5,12 @@ const config: CapacitorConfig = {
   appName: 'anvaya-alpha',
   webDir: 'dist',
 
-  // DEV ONLY: Remove "server" block for production / App Store builds.
-  server: {
-    url: 'https://15f9b36f-8215-4684-988a-0e68a6183ccd.lovableproject.com?forceHideBadge=true',
-    cleartext: true,
-    allowNavigation: ['*.lovableproject.com', '*.supabase.co', '*.lovable.app'],
-  },
+  // To enable dev hot-reload, uncomment the server block below:
+  // server: {
+  //   url: 'https://15f9b36f-8215-4684-988a-0e68a6183ccd.lovableproject.com?forceHideBadge=true',
+  //   cleartext: true,
+  //   allowNavigation: ['*.lovableproject.com', '*.supabase.co', '*.lovable.app'],
+  // },
   ios: {
     contentInset: 'automatic',
     preferredContentMode: 'mobile',
