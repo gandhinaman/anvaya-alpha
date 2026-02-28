@@ -465,13 +465,36 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
      { label: "Activity Level", value: derivedStats.activityLevel.value, icon: Zap, color: "#A1887F", trend: derivedStats.activityLevel.trend },
   ];
 
-  const alerts = healthEvents.slice(0, 3).map(e => ({
-    text: e.event_type === "medication_taken"
-      ? `Medication taken: ${e.value?.medication_name || "Unknown"}`
-      : `${e.event_type.replace(/_/g, " ")} recorded`,
-    type: e.event_type === "medication_taken" ? "success" : "info"
-  }));
-  if (alerts.length === 0) alerts.push({ text: "No recent events", type: "info" });
+  const alerts = healthEvents.slice(0, 5).map(e => {
+    const time = e.recorded_at ? new Date(e.recorded_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+    const score = e.value?.score != null ? ` (${e.value.score}%)` : "";
+    const label = e.value?.label ? ` — ${e.value.label}` : "";
+    let text = "", type = "info", icon = "";
+    switch (e.event_type) {
+      case "medication_taken":
+        text = `💊 Medication taken: ${e.value?.medication_name || "Unknown"}`;
+        type = "success"; break;
+      case "vocal_energy":
+        text = `🎙️ Vocal Energy${score}${label}`;
+        type = e.value?.score >= 70 ? "success" : "info"; break;
+      case "cognitive_vitality":
+        text = `🧠 Cognitive Vitality${score}${label}`;
+        type = e.value?.score >= 70 ? "success" : e.value?.score < 40 ? "warning" : "info"; break;
+      case "emotional_state":
+        text = `💛 Emotional State${score}${label}`;
+        type = e.value?.label === "Distressed" ? "warning" : "info"; break;
+      case "activity_level":
+        text = `⚡ Activity Level${score}${label}`;
+        type = "info"; break;
+      case "emergency":
+        text = `🚨 Emergency alert triggered`;
+        type = "warning"; break;
+      default:
+        text = `${e.event_type.replace(/_/g, " ")} recorded`;
+    }
+    return { text, type, time };
+  });
+  if (alerts.length === 0) alerts.push({ text: "No recent events", type: "info", time: "" });
 
   const fmtDate = (d) => {
     if (!d) return "—";
@@ -1038,7 +1061,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               <div className="gcard s6" style={{ padding: 20 }}>
                 <div style={{ marginBottom: 14 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Recent Alerts</div>
-                  <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Today's notifications</div>
+                  <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Latest health & activity events</div>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
                   {alerts.map((a, i) => (
@@ -1047,12 +1070,15 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                       animation: `fadeUp .5s ease ${.8 + i * .1}s both`,
                       background: "rgba(255,255,255,0.6)"
                     }}>
-                      <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: 8, width: "100%" }}>
                         <div style={{
                           width: 7, height: 7, borderRadius: "50%", marginTop: 4, flexShrink: 0,
-                          background: a.type === "info" ? "#C68B59" : "#8D6E63"
+                          background: a.type === "warning" ? "#DC2626" : a.type === "success" ? "#22C55E" : "#C68B59"
                         }} />
-                        <p style={{ fontSize: 11, color: "#6b6b6b", lineHeight: 1.5 }}>{a.text}</p>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: 11, color: "#3E2723", lineHeight: 1.5, fontWeight: 500 }}>{a.text}</p>
+                          {a.time && <span style={{ fontSize: 9, color: "#9CA3AF" }}>{a.time}</span>}
+                        </div>
                       </div>
                     </div>
                   ))}
