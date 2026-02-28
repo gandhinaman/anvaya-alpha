@@ -4,7 +4,7 @@ import {
   Home, Bell, Settings, ChevronRight, ChevronDown, Play, Pause,
   User, LogOut, Headphones, Brain, Check, Menu, X,
   TrendingUp, Zap, PhoneOff, AlertTriangle, ShieldCheck,
-  Loader2, Link2, Copy, Search
+  Loader2, Link2, Copy, Search, Trash2
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useParentData } from "@/hooks/useParentData";
@@ -310,10 +310,11 @@ function WeeklyTrendChart({ healthEvents = [] }) {
 }
 
 // ─── MEMORY CARD ──────────────────────────────────────────────────────────────
-function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null, emotionalTone = null }) {
+function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null, emotionalTone = null, promptQuestion = null, onDelete = null, deleting = false }) {
   const toneColors = { joyful: "#C68B59", nostalgic: "#8D6E63", peaceful: "#5D4037", concerned: "#DC2626" };
   const tone = emotionalTone || "positive";
   const toneColor = toneColors[tone.toLowerCase()] || "#C68B59";
+  const isVideo = audioUrl?.includes("/video_");
   return (
     <div className="gcard" style={{ padding: 18, animation: `fadeUp .5s ease ${.6 + index * .1}s both` }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
@@ -325,7 +326,24 @@ function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null
           </div>
         </div>
       </div>
-      <AudioPlayer color="#5D4037" audioUrl={audioUrl} />
+      {/* Prompt question */}
+      {promptQuestion && (
+        <div style={{
+          marginBottom: 10, padding: "8px 12px", borderRadius: 10,
+          background: "rgba(198,139,89,0.06)", border: "1px solid rgba(198,139,89,0.12)",
+        }}>
+          <div style={{ fontSize: 9, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 3 }}>Question</div>
+          <p style={{ fontSize: 12, color: "#8D6E63", fontStyle: "italic", margin: 0, lineHeight: 1.4 }}>"{promptQuestion}"</p>
+        </div>
+      )}
+      {/* Video or Audio player */}
+      {isVideo ? (
+        <div style={{ borderRadius: 12, overflow: "hidden", border: "1px solid rgba(93,64,55,0.12)", maxWidth: 300, marginBottom: 8 }}>
+          <video src={audioUrl} controls playsInline style={{ width: "100%", display: "block", borderRadius: 10 }} />
+        </div>
+      ) : (
+        <AudioPlayer color="#5D4037" audioUrl={audioUrl} />
+      )}
       {summary && <p style={{
         marginTop: 10, fontStyle: "italic",
         fontFamily: "'Cormorant Garamond',serif", fontSize: 14,
@@ -334,9 +352,28 @@ function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null
       }}>
         "{summary}"
       </p>}
-      <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 5 }}>
-        <div style={{ width: 6, height: 6, borderRadius: "50%", background: toneColor }} />
-        <span style={{ fontSize: 10, color: toneColor, fontWeight: 600 }}>Emotional tone: {tone.charAt(0).toUpperCase() + tone.slice(1)}</span>
+      <div style={{ marginTop: 10, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+          <div style={{ width: 6, height: 6, borderRadius: "50%", background: toneColor }} />
+          <span style={{ fontSize: 10, color: toneColor, fontWeight: 600 }}>Emotional tone: {tone.charAt(0).toUpperCase() + tone.slice(1)}</span>
+        </div>
+        {onDelete && (
+          <button
+            onClick={() => {
+              if (window.confirm("Delete this memory? This cannot be undone.")) onDelete();
+            }}
+            disabled={deleting}
+            style={{
+              display: "flex", alignItems: "center", gap: 4, padding: "4px 10px",
+              borderRadius: 8, border: "1px solid rgba(220,38,38,0.2)",
+              background: "rgba(220,38,38,0.04)", color: "#DC2626",
+              fontSize: 10, fontWeight: 600, cursor: "pointer", opacity: deleting ? 0.5 : 1,
+            }}
+          >
+            <Trash2 size={11} />
+            {deleting ? "…" : "Delete"}
+          </button>
+        )}
       </div>
     </div>
   );
@@ -431,6 +468,8 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
   const [notifPref, setNotifPref] = useState({ emergency: true, medication: true, memories: true });
   const [signingOut, setSigningOut] = useState(false);
   const [memorySearch, setMemorySearch] = useState("");
+  const [memoryFilter, setMemoryFilter] = useState("all");
+  const [deletingMemId, setDeletingMemId] = useState(null);
 
   // Guardian profile state
   const [guardianProfile, setGuardianProfile] = useState({ full_name: "", phone: "", location: "" });
@@ -586,8 +625,22 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
   };
   const fmtDuration = (s) => s ? (s >= 60 ? `${Math.round(s / 60)} min` : `${s}s`) : "—";
 
+  const deleteMemory = async (memId) => {
+    if (deletingMemId) return;
+    setDeletingMemId(memId);
+    try {
+      await supabase.from("memory_comments").delete().eq("memory_id", memId);
+      await supabase.from("memories").delete().eq("id", memId);
+    } catch (err) {
+      console.error("Delete error:", err);
+    } finally {
+      setDeletingMemId(null);
+    }
+  };
+
   const memories = realMemories.length > 0
     ? realMemories.map(m => ({
+      id: m.id,
       title: m.title || "Untitled",
       date: fmtDate(m.created_at),
       duration: fmtDuration(m.duration_seconds),
@@ -595,8 +648,9 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
       transcript: m.transcript || "",
       audioUrl: m.audio_url || null,
       emotionalTone: m.emotional_tone || null,
+      promptQuestion: m.prompt_question || null,
     }))
-    : [{ title: "No memories yet", date: "—", duration: "—", summary: "Memories recorded by your parent will appear here.", transcript: "", audioUrl: null, emotionalTone: null }];
+    : [{ id: null, title: "No memories yet", date: "—", duration: "—", summary: "Memories recorded by your parent will appear here.", transcript: "", audioUrl: null, emotionalTone: null, promptQuestion: null }];
 
   const Sidebar = ({ mobile = false }) => (
      <div style={{
@@ -928,7 +982,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
             <div style={{
               display: "flex", alignItems: "center", gap: 8, padding: "10px 14px",
               background: "rgba(255,255,255,0.72)", backdropFilter: "blur(12px)",
-              border: "1px solid rgba(93,64,55,0.12)", borderRadius: 14, marginBottom: 16
+              border: "1px solid rgba(93,64,55,0.12)", borderRadius: 14, marginBottom: 10
             }}>
               <Search size={16} color="#9CA3AF" />
               <input
@@ -946,6 +1000,26 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                 </button>
               )}
             </div>
+            {/* Filter tabs */}
+            <div style={{ display: "flex", gap: 8, overflowX: "auto", marginBottom: 16, paddingBottom: 4 }}>
+              {[
+                { id: "all", label: "All", emoji: "📚" },
+                { id: "joyful", label: "Joyful", emoji: "😊" },
+                { id: "nostalgic", label: "Nostalgic", emoji: "🌅" },
+                { id: "peaceful", label: "Peaceful", emoji: "🕊️" },
+                { id: "concerned", label: "Concerned", emoji: "😟" },
+              ].map(cat => (
+                <button key={cat.id} onClick={() => setMemoryFilter(cat.id)} style={{
+                  padding: "6px 14px", borderRadius: 100, border: "none", cursor: "pointer",
+                  background: memoryFilter === cat.id ? "#5D4037" : "rgba(93,64,55,0.06)",
+                  color: memoryFilter === cat.id ? "#FFF8F0" : "#6b6b6b",
+                  fontSize: 12, fontWeight: 600, whiteSpace: "nowrap",
+                  display: "flex", alignItems: "center", gap: 4, transition: "all .2s",
+                }}>
+                  <span>{cat.emoji}</span> {cat.label}
+                </button>
+              ))}
+            </div>
             {realMemories.length === 0 ? (
               <div className="gcard" style={{ padding: 28, textAlign: "center" }}>
                 <Headphones size={28} color="#9CA3AF" style={{ margin: "0 auto 10px" }} />
@@ -956,18 +1030,26 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               </div>
             ) : (() => {
               const q = memorySearch.toLowerCase();
-              const filtered = memories.filter(m =>
-                !q || m.title.toLowerCase().includes(q) || (m.transcript && m.transcript.toLowerCase().includes(q)) || (m.summary && m.summary.toLowerCase().includes(q))
-              );
+              const filtered = memories.filter(m => {
+                const matchesFilter = memoryFilter === "all" || (m.emotionalTone && m.emotionalTone.toLowerCase() === memoryFilter);
+                const matchesSearch = !q || m.title.toLowerCase().includes(q) || (m.transcript && m.transcript.toLowerCase().includes(q)) || (m.summary && m.summary.toLowerCase().includes(q));
+                return matchesFilter && matchesSearch;
+              });
               return filtered.length === 0 ? (
                 <div className="gcard" style={{ padding: 28, textAlign: "center" }}>
                   <Search size={28} color="#9CA3AF" style={{ margin: "0 auto 10px" }} />
-                  <p style={{ fontSize: 13, color: "#6b6b6b" }}>No memories match "{memorySearch}"</p>
+                  <p style={{ fontSize: 13, color: "#6b6b6b" }}>No memories match your filter</p>
                 </div>
               ) : (
                 <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 13 }}>
                   {filtered.map((m, i) => (
-                    <MemoryCard key={i} {...m} index={i} />
+                    <MemoryCard
+                      key={m.id || i}
+                      {...m}
+                      index={i}
+                      onDelete={m.id ? () => deleteMemory(m.id) : null}
+                      deleting={deletingMemId === m.id}
+                    />
                   ))}
                 </div>
               );

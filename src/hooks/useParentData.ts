@@ -18,6 +18,7 @@ interface Memory {
   duration_seconds: number | null;
   created_at: string | null;
   transcript: string | null;
+  prompt_question: string | null;
 }
 
 interface Medication {

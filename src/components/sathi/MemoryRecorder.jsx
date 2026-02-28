@@ -234,9 +234,11 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
   const stopRecording = useCallback(async () => {
     if (!mediaRecorder.current || mediaRecorder.current.state === "inactive") return;
 
+    // Immediately show processing state for instant feedback
     clearInterval(timerRef.current);
     const duration = seconds;
     const mode = recordingMode;
+    setPhase("processing");
 
     await new Promise((resolve) => {
       mediaRecorder.current.onstop = resolve;
@@ -251,7 +253,6 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
     const isVideo = mode === "video";
     const blobType = isVideo ? "video/webm" : "audio/webm";
     const blob = new Blob(chunks.current, { type: blobType });
-    setPhase("processing");
 
     try {
       const ext = isVideo ? "webm" : "webm";

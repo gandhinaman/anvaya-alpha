@@ -1079,7 +1079,8 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
       <div style={{display:"flex",justifyContent:"center",marginTop:voicePhase!=="idle"?16:isMock?36:48,transition:"margin .5s ease",flexShrink:0}}>
         <div style={{position:"relative"}} className="pring">
           <div
-            onClick={startVoiceConversation}
+            onPointerUp={(e) => { e.preventDefault(); startVoiceConversation(); }}
+            onTouchEnd={(e) => { e.preventDefault(); startVoiceConversation(); }}
             className={voicePhase==="listening"?"orb-rec":voicePhase==="speaking"?"orb-rec":"orb"}
             style={{
               width:voicePhase!=="idle"?(isMock?120:140):(isMock?160:180),
@@ -1093,6 +1094,8 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
                 ? "radial-gradient(circle at 40% 35%,#D7CCC8 0%,#BCAAA4 35%,#A1887F 65%,#8D6E63 100%)"
                 : "radial-gradient(circle at 40% 35%,#E8C9A0 0%,#D4A574 30%,#C68B59 55%,#8D6E63 80%,#5D4037 100%)",
               position:"relative",cursor:"pointer",transition:"all .5s ease",
+              WebkitTapHighlightColor:"transparent",
+              touchAction:"manipulation",
               boxShadow: voicePhase!=="idle"
                 ? "0 0 40px 10px rgba(212,165,116,.25), 0 0 80px 30px rgba(198,139,89,.1)"
                 : "0 0 50px 12px rgba(198,139,89,.2), 0 0 100px 30px rgba(141,110,99,.08)"

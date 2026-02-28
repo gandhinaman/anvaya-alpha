@@ -228,6 +228,7 @@ Deno.serve(async (req) => {
         audio_url: audioUrl,
         duration_seconds: durationSeconds || 0,
         vocal_energy: vocalEnergyLabel,
+        prompt_question: promptQuestion || null,
       })
       .select()
       .single();
