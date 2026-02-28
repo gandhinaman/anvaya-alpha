@@ -541,27 +541,32 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
           </div>
 
           <button
-            onClick={stopRecording}
+            onPointerUp={(e) => { e.preventDefault(); stopRecording(); }}
+            onTouchEnd={(e) => { e.preventDefault(); stopRecording(); }}
             style={{
               width: "100%",
-              padding: "20px",
-              borderRadius: 18,
-              border: "none",
+              minHeight: 72,
+              padding: "22px 20px",
+              borderRadius: 20,
+              border: "3px solid rgba(255,100,100,.6)",
               cursor: "pointer",
               background: "linear-gradient(135deg,#dc2626,#b91c1c)",
-              color: "#F9F9F7",
-              fontSize: 20,
+              color: "#FFF8F0",
+              fontSize: 24,
               fontWeight: 700,
-              boxShadow: "0 8px 28px rgba(220,38,38,.3)",
+              boxShadow: "0 8px 28px rgba(220,38,38,.4)",
               fontFamily: "'DM Sans', sans-serif",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: 10,
-              marginTop: 16,
+              gap: 12,
+              marginTop: 20,
+              WebkitTapHighlightColor: "transparent",
+              touchAction: "manipulation",
+              userSelect: "none",
             }}
           >
-            <Square size={18} fill="#F9F9F7" />
+            <Square size={24} fill="#FFF8F0" />
             {lang === "hi" ? "रिकॉर्डिंग बंद करें" : "Stop Recording"}
           </button>
         </div>
