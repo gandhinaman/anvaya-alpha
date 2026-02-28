@@ -9,6 +9,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useParentData } from "@/hooks/useParentData";
 import { filterCities } from "@/lib/cities";
+import { formatPhoneInput, isValidPhone } from "@/lib/phoneFormat";
 
 // ─── STYLES (shared with AnvayaApp) ────────────────────────────────────────────
 export const guardianStyles = `
@@ -748,10 +749,12 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                 </div>
                 <div>
                   <label style={{ fontSize: 11, fontWeight: 600, color: "#6b6b6b", marginBottom: 4, display: "block" }}>Phone Number</label>
-                  <input value={guardianProfile.phone} onChange={e => setGuardianProfile(p => ({ ...p, phone: e.target.value }))}
+                  <input value={guardianProfile.phone} onChange={e => setGuardianProfile(p => ({ ...p, phone: formatPhoneInput(e.target.value) }))}
                     placeholder="+91 98765 43210" type="tel"
-                    style={{ width: "100%", padding: "11px 14px", borderRadius: 12, border: "1px solid rgba(93,64,55,0.15)", fontSize: 14, outline: "none", color: "#3E2723", fontFamily: "'DM Sans',sans-serif" }} />
-                  <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 3 }}>Your parent can use this to call you directly</div>
+                    style={{ width: "100%", padding: "11px 14px", borderRadius: 12, border: `1px solid ${guardianProfile.phone?.length > 0 ? (isValidPhone(guardianProfile.phone) ? "rgba(34,197,94,0.4)" : "rgba(220,38,38,0.4)") : "rgba(93,64,55,0.15)"}`, fontSize: 14, outline: "none", color: "#3E2723", fontFamily: "'DM Sans',sans-serif" }} />
+                  <div style={{ fontSize: 10, color: guardianProfile.phone?.length > 3 && !isValidPhone(guardianProfile.phone) ? "#DC2626" : "#9CA3AF", marginTop: 3 }}>
+                    {guardianProfile.phone?.length > 3 && !isValidPhone(guardianProfile.phone) ? "Include country code, e.g. +91 98765 43210" : "Your parent can use this to call you directly"}
+                  </div>
                 </div>
                 <div style={{ position: "relative" }} ref={cityRef}>
                   <label style={{ fontSize: 11, fontWeight: 600, color: "#6b6b6b", marginBottom: 4, display: "block" }}>Location</label>
@@ -802,7 +805,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                     </div>
                   )}
                 </div>
-                <button onClick={saveGuardianProfile} disabled={guardianProfileLoading} style={{
+                <button onClick={saveGuardianProfile} disabled={guardianProfileLoading || (guardianProfile.phone?.length > 0 && !isValidPhone(guardianProfile.phone))} style={{
                   width: "100%", padding: "12px", borderRadius: 12, border: "none", cursor: guardianProfileLoading ? "wait" : "pointer",
                   background: guardianProfileSaved ? "#22C55E" : "linear-gradient(135deg,#8D6E63,#5D4037)",
                   color: "#FFF8F0", fontSize: 13, fontWeight: 600, opacity: guardianProfileLoading ? .6 : 1,

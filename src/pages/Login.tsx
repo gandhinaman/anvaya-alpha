@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { fontStyle } from "@/components/AnvayaApp";
+import { formatPhoneInput, isValidPhone } from "@/lib/phoneFormat";
 
 const inputStyle = {
   width: "100%",
@@ -45,6 +46,9 @@ export default function Login() {
         if (resetErr) throw resetErr;
         setForgotSuccess(true);
       } else if (mode === "signup") {
+        if (role === "child" && phone && !isValidPhone(phone)) {
+          throw new Error("Please enter a valid phone number with country code (e.g. +91 98765 43210)");
+        }
         const { error: signupErr } = await supabase.auth.signUp({
           email,
           password,
@@ -199,8 +203,11 @@ export default function Login() {
                 {role === "child" && (
                   <div>
                     <label style={labelStyle}>Phone Number</label>
-                    <input type="tel" required value={phone} onChange={e => setPhone(e.target.value)} placeholder="+91 98765 43210" style={inputStyle} />
-                    <div style={{ fontSize: 10, color: "rgba(249,249,247,.35)", marginTop: 4 }}>Your parent can call you directly from the app</div>
+                    <input type="tel" required value={phone} onChange={e => setPhone(formatPhoneInput(e.target.value))} placeholder="+91 98765 43210"
+                      style={{ ...inputStyle, borderColor: phone.length > 0 ? (isValidPhone(phone) ? "rgba(34,197,94,0.5)" : "rgba(220,38,38,0.5)") : "rgba(255,255,255,.12)" }} />
+                    <div style={{ fontSize: 10, color: phone.length > 3 && !isValidPhone(phone) ? "#fca5a5" : "rgba(249,249,247,.35)", marginTop: 4 }}>
+                      {phone.length > 3 && !isValidPhone(phone) ? "Include country code, e.g. +91 98765 43210" : "Your parent can call you directly from the app"}
+                    </div>
                   </div>
                 )}
               </>
