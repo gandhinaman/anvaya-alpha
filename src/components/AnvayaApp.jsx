@@ -336,6 +336,21 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
     });
   },[propUserId]);
 
+  // Request mic/camera permissions early on iOS so the orb doesn't get stuck
+  useEffect(() => {
+    if (!userId) return;
+    const requestPermissions = async () => {
+      try {
+        // Request mic permission early — the stream is released immediately
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach(t => t.stop());
+      } catch (e) {
+        console.warn("Early mic permission request failed:", e);
+      }
+    };
+    requestPermissions();
+  }, [userId]);
+
   // Broadcast presence so guardian can see parent is online
   useEffect(() => {
     if (!userId) return;
@@ -665,6 +680,15 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
       stopVoiceConversation();
       return;
     }
+
+    // Guard: if stuck in a non-idle state for >15s, force reset
+    // (This handles sporadic stuck states on iOS)
+    setTimeout(() => {
+      if (voicePhase === "listening" && !speechRecRef.current && !wavRecorderRef.current) {
+        console.warn("Orb stuck in listening — force resetting");
+        stopVoiceConversation();
+      }
+    }, 15000);
 
     // Unlock audio on iOS — only once, skip if already done
     if (!preWarmedAudioRef.current) {

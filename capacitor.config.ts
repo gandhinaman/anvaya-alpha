@@ -2,7 +2,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
   appId: "app.lovable.anvayaalpha.app",
-  appName: "anvaya-alpha",
+  appName: "Anvaya",
   webDir: "dist",
 
   // To enable dev hot-reload, uncomment the server block below:
