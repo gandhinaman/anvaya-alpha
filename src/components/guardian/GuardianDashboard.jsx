@@ -875,11 +875,11 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
             }}>
               <div className="gcard s3" style={{ padding: 20 }}>
                 <div style={{ marginBottom: 14 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Cognitive Vitality</div>
-                  <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Real-time cognitive assessment</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Emotional Wellbeing</div>
+                  <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Tone & mood from recent conversations</div>
                 </div>
                 <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
-                  <CognitiveRing value={parseInt(derivedStats.cognitiveClarity.value) || 0} label={derivedStats.cognitiveClarity.trend} />
+                  <CognitiveRing value={parseInt(derivedStats.emotionalTone.value) || 0} label={derivedStats.emotionalTone.trend} />
                 </div>
                 <div style={{
                   display: "flex", alignItems: "flex-start", gap: 8, padding: "10px 12px",
@@ -887,7 +887,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                 }}>
                   <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#C68B59", marginTop: 4, flexShrink: 0 }} />
                   <p style={{ fontSize: 11, color: "#6b6b6b", lineHeight: 1.5 }}>
-                    Pattern recognition and recall scores are within healthy range
+                    Emotional state derived from voice tone, breathing patterns, and conversation sentiment
                   </p>
                 </div>
               </div>
@@ -1054,11 +1054,11 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
             }}>
               <div className="gcard s3" style={{ padding: 20 }}>
                 <div style={{ marginBottom: 14 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Cognitive Vitality</div>
-                  <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Real-time cognitive assessment</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Emotional Wellbeing</div>
+                  <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Tone & mood from recent conversations</div>
                 </div>
                 <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
-                  <CognitiveRing value={parseInt(derivedStats.cognitiveClarity.value) || 0} label={derivedStats.cognitiveClarity.trend} />
+                  <CognitiveRing value={parseInt(derivedStats.emotionalTone.value) || 0} label={derivedStats.emotionalTone.trend} />
                 </div>
                 <div style={{
                   display: "flex", alignItems: "flex-start", gap: 8, padding: "10px 12px",
@@ -1066,7 +1066,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                 }}>
                   <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#C68B59", marginTop: 4, flexShrink: 0 }} />
                   <p style={{ fontSize: 11, color: "#6b6b6b", lineHeight: 1.5 }}>
-                    Pattern recognition and recall scores are within healthy range
+                    Emotional state derived from voice tone, breathing patterns, and conversation sentiment
                   </p>
                 </div>
               </div>
