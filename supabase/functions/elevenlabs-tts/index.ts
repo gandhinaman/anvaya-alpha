@@ -21,6 +21,9 @@ Deno.serve(async (req) => {
     });
   }
 
+  // Truncate to stay within API limits
+  const truncatedText = text.length > 2400 ? text.slice(0, 2400) + "…" : text;
+
   // ── Sarvam AI TTS (fast for Indian languages) ──
   if (SARVAM_API_KEY) {
     try {
@@ -33,7 +36,7 @@ Deno.serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          text,
+          text: truncatedText,
           target_language_code: targetLang,
           speaker: "anushka",
           model: "bulbul:v2",
@@ -85,7 +88,7 @@ Deno.serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          text,
+          text: truncatedText,
           model_id: "eleven_turbo_v2_5",
           voice_settings: {
             stability: 0.3,

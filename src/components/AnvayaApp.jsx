@@ -894,8 +894,13 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
         ttsAudioRef.current = null;
       };
 
-      // Stream audio via MediaSource (Chrome/Android) or blob fallback (iOS/Safari)
-      if (window.MediaSource && MediaSource.isTypeSupported('audio/mpeg')) {
+      // Check content type — MediaSource streaming only works for audio/mpeg (ElevenLabs)
+      // Sarvam returns audio/wav which must use blob approach
+      const contentType = response.headers.get('content-type') || '';
+      const isMpeg = contentType.includes('audio/mpeg');
+
+      if (isMpeg && window.MediaSource && MediaSource.isTypeSupported('audio/mpeg')) {
+        // Stream audio via MediaSource (Chrome/Android)
         const mediaSource = new MediaSource();
         audio.src = URL.createObjectURL(mediaSource);
         await new Promise((resolve, reject) => {
@@ -923,7 +928,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
           }, { once: true });
         });
       } else {
-        // iOS/Safari fallback — no MediaSource for mp3
+        // Blob fallback for audio/wav (Sarvam) or iOS/Safari
         const audioBlob = await response.blob();
         audio.src = URL.createObjectURL(audioBlob);
         await audio.play();
