@@ -24,6 +24,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [role, setRole] = useState<"parent" | "child">("parent");
+  const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [signupSuccess, setSignupSuccess] = useState(false);
@@ -49,7 +50,7 @@ export default function Login() {
           password,
           options: {
             emailRedirectTo: window.location.origin,
-            data: { full_name: fullName, role },
+            data: { full_name: fullName, role, phone: role === "child" ? phone : undefined },
           },
         });
         if (signupErr) throw signupErr;
@@ -195,6 +196,13 @@ export default function Login() {
                     ))}
                   </div>
                 </div>
+                {role === "child" && (
+                  <div>
+                    <label style={labelStyle}>Phone Number</label>
+                    <input type="tel" required value={phone} onChange={e => setPhone(e.target.value)} placeholder="+91 98765 43210" style={inputStyle} />
+                    <div style={{ fontSize: 10, color: "rgba(249,249,247,.35)", marginTop: 4 }}>Your parent can call you directly from the app</div>
+                  </div>
+                )}
               </>
             )}
 
