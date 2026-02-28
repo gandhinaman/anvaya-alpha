@@ -460,13 +460,25 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
 
   const stats = [
      { label: "Vocal Energy", value: derivedStats.vocalEnergy.value, icon: Mic, color: "#5D4037", trend: derivedStats.vocalEnergy.trend,
-       desc: "Measures the strength, pitch variation, and resonance of your parent's voice during conversations. A score of 75%+ indicates strong vocal projection and healthy speech patterns. Lower scores may suggest fatigue, low mood, or respiratory changes. This is analyzed from recorded memories and voice interactions with Sathi." },
+       what: "Strength, pitch variation, and resonance of your parent's voice.",
+       how: "Analyzed directly from the audio waveform of recorded memories — not just words.",
+       meaning: { high: "75%+ = strong projection, healthy speech", mid: "40–75% = normal variation", low: "Below 40% = possible fatigue or respiratory changes" }
+     },
      { label: "Cognitive Vitality", value: derivedStats.cognitiveClarity.value, icon: TrendingUp, color: "#8D6E63", trend: derivedStats.cognitiveClarity.trend,
-       desc: "Tracks word retrieval speed, sentence coherence, and recall accuracy during conversations. A score of 80%+ shows sharp cognitive function. Scores between 50-80% are normal for age-related changes. Below 50% may warrant a check-in. This metric is derived from speech pattern analysis in Sathi conversations." },
+       what: "Word retrieval speed, sentence coherence, and recall accuracy.",
+       how: "Derived from transcript analysis — vocabulary richness, logical flow, and self-corrections.",
+       meaning: { high: "80%+ = sharp, fluent recall", mid: "50–80% = normal age-related variation", low: "Below 50% = may warrant a check-in" }
+     },
      { label: "Emotional Tone", value: derivedStats.emotionalTone.value, icon: Heart, color: "#C68B59", trend: derivedStats.emotionalTone.trend,
-       desc: "Analyzes the emotional quality of your parent's voice — detecting joy, calm, sadness, or distress from tone and breathing patterns. A high percentage indicates positive emotional wellbeing. Labels like 'Joyful' or 'Peaceful' are good signs. 'Concerned' or lower scores may indicate they need extra support or a call." },
+       what: "Emotional quality detected from voice — joy, calm, sadness, or distress.",
+       how: "Measured from audio tone, breathing patterns, and vocal trembling.",
+       meaning: { high: "Joyful / Peaceful = positive wellbeing", mid: "Calm / Nostalgic = stable", low: "Concerned / Distressed = may need support" }
+     },
      { label: "Activity Level", value: derivedStats.activityLevel.value, icon: Zap, color: "#A1887F", trend: derivedStats.activityLevel.trend,
-       desc: "Gauges overall engagement through speech speed, enthusiasm, and frequency of interactions with Sathi. A high score means your parent is actively talking, recording memories, and staying engaged. Low activity may indicate isolation, fatigue, or disinterest — a good cue to reach out." },
+       what: "Overall engagement through speech speed and interaction frequency.",
+       how: "Measured from audio speech rate, rhythm, and enthusiasm in delivery.",
+       meaning: { high: "Active = engaged and talkative", mid: "Moderate = normal", low: "Low = possible isolation or fatigue" }
+     },
   ];
 
   const [expandedStat, setExpandedStat] = useState(null);
@@ -882,12 +894,28 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                   <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>{st.label}</div>
                   {isOpen && (
                     <div style={{
-                      marginTop: 10, padding: "10px 12px",
-                      background: `${st.color}08`, borderRadius: 10,
-                      border: `1px solid ${st.color}18`,
-                      animation: "fadeUp .3s ease both"
+                      marginTop: 12, padding: "14px 16px",
+                      background: `${st.color}06`, borderRadius: 12,
+                      border: `1px solid ${st.color}15`,
+                      animation: "fadeUp .25s ease both"
                     }}>
-                      <p style={{ fontSize: 11, color: "#555", lineHeight: 1.6 }}>{st.desc}</p>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 6 }}>What it measures</div>
+                      <p style={{ fontSize: 11.5, color: "#555", lineHeight: 1.5, margin: 0, marginBottom: 12 }}>{st.what}</p>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 6 }}>How it's measured</div>
+                      <p style={{ fontSize: 11.5, color: "#555", lineHeight: 1.5, margin: 0, marginBottom: 12 }}>{st.how}</p>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>What the score means</div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                        {[
+                          { dot: "#4CAF50", text: st.meaning.high },
+                          { dot: "#FF9800", text: st.meaning.mid },
+                          { dot: "#E53935", text: st.meaning.low },
+                        ].map((row, ri) => (
+                          <div key={ri} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                            <div style={{ width: 6, height: 6, borderRadius: "50%", background: row.dot, marginTop: 5, flexShrink: 0 }} />
+                            <span style={{ fontSize: 11, color: "#666", lineHeight: 1.5 }}>{row.text}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1061,12 +1089,28 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                   <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>{st.label}</div>
                   {isOpen && (
                     <div style={{
-                      marginTop: 10, padding: "10px 12px",
-                      background: `${st.color}08`, borderRadius: 10,
-                      border: `1px solid ${st.color}18`,
-                      animation: "fadeUp .3s ease both"
+                      marginTop: 12, padding: "14px 16px",
+                      background: `${st.color}06`, borderRadius: 12,
+                      border: `1px solid ${st.color}15`,
+                      animation: "fadeUp .25s ease both"
                     }}>
-                      <p style={{ fontSize: 11, color: "#555", lineHeight: 1.6 }}>{st.desc}</p>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 6 }}>What it measures</div>
+                      <p style={{ fontSize: 11.5, color: "#555", lineHeight: 1.5, margin: 0, marginBottom: 12 }}>{st.what}</p>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 6 }}>How it's measured</div>
+                      <p style={{ fontSize: 11.5, color: "#555", lineHeight: 1.5, margin: 0, marginBottom: 12 }}>{st.how}</p>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>What the score means</div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                        {[
+                          { dot: "#4CAF50", text: st.meaning.high },
+                          { dot: "#FF9800", text: st.meaning.mid },
+                          { dot: "#E53935", text: st.meaning.low },
+                        ].map((row, ri) => (
+                          <div key={ri} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                            <div style={{ width: 6, height: 6, borderRadius: "50%", background: row.dot, marginTop: 5, flexShrink: 0 }} />
+                            <span style={{ fontSize: 11, color: "#666", lineHeight: 1.5 }}>{row.text}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
