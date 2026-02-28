@@ -689,11 +689,12 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
         const recognition = new SpeechRecognition();
         recognition.lang = lang === "hi" ? "hi-IN" : "en-IN";
         recognition.interimResults = true;
-        recognition.continuous = false;
+        recognition.continuous = true;
         recognition.maxAlternatives = 1;
         speechRecRef.current = recognition;
 
         let finalTranscript = "";
+        let silenceTimer = null;
 
         recognition.onresult = (event) => {
           let interim = "";
@@ -705,6 +706,11 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
             }
           }
           setVoiceText(finalTranscript || interim || (lang === "hi" ? "सुन रहा हूँ…" : "Listening…"));
+          // Auto-stop after 3.5s of silence
+          if (silenceTimer) clearTimeout(silenceTimer);
+          silenceTimer = setTimeout(() => {
+            try { recognition.stop(); } catch (e) {}
+          }, 3500);
         };
 
         recognition.onend = () => {
@@ -755,12 +761,12 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
       wavRecorderRef.current = recorder;
       setVoiceText(lang === "hi" ? "बोलिए… फिर गोले को दबाएं" : "Speak now… tap orb when done");
 
-      // Auto-stop after 10 seconds
+      // Auto-stop after 30 seconds
       setTimeout(() => {
         if (wavRecorderRef.current) {
           startVoiceConversation(); // triggers the stop path
         }
-      }, 10000);
+      }, 30000);
     } catch (err) {
       console.error("WAV recording error:", err);
       setRec(false);
