@@ -370,7 +370,9 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
   const [showCode,setShowCode]=useState(false);
   const [codeCopied,setCodeCopied]=useState(false);
   const isMock = inPanel;
-  const [seniorUnreadCount, setSeniorUnreadCount]=useState(0);
+  const [seniorUnreadHearts, setSeniorUnreadHearts]=useState(0);
+  const [seniorUnreadComments, setSeniorUnreadComments]=useState(0);
+  const seniorUnreadCount = seniorUnreadHearts + seniorUnreadComments;
 
   // Fetch unread comment/reaction count for senior
   useEffect(()=>{
@@ -380,14 +382,15 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
       const cutoff = prof?.memories_last_viewed_at || "1970-01-01T00:00:00Z";
       
       const { data: mems } = await supabase.from("memories").select("id").eq("user_id",userId);
-      if(!mems?.length){ setSeniorUnreadCount(0); return; }
+      if(!mems?.length){ setSeniorUnreadHearts(0); setSeniorUnreadComments(0); return; }
       const ids = mems.map(m=>m.id);
       
       const [{ count: cmtCount },{ count: rxnCount }] = await Promise.all([
         supabase.from("memory_comments").select("*",{count:"exact",head:true}).in("memory_id",ids).gt("created_at",cutoff),
         supabase.from("memory_reactions").select("*",{count:"exact",head:true}).in("memory_id",ids).gt("created_at",cutoff),
       ]);
-      setSeniorUnreadCount((cmtCount||0)+(rxnCount||0));
+      setSeniorUnreadComments(cmtCount||0);
+      setSeniorUnreadHearts(rxnCount||0);
     };
     fetchUnread();
 
@@ -403,7 +406,8 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
     setMemoryLogOpen(true);
     if(userId){
       await supabase.from("profiles").update({memories_last_viewed_at:new Date().toISOString()}).eq("id",userId);
-      setSeniorUnreadCount(0);
+      setSeniorUnreadHearts(0);
+      setSeniorUnreadComments(0);
     }
   };
 
@@ -1320,7 +1324,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
       <div style={{padding:"16px 16px",display:"flex",flexDirection:"column",gap:14,flex:1,justifyContent:"flex-end"}}>
         {[
           {icon:<Mic size={24} color="#FFF8F0"/>,label:lang==="en"?"Record a Memory":"यादें रिकॉर्ड करें",sub:lang==="en"?"Your voice, preserved forever":"आपकी आवाज़, सदा के लिए",acc:"#C68B59",fn:()=>setMemoryOpen(true)},
-          {icon:<BookOpen size={24} color="#FFF8F0"/>,label:lang==="en"?"Memory Log":"यादों की डायरी",sub:lang==="en"?"Your memories & family comments":"आपकी यादें और परिवार की टिप्पणियाँ",acc:"#C68B59",fn:()=>openMemoryLog(),badge:seniorUnreadCount},
+          {icon:<BookOpen size={24} color="#FFF8F0"/>,label:lang==="en"?"Memory Log":"यादों की डायरी",sub:lang==="en"?"Your memories & family comments":"आपकी यादें और परिवार की टिप्पणियाँ",acc:"#C68B59",fn:()=>openMemoryLog(),badge:seniorUnreadCount,badgeHearts:seniorUnreadHearts,badgeComments:seniorUnreadComments},
           {icon:<MessageCircle size={24} color="#FFF8F0"/>,label:lang==="en"?"Ask Ava":"एवा से पूछें",sub:lang==="en"?"Health · Reminders · Stories":"स्वास्थ्य · याद · कहानियाँ",acc:"#C68B59",fn:()=>setChatOpen(true)},
           {icon:<Phone size={24} color="#FFF8F0"/>,label:lang==="en"?`Call ${linkedName||"Family"}`:`${linkedName||"परिवार"} को कॉल करें`,sub:linkedName||"Caregiver",acc:"#C68B59",fn:()=>setCallOpen(true)},
         ].map((c,i)=>(
@@ -1341,10 +1345,17 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
             {c.badge > 0 && (
               <span style={{
                 position:"absolute",top:8,right:12,
-                background:"#DC2626",color:"#FFF",fontSize:10,fontWeight:700,
-                minWidth:20,height:20,borderRadius:100,display:"flex",alignItems:"center",justifyContent:"center",
-                padding:"0 6px",boxShadow:"0 2px 8px rgba(220,38,38,.4)"
-              }}>{c.badge > 99 ? "99+" : c.badge}</span>
+                background:"linear-gradient(135deg, #E8403F, #C62828)",color:"#FFF",fontSize:10,fontWeight:700,
+                borderRadius:100,display:"flex",alignItems:"center",gap:6,
+                padding:"3px 8px",boxShadow:"0 2px 8px rgba(220,38,38,.4)"
+              }}>
+                {(c.badgeHearts||0) > 0 && <span style={{display:"flex",alignItems:"center",gap:2}}>
+                  <Heart size={10} fill="#FFF" stroke="none"/>{c.badgeHearts}
+                </span>}
+                {(c.badgeComments||0) > 0 && <span style={{display:"flex",alignItems:"center",gap:2}}>
+                  <MessageCircle size={10} fill="#FFF" stroke="none"/>{c.badgeComments}
+                </span>}
+              </span>
             )}
             <ChevronRight size={18} color="rgba(255,248,240,.4)"/>
           </button>

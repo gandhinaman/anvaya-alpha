@@ -553,7 +553,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
   const [callOpen, setCallOpen] = useState(false);
   const [parentOnline, setParentOnline] = useState(false);
 
-  const { parentProfile, memories: realMemories, medications, healthEvents, stats: derivedStats, loading: dataLoading, lastUpdated, toggleMedication, memoryComments, memoryReactions, unreadCount, markMemoriesViewed } = useParentData(profileId);
+  const { parentProfile, memories: realMemories, medications, healthEvents, stats: derivedStats, loading: dataLoading, lastUpdated, toggleMedication, memoryComments, memoryReactions, unreadCount, unreadHearts, unreadComments, markMemoriesViewed } = useParentData(profileId);
 
   // Request notification permission
   useEffect(() => {
@@ -882,10 +882,17 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
             {item.id === "memories" && unreadCount > 0 && nav !== "memories" && (
               <span style={{
                 position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)",
-                background: "#DC2626", color: "#FFF", fontSize: 9, fontWeight: 700,
-                minWidth: 18, height: 18, borderRadius: 100, display: "flex", alignItems: "center", justifyContent: "center",
-                padding: "0 5px",
-              }}>{unreadCount > 99 ? "99+" : unreadCount}</span>
+                background: "linear-gradient(135deg, #E8403F, #C62828)", color: "#FFF", fontSize: 9, fontWeight: 700,
+                borderRadius: 100, display: "flex", alignItems: "center", gap: 6,
+                padding: "3px 8px", boxShadow: "0 2px 8px rgba(220,38,38,0.3)",
+              }}>
+                {unreadHearts > 0 && <span style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  <Heart size={10} fill="#FFF" stroke="none" />{unreadHearts}
+                </span>}
+                {unreadComments > 0 && <span style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  <MessageCircle size={10} fill="#FFF" stroke="none" />{unreadComments}
+                </span>}
+              </span>
             )}
           </button>
         ))}
@@ -1785,11 +1792,18 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               <span style={{ fontSize: 9, fontWeight: nav === item.id ? 700 : 400 }}>{item.label}</span>
               {item.id === "memories" && unreadCount > 0 && nav !== "memories" && (
                 <span style={{
-                  position: "absolute", top: -4, right: -2,
-                  background: "#DC2626", color: "#FFF", fontSize: 8, fontWeight: 700,
-                  minWidth: 16, height: 16, borderRadius: 100, display: "flex", alignItems: "center", justifyContent: "center",
-                  padding: "0 4px",
-                }}>{unreadCount > 99 ? "99+" : unreadCount}</span>
+                  position: "absolute", top: -6, right: -6,
+                  background: "linear-gradient(135deg, #E8403F, #C62828)", color: "#FFF", fontSize: 8, fontWeight: 700,
+                  borderRadius: 100, display: "flex", alignItems: "center", gap: 4,
+                  padding: "2px 6px", boxShadow: "0 2px 8px rgba(220,38,38,0.3)",
+                }}>
+                  {unreadHearts > 0 && <span style={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Heart size={8} fill="#FFF" stroke="none" />{unreadHearts}
+                  </span>}
+                  {unreadComments > 0 && <span style={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <MessageCircle size={8} fill="#FFF" stroke="none" />{unreadComments}
+                  </span>}
+                </span>
               )}
             </button>
           ))}

@@ -311,24 +311,24 @@ export function useParentData(profileId: string | null) {
       });
   }, [memories]);
 
-  // Compute unread count: comments + reactions created after memoriesLastViewedAt
-  const unreadCount = (() => {
+  // Compute unread hearts and comments separately
+  const { unreadHearts, unreadComments } = (() => {
     const cutoff = memoriesLastViewedAt ? new Date(memoriesLastViewedAt).getTime() : 0;
-    let count = 0;
-    // Count unread comments
+    let hearts = 0;
+    let comments = 0;
     Object.values(memoryComments).forEach(arr => {
       arr.forEach(c => {
-        if (new Date(c.created_at).getTime() > cutoff) count++;
+        if (new Date(c.created_at).getTime() > cutoff) comments++;
       });
     });
-    // Count unread reactions
     Object.values(memoryReactions).forEach(arr => {
       arr.forEach(r => {
-        if (new Date(r.created_at).getTime() > cutoff) count++;
+        if (new Date(r.created_at).getTime() > cutoff) hearts++;
       });
     });
-    return count;
+    return { unreadHearts: hearts, unreadComments: comments };
   })();
+  const unreadCount = unreadHearts + unreadComments;
 
   const markMemoriesViewed = async () => {
     if (!profileId) return;
@@ -337,5 +337,5 @@ export function useParentData(profileId: string | null) {
     setMemoriesLastViewedAt(now);
   };
 
-  return { parentProfile, memories, medications, healthEvents, stats, loading, lastUpdated, toggleMedication, memoryComments, memoryReactions, unreadCount, markMemoriesViewed };
+  return { parentProfile, memories, medications, healthEvents, stats, loading, lastUpdated, toggleMedication, memoryComments, memoryReactions, unreadCount, unreadHearts, unreadComments, markMemoriesViewed };
 }
