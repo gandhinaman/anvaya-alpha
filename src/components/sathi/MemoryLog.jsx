@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { X, BookOpen, MessageCircle, ChevronDown, ChevronUp, Play, Pause, Trash2, Search, Mic, Send } from "lucide-react";
+import { X, BookOpen, MessageCircle, ChevronDown, ChevronUp, Play, Pause, Trash2, Search, Mic, Send, Heart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const TONE_EMOJI = { joyful: "😊", nostalgic: "🌅", peaceful: "🕊️", concerned: "😟" };
@@ -98,6 +98,7 @@ function CommentInput({ memoryId, userId, lang }) {
 export default function MemoryLog({ open, onClose, lang = "en", userId }) {
   const [memories, setMemories] = useState([]);
   const [comments, setComments] = useState({});
+  const [reactions, setReactions] = useState({});
   const [expandedId, setExpandedId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [playingId, setPlayingId] = useState(null);
@@ -120,11 +121,10 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
 
       if (mems?.length) {
         const ids = mems.map((m) => m.id);
-        const { data: cmts } = await supabase
-          .from("memory_comments")
-          .select("*")
-          .in("memory_id", ids)
-          .order("created_at", { ascending: true });
+        const [{ data: cmts }, { data: rxns }] = await Promise.all([
+          supabase.from("memory_comments").select("*").in("memory_id", ids).order("created_at", { ascending: true }),
+          supabase.from("memory_reactions").select("*").in("memory_id", ids),
+        ]);
 
         const grouped = {};
         (cmts || []).forEach((c) => {
@@ -132,6 +132,13 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
           grouped[c.memory_id].push(c);
         });
         setComments(grouped);
+
+        const rxnGrouped = {};
+        (rxns || []).forEach((r) => {
+          if (!rxnGrouped[r.memory_id]) rxnGrouped[r.memory_id] = [];
+          rxnGrouped[r.memory_id].push(r);
+        });
+        setReactions(rxnGrouped);
       }
       setLoading(false);
     };
@@ -299,6 +306,8 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
             {filtered.map((m) => {
               const isExpanded = expandedId === m.id;
               const memComments = comments[m.id] || [];
+              const memReactions = reactions[m.id] || [];
+              const heartCount = memReactions.filter(r => r.reaction_type === "heart").length;
               return (
                 <div
                   key={m.id}
@@ -339,11 +348,16 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
                           </span>
                         )}
                         {memComments.length > 0 && (
-                          <span style={{ display: "flex", alignItems: "center", gap: 3, color: "#D4A574" }}>
-                            <MessageCircle size={13} /> {memComments.length}
-                          </span>
-                        )}
-                      </div>
+                           <span style={{ display: "flex", alignItems: "center", gap: 3, color: "#D4A574" }}>
+                             <MessageCircle size={13} /> {memComments.length}
+                           </span>
+                         )}
+                         {heartCount > 0 && (
+                           <span style={{ display: "flex", alignItems: "center", gap: 3, color: "#DC2626" }}>
+                             <Heart size={13} fill="#DC2626" /> {heartCount}
+                           </span>
+                         )}
+                       </div>
                     </div>
                     {isExpanded ? <ChevronUp size={20} color="rgba(255,248,240,.5)" /> : <ChevronDown size={20} color="rgba(255,248,240,.5)" />}
                   </button>

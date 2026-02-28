@@ -117,6 +117,8 @@ export function useParentData(profileId: string | null) {
   const [healthEvents, setHealthEvents] = useState<HealthEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [memoryReactions, setMemoryReactions] = useState<Record<string, any[]>>({});
+  const [memoriesLastViewedAt, setMemoriesLastViewedAt] = useState<string | null>(null);
 
   const fetchAll = useCallback(async () => {
     if (!profileId) { setLoading(false); return; }
@@ -167,6 +169,29 @@ export function useParentData(profileId: string | null) {
         .order("recorded_at", { ascending: false });
       if (hevts) setHealthEvents(hevts as HealthEvent[]);
 
+      // Fetch memory reactions
+      if (mems && mems.length > 0) {
+        const memIds = mems.map((m: any) => m.id);
+        const { data: reactions } = await supabase
+          .from("memory_reactions")
+          .select("*")
+          .in("memory_id", memIds);
+        const grouped: Record<string, any[]> = {};
+        (reactions || []).forEach((r: any) => {
+          if (!grouped[r.memory_id]) grouped[r.memory_id] = [];
+          grouped[r.memory_id].push(r);
+        });
+        setMemoryReactions(grouped);
+      }
+
+      // Fetch caregiver's own last-viewed timestamp
+      const { data: myOwnProfile } = await supabase
+        .from("profiles")
+        .select("memories_last_viewed_at")
+        .eq("id", profileId)
+        .maybeSingle();
+      if (myOwnProfile) setMemoriesLastViewedAt(myOwnProfile.memories_last_viewed_at);
+
       setLastUpdated(new Date());
     } catch (err) {
       console.error("useParentData fetch error:", err);
@@ -203,6 +228,11 @@ export function useParentData(profileId: string | null) {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "memory_comments" },
+        () => fetchAll()
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "memory_reactions" },
         () => fetchAll()
       )
       .subscribe();
@@ -281,5 +311,31 @@ export function useParentData(profileId: string | null) {
       });
   }, [memories]);
 
-  return { parentProfile, memories, medications, healthEvents, stats, loading, lastUpdated, toggleMedication, memoryComments };
+  // Compute unread count: comments + reactions created after memoriesLastViewedAt
+  const unreadCount = (() => {
+    const cutoff = memoriesLastViewedAt ? new Date(memoriesLastViewedAt).getTime() : 0;
+    let count = 0;
+    // Count unread comments
+    Object.values(memoryComments).forEach(arr => {
+      arr.forEach(c => {
+        if (new Date(c.created_at).getTime() > cutoff) count++;
+      });
+    });
+    // Count unread reactions
+    Object.values(memoryReactions).forEach(arr => {
+      arr.forEach(r => {
+        if (new Date(r.created_at).getTime() > cutoff) count++;
+      });
+    });
+    return count;
+  })();
+
+  const markMemoriesViewed = async () => {
+    if (!profileId) return;
+    const now = new Date().toISOString();
+    await supabase.from("profiles").update({ memories_last_viewed_at: now } as any).eq("id", profileId);
+    setMemoriesLastViewedAt(now);
+  };
+
+  return { parentProfile, memories, medications, healthEvents, stats, loading, lastUpdated, toggleMedication, memoryComments, memoryReactions, unreadCount, markMemoriesViewed };
 }

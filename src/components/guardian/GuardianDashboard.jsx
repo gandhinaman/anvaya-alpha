@@ -310,7 +310,7 @@ function WeeklyTrendChart({ healthEvents = [] }) {
 }
 
 // ─── MEMORY CARD ──────────────────────────────────────────────────────────────
-function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null, emotionalTone = null, promptQuestion = null, onDelete = null, deleting = false, comments = [], memoryId = null, profileId = null, visualAnalysis = null }) {
+function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null, emotionalTone = null, promptQuestion = null, onDelete = null, deleting = false, comments = [], memoryId = null, profileId = null, visualAnalysis = null, reactions = [], onToggleHeart = null }) {
   const toneColors = { joyful: "#C68B59", nostalgic: "#8D6E63", peaceful: "#5D4037", concerned: "#DC2626" };
   const tone = emotionalTone || "positive";
   const toneColor = toneColors[tone.toLowerCase()] || "#C68B59";
@@ -427,6 +427,21 @@ function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null
           <span style={{ fontSize: 10, color: toneColor, fontWeight: 600 }}>Emotional tone: {tone.charAt(0).toUpperCase() + tone.slice(1)}</span>
         </div>
         <div style={{ display: "flex", gap: 6 }}>
+          {memoryId && onToggleHeart && (() => {
+            const isHearted = reactions.some(r => r.user_id === profileId && r.reaction_type === "heart");
+            const heartCount = reactions.filter(r => r.reaction_type === "heart").length;
+            return (
+              <button onClick={() => onToggleHeart(memoryId, isHearted)} style={{
+                display: "flex", alignItems: "center", gap: 4, padding: "4px 10px",
+                borderRadius: 8, border: `1px solid ${isHearted ? "rgba(220,38,38,0.25)" : "rgba(198,139,89,0.2)"}`,
+                background: isHearted ? "rgba(220,38,38,0.08)" : "rgba(198,139,89,0.04)",
+                color: isHearted ? "#DC2626" : "#C68B59", fontSize: 10, fontWeight: 600, cursor: "pointer",
+                transition: "all .2s",
+              }}>
+                <Heart size={11} fill={isHearted ? "#DC2626" : "none"} /> {heartCount || ""}
+              </button>
+            );
+          })()}
           {memoryId && (
             <button onClick={() => setShowComments(!showComments)} style={{
               display: "flex", alignItems: "center", gap: 4, padding: "4px 10px",
@@ -524,12 +539,21 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
   const isMobile = !inPanel && w < 768;
   const [nav, setNav] = useState("home");
   const [drawer, setDrawer] = useState(false);
+
+  // Mark memories as viewed when switching to memories tab
+  const setNavWithMark = (id) => {
+    setNav(id);
+    if (id === "memories") {
+      // delay slightly so data renders first
+      setTimeout(() => markMemoriesViewed(), 300);
+    }
+  };
   const [incomingCall, setIncomingCall] = useState(null);
   const [emergency, setEmergency] = useState(null);
   const [callOpen, setCallOpen] = useState(false);
   const [parentOnline, setParentOnline] = useState(false);
 
-  const { parentProfile, memories: realMemories, medications, healthEvents, stats: derivedStats, loading: dataLoading, lastUpdated, toggleMedication, memoryComments } = useParentData(profileId);
+  const { parentProfile, memories: realMemories, medications, healthEvents, stats: derivedStats, loading: dataLoading, lastUpdated, toggleMedication, memoryComments, memoryReactions, unreadCount, markMemoriesViewed } = useParentData(profileId);
 
   // Request notification permission
   useEffect(() => {
@@ -657,6 +681,16 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
     setSigningOut(true);
     await supabase.auth.signOut();
     window.location.href = "/login";
+  };
+
+  const handleToggleHeart = async (memoryId, isHearted) => {
+    if (!profileId) return;
+    if (isHearted) {
+      await supabase.from("memory_reactions").delete().eq("memory_id", memoryId).eq("user_id", profileId).eq("reaction_type", "heart");
+    } else {
+      await supabase.from("memory_reactions").insert({ memory_id: memoryId, user_id: profileId, reaction_type: "heart" });
+    }
+  };
   };
 
   const navItems = [
@@ -799,6 +833,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
       memoryId: m.id,
       comments: memoryComments[m.id] || [],
       visualAnalysis: visualAnalysisMap[m.id] || null,
+      reactions: memoryReactions[m.id] || [],
     }))
     : [{ id: null, title: "No memories yet", date: "—", duration: "—", summary: "Memories recorded by your parent will appear here.", transcript: "", audioUrl: null, emotionalTone: null, promptQuestion: null, memoryId: null, comments: [], visualAnalysis: null }];
 
@@ -836,13 +871,24 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
 
       <nav style={{ flex: 1, padding: "4px 10px", display: "flex", flexDirection: "column", gap: 1 }}>
         {navItems.map(item => (
-          <button key={item.id} onClick={() => { setNav(item.id); setDrawer(false); }} style={{
+          <button key={item.id} onClick={() => { setNavWithMark(item.id); setDrawer(false); }} style={{
             display: "flex", alignItems: "center", gap: 10, padding: "9px 12px",
             borderRadius: 11, border: "none", cursor: "pointer", textAlign: "left", width: "100%",
              background: nav === item.id ? "rgba(93,64,55,0.08)" : "transparent",
              color: nav === item.id ? "#3E2723" : "#6b6b6b",
-            fontWeight: nav === item.id ? 700 : 400, fontSize: 13, transition: "all .2s"
-          }}>{item.icon}{item.label}</button>
+            fontWeight: nav === item.id ? 700 : 400, fontSize: 13, transition: "all .2s",
+            position: "relative",
+          }}>
+            {item.icon}{item.label}
+            {item.id === "memories" && unreadCount > 0 && nav !== "memories" && (
+              <span style={{
+                position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)",
+                background: "#DC2626", color: "#FFF", fontSize: 9, fontWeight: 700,
+                minWidth: 18, height: 18, borderRadius: 100, display: "flex", alignItems: "center", justifyContent: "center",
+                padding: "0 5px",
+              }}>{unreadCount > 99 ? "99+" : unreadCount}</span>
+            )}
+          </button>
         ))}
       </nav>
 
@@ -1200,6 +1246,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                       profileId={profileId}
                       onDelete={m.id ? () => deleteMemory(m.id) : null}
                       deleting={deletingMemId === m.id}
+                      onToggleHeart={handleToggleHeart}
                     />
                   ))}
                 </div>
@@ -1710,7 +1757,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                   gap: 13
                 }}>
                   {memories.slice(0, 2).map((m, i) => (
-                    <MemoryCard key={i} {...m} index={i} />
+                    <MemoryCard key={i} {...m} index={i} profileId={profileId} onToggleHeart={handleToggleHeart} />
                   ))}
                 </div>
               )}
@@ -1729,13 +1776,22 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
           padding: "9px 0", paddingBottom: "max(9px,env(safe-area-inset-bottom))", zIndex: 30
         }}>
           {navItems.map(item => (
-            <button key={item.id} onClick={() => setNav(item.id)} style={{
+            <button key={item.id} onClick={() => setNavWithMark(item.id)} style={{
               display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
               border: "none", background: "transparent", cursor: "pointer", padding: "0 6px",
-              color: nav === item.id ? "#3E2723" : "#9CA3AF", transition: "color .2s"
+              color: nav === item.id ? "#3E2723" : "#9CA3AF", transition: "color .2s",
+              position: "relative",
             }}>
               {item.icon}
               <span style={{ fontSize: 9, fontWeight: nav === item.id ? 700 : 400 }}>{item.label}</span>
+              {item.id === "memories" && unreadCount > 0 && nav !== "memories" && (
+                <span style={{
+                  position: "absolute", top: -4, right: -2,
+                  background: "#DC2626", color: "#FFF", fontSize: 8, fontWeight: 700,
+                  minWidth: 16, height: 16, borderRadius: 100, display: "flex", alignItems: "center", justifyContent: "center",
+                  padding: "0 4px",
+                }}>{unreadCount > 99 ? "99+" : unreadCount}</span>
+              )}
             </button>
           ))}
         </div>
