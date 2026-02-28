@@ -11,6 +11,13 @@ const config: CapacitorConfig = {
   //   cleartext: true,
   //   allowNavigation: ['*.lovableproject.com', '*.supabase.co', '*.lovable.app'],
   // },
+  plugins: {
+    Keyboard: {
+      resize: 'body',
+      scrollAssist: true,
+      scrollPadding: false,
+    },
+  },
   ios: {
     contentInset: 'automatic',
     preferredContentMode: 'mobile',

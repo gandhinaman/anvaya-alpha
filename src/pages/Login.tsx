@@ -120,7 +120,9 @@ export default function Login() {
       fontFamily: "'DM Sans', sans-serif",
       padding: "20px",
       paddingTop: "calc(20px + env(safe-area-inset-top, 0px))",
-      paddingBottom: "calc(20px + env(safe-area-inset-bottom, 0px))",
+      paddingBottom: "calc(20px + env(safe-area-inset-bottom, 0px) + var(--keyboard-height, 0px))",
+      overflowY: "auto" as const,
+      WebkitOverflowScrolling: "touch" as any,
     }}>
       <style>{fontStyle}</style>
 

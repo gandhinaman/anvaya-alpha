@@ -856,7 +856,7 @@ export default function SathiChat({ open, onClose, lang = "en", userId, initialM
       <div
         style={{
           padding: "12px 14px",
-          paddingBottom: "max(12px, env(safe-area-inset-bottom))",
+          paddingBottom: "calc(max(12px, env(safe-area-inset-bottom)) + var(--keyboard-height, 0px))",
           borderTop: "1px solid rgba(255,248,240,.08)",
           display: "flex",
           gap: 10,
