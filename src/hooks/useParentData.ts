@@ -72,10 +72,10 @@ function deriveStats(healthEvents: HealthEvent[], memories: Memory[]): Stats {
   const actTrend = actEvent?.value?.detail || "—";
 
   return {
-    vocalEnergy: { value: capitalize(vocalLabel), trend: vocalScore != null ? `${vocalScore}%` : vocalTrend },
-    cognitiveClarity: { value: cogScore != null ? `${cogScore}%` : cogLabel, trend: cogTrend },
-    emotionalTone: { value: capitalize(emoLabel), trend: emoTrend },
-    activityLevel: { value: capitalize(actLabel), trend: actTrend },
+    vocalEnergy: { value: vocalScore != null ? `${vocalScore}%` : vocalLabel, trend: vocalScore != null ? capitalize(vocalLabel) : vocalTrend },
+    cognitiveClarity: { value: cogScore != null ? `${cogScore}%` : cogLabel, trend: cogScore != null ? capitalize(cogLabel) : cogTrend },
+    emotionalTone: { value: emoEvent?.value?.score != null ? `${emoEvent.value.score}%` : capitalize(emoLabel), trend: emoEvent?.value?.score != null ? capitalize(emoLabel) : emoTrend },
+    activityLevel: { value: actEvent?.value?.score != null ? `${actEvent.value.score}%` : capitalize(actLabel), trend: actEvent?.value?.score != null ? capitalize(actLabel) : actTrend },
   };
 }
 
