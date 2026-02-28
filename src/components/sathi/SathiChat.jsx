@@ -122,102 +122,70 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
     }
   };
 
-  // ─── VOICE INPUT (Sarvam STT) ───
-  const sttRecorderRef = useRef(null);
-  const sttStreamRef = useRef(null);
-  const sttChunksRef = useRef([]);
+  // ─── VOICE INPUT (Web Speech API) ───
+  const speechRecRef = useRef(null);
 
-  const startListening = useCallback(async () => {
+  const startListening = useCallback(() => {
     stopTTS();
 
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setInput("Speech recognition not supported in this browser.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = lang === "hi" ? "hi-IN" : "en-IN";
+    recognition.interimResults = true;
+    recognition.continuous = false;
+    recognition.maxAlternatives = 1;
+    speechRecRef.current = recognition;
+
+    let finalTranscript = "";
+
+    recognition.onresult = (event) => {
+      let interim = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        } else {
+          interim += event.results[i][0].transcript;
+        }
+      }
+      setInput(finalTranscript || interim || "");
+    };
+
+    recognition.onend = () => {
+      speechRecRef.current = null;
+      setIsListening(false);
+      if (finalTranscript.trim()) {
+        pendingSendRef.current = finalTranscript.trim();
+        setInput("");
+      }
+    };
+
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error:", event.error);
+      speechRecRef.current = null;
+      setIsListening(false);
+      setInput("");
+    };
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      sttStreamRef.current = stream;
-      sttChunksRef.current = [];
-
-      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-        ? "audio/webm;codecs=opus" : "audio/webm";
-      const recorder = new MediaRecorder(stream, { mimeType });
-
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) sttChunksRef.current.push(e.data);
-      };
-
-      recorder.onstop = async () => {
-        // Stop mic
-        if (sttStreamRef.current) {
-          sttStreamRef.current.getTracks().forEach(t => t.stop());
-          sttStreamRef.current = null;
-        }
-
-        const blob = new Blob(sttChunksRef.current, { type: "audio/webm" });
-        setInput(lang === "hi" ? "प्रोसेस हो रहा है…" : "Processing…");
-
-        try {
-          // Convert blob to base64
-          const buffer = await blob.arrayBuffer();
-          const bytes = new Uint8Array(buffer);
-          let binary = "";
-          for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-          const base64 = btoa(binary);
-
-          const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-          const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-
-          const res = await fetch(
-            `https://${projectId}.supabase.co/functions/v1/sarvam-stt`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                apikey: anonKey,
-                Authorization: `Bearer ${anonKey}`,
-              },
-              body: JSON.stringify({
-                audioBase64: base64,
-                contentType: "audio/webm",
-                languageCode: lang === "hi" ? "hi-IN" : "en-IN",
-              }),
-            }
-          );
-
-          if (!res.ok) throw new Error("STT failed");
-          const { transcript } = await res.json();
-
-          if (transcript && transcript.trim()) {
-            pendingSendRef.current = transcript.trim();
-            setInput("");
-          } else {
-            setInput("");
-          }
-        } catch (err) {
-          console.error("Sarvam STT error:", err);
-          setInput("");
-        }
-        setIsListening(false);
-      };
-
-      recorder.start(250);
-      sttRecorderRef.current = recorder;
+      recognition.start();
       setIsListening(true);
     } catch (err) {
-      console.error("Mic access error:", err);
-      setInput(lang === "hi" ? "माइक्रोफ़ोन एक्सेस नहीं मिला" : "Microphone access denied");
+      console.error("Speech recognition start error:", err);
       setIsListening(false);
     }
   }, [lang, stopTTS]);
 
   const stopListening = useCallback(() => {
-    if (sttRecorderRef.current && sttRecorderRef.current.state !== "inactive") {
-      sttRecorderRef.current.stop();
-      sttRecorderRef.current = null;
-    } else {
-      setIsListening(false);
+    if (speechRecRef.current) {
+      try { speechRecRef.current.stop(); } catch {}
+      speechRecRef.current = null;
     }
-    if (sttStreamRef.current) {
-      sttStreamRef.current.getTracks().forEach(t => t.stop());
-      sttStreamRef.current = null;
-    }
+    setIsListening(false);
   }, []);
 
   const toggleVoice = useCallback(() => {
