@@ -524,7 +524,7 @@ export default function SathiChat({ open, onClose, lang = "en", userId, initialM
                 fontWeight: 600,
               }}
             >
-              {lang === "hi" ? "साथी" : "Sathi"}
+              {lang === "hi" ? "आवा" : "Ava"}
             </div>
             <div style={{ fontSize: 10, color: "rgba(255,248,240,.4)" }}>
               {lang === "hi" ? "आपका AI साथी" : "Your AI companion"}
@@ -605,8 +605,8 @@ export default function SathiChat({ open, onClose, lang = "en", userId, initialM
               }}
             >
               {lang === "hi"
-                ? "साथी से कुछ भी पूछें…"
-                : "Ask Sathi anything…"}
+                ? "आवा से कुछ भी पूछें…"
+                : "Ask Ava anything…"}
             </p>
 
             <div
