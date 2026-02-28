@@ -542,25 +542,26 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
                     alignSelf: "flex-start",
                     display: "flex",
                     alignItems: "center",
-                    gap: 5,
-                    padding: "5px 10px",
-                    borderRadius: 8,
+                    gap: 8,
+                    padding: "10px 18px",
+                    borderRadius: 12,
                     border: speakingIdx === i
-                      ? "1px solid rgba(79,70,229,.4)"
-                      : "1px solid rgba(255,255,255,.1)",
+                      ? "2px solid rgba(79,70,229,.5)"
+                      : "2px solid rgba(255,255,255,.15)",
                     background: speakingIdx === i
-                      ? "rgba(79,70,229,.2)"
-                      : "rgba(249,249,247,.04)",
+                      ? "rgba(79,70,229,.25)"
+                      : "rgba(249,249,247,.06)",
                     color: speakingIdx === i
                       ? "#a5b4fc"
-                      : "rgba(249,249,247,.45)",
-                    fontSize: 11,
+                      : "rgba(249,249,247,.55)",
+                    fontSize: 16,
+                    fontWeight: 600,
                     cursor: "pointer",
                     fontFamily: "'DM Sans', sans-serif",
                     transition: "all .2s",
                   }}
                 >
-                  <Volume2 size={13} />
+                  <Volume2 size={20} />
                   {speakingIdx === i
                     ? (lang === "hi" ? "रोकें" : "Stop")
                     : (lang === "hi" ? "सुनें" : "Read aloud")
