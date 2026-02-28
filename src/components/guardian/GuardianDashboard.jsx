@@ -1272,7 +1272,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                   <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Recent Alerts</div>
                   <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Latest health & activity events</div>
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 9, overflowY: "auto", flex: 1, paddingRight: 4 }}>
+                <div className="scr" style={{ display: "flex", flexDirection: "column", gap: 9, overflowY: "auto", flex: 1, maxHeight: 320, paddingRight: 6 }}>
                   {alerts.map((a, i) => (
                     <div key={i} className="gcard" style={{
                       padding: "10px 12px",
