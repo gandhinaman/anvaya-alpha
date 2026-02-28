@@ -703,7 +703,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                  position: "absolute", top: -3, right: -3, width: 16, height: 16, borderRadius: "50%",
                  background: "#C68B59", color: "#fff", fontSize: 9, fontWeight: 700,
                  display: "flex", alignItems: "center", justifyContent: "center"
-              }}>{healthEvents.length || 0}</span>
+              }}>{allAlerts.length}</span>
             </button>
           </div>}
         </div>
