@@ -80,15 +80,15 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
       className="fadein"
       style={{
         position: "fixed", inset: 0, zIndex: 200,
-        background: "linear-gradient(160deg,#022c22 0%,#064E3B 40%,#065f46 70%,#0a3f34 100%)",
+        background: "linear-gradient(160deg,#1A0F0A 0%,#2C1810 40%,#3E2723 70%,#2A1B14 100%)",
         display: "flex", flexDirection: "column",
       }}
     >
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 18px 10px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <BookOpen size={22} color="#d97706" />
-          <span style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 24, color: "#F9F9F7", fontWeight: 600 }}>
+          <BookOpen size={22} color="#C68B59" />
+          <span style={{ fontFamily: "'Playfair Display',serif", fontSize: 24, color: "#FFF8F0", fontWeight: 600 }}>
             {lang === "en" ? "Memory Log" : "यादों की डायरी"}
           </span>
         </div>
@@ -102,18 +102,18 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
             boxShadow: "0 4px 18px rgba(220,38,38,.3)", cursor: "pointer",
           }}
         >
-          <X size={28} color="#F9F9F7" strokeWidth={3} />
+          <X size={28} color="#FFF8F0" strokeWidth={3} />
         </button>
       </div>
 
       {/* Content */}
       <div style={{ flex: 1, overflowY: "auto", padding: "0 16px 24px" }}>
         {loading ? (
-          <div style={{ textAlign: "center", marginTop: 60, color: "rgba(249,249,247,.5)", fontSize: 15 }}>
+          <div style={{ textAlign: "center", marginTop: 60, color: "rgba(255,248,240,.5)", fontSize: 15 }}>
             {lang === "en" ? "Loading memories…" : "यादें लोड हो रही हैं…"}
           </div>
         ) : memories.length === 0 ? (
-          <div style={{ textAlign: "center", marginTop: 60, color: "rgba(249,249,247,.4)", fontSize: 15 }}>
+          <div style={{ textAlign: "center", marginTop: 60, color: "rgba(255,248,240,.4)", fontSize: 15 }}>
             {lang === "en" ? "No memories recorded yet. Tap 'Record a Memory' to get started!" : "अभी कोई यादें नहीं हैं। 'यादें रिकॉर्ड करें' दबाएं!"}
           </div>
         ) : (
@@ -125,8 +125,8 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
                 <div
                   key={m.id}
                   style={{
-                    background: "rgba(249,249,247,.07)",
-                    border: "1px solid rgba(255,255,255,.1)",
+                    background: "rgba(255,248,240,.07)",
+                    border: "1px solid rgba(255,248,240,.1)",
                     borderRadius: 18, overflow: "hidden",
                     transition: "all .3s",
                   }}
@@ -141,33 +141,33 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
                   >
                     <div style={{
                       width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-                      background: "rgba(217,119,6,.2)", border: "1px solid rgba(217,119,6,.3)",
+                      background: "rgba(198,139,89,.2)", border: "1px solid rgba(198,139,89,.3)",
                       display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22,
                     }}>
                       {TONE_EMOJI[m.emotional_tone] || "📝"}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ color: "#F9F9F7", fontSize: 15, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <div style={{ color: "#FFF8F0", fontSize: 15, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {m.title || (lang === "en" ? "A shared memory" : "एक याद")}
                       </div>
-                      <div style={{ color: "rgba(249,249,247,.4)", fontSize: 12, marginTop: 2, display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ color: "rgba(255,248,240,.4)", fontSize: 12, marginTop: 2, display: "flex", alignItems: "center", gap: 8 }}>
                         <span>{formatDate(m.created_at)}</span>
                         {memComments.length > 0 && (
-                          <span style={{ display: "flex", alignItems: "center", gap: 3, color: "#818CF8" }}>
+                          <span style={{ display: "flex", alignItems: "center", gap: 3, color: "#D4A574" }}>
                             <MessageCircle size={11} /> {memComments.length}
                           </span>
                         )}
                       </div>
                     </div>
-                    {isExpanded ? <ChevronUp size={18} color="rgba(249,249,247,.4)" /> : <ChevronDown size={18} color="rgba(249,249,247,.4)" />}
+                    {isExpanded ? <ChevronUp size={18} color="rgba(255,248,240,.4)" /> : <ChevronDown size={18} color="rgba(255,248,240,.4)" />}
                   </button>
 
                   {/* Expanded content */}
                   {isExpanded && (
-                    <div style={{ padding: "0 16px 16px", borderTop: "1px solid rgba(255,255,255,.06)" }}>
+                    <div style={{ padding: "0 16px 16px", borderTop: "1px solid rgba(255,248,240,.06)" }}>
                       {/* Summary */}
                       {m.ai_summary && (
-                        <p style={{ color: "rgba(249,249,247,.7)", fontSize: 14, lineHeight: 1.6, marginTop: 12, fontStyle: "italic" }}>
+                        <p style={{ color: "rgba(255,248,240,.7)", fontSize: 14, lineHeight: 1.6, marginTop: 12, fontStyle: "italic" }}>
                           "{m.ai_summary}"
                         </p>
                       )}
@@ -177,7 +177,7 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
                         m.audio_url.includes("video_") ? (
                           <div style={{
                             marginTop: 10, borderRadius: 14, overflow: "hidden",
-                            border: "1.5px solid rgba(79,70,229,.3)",
+                            border: "1.5px solid rgba(141,110,99,.3)",
                             maxWidth: 300,
                           }}>
                             <video
@@ -193,9 +193,9 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
                             style={{
                               marginTop: 10, display: "flex", alignItems: "center", gap: 8,
                               padding: "8px 14px", borderRadius: 10,
-                              background: playingId === m.id ? "rgba(79,70,229,.25)" : "rgba(249,249,247,.06)",
-                              border: playingId === m.id ? "1.5px solid rgba(79,70,229,.4)" : "1.5px solid rgba(255,255,255,.1)",
-                              color: playingId === m.id ? "#a5b4fc" : "rgba(249,249,247,.5)",
+                              background: playingId === m.id ? "rgba(93,64,55,.25)" : "rgba(255,248,240,.06)",
+                              border: playingId === m.id ? "1.5px solid rgba(93,64,55,.4)" : "1.5px solid rgba(255,248,240,.1)",
+                              color: playingId === m.id ? "#D4A574" : "rgba(255,248,240,.5)",
                               fontSize: 13, fontWeight: 500, cursor: "pointer",
                             }}
                           >
@@ -210,10 +210,10 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
                       {/* Transcript */}
                       {m.transcript && m.transcript !== "[Audio recording - transcription unavailable]" && (
                         <div style={{ marginTop: 12 }}>
-                          <div style={{ fontSize: 11, color: "rgba(249,249,247,.35)", marginBottom: 4, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                          <div style={{ fontSize: 11, color: "rgba(255,248,240,.35)", marginBottom: 4, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em" }}>
                             {lang === "en" ? "Transcript" : "प्रतिलेख"}
                           </div>
-                          <p style={{ color: "rgba(249,249,247,.55)", fontSize: 13, lineHeight: 1.6 }}>
+                          <p style={{ color: "rgba(255,248,240,.55)", fontSize: 13, lineHeight: 1.6 }}>
                             {m.transcript}
                           </p>
                         </div>
@@ -221,8 +221,8 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
 
                       {/* Comments from child */}
                       {memComments.length > 0 && (
-                        <div style={{ marginTop: 14, borderTop: "1px solid rgba(255,255,255,.06)", paddingTop: 12 }}>
-                          <div style={{ fontSize: 11, color: "rgba(249,249,247,.35)", marginBottom: 8, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", display: "flex", alignItems: "center", gap: 5 }}>
+                        <div style={{ marginTop: 14, borderTop: "1px solid rgba(255,248,240,.06)", paddingTop: 12 }}>
+                          <div style={{ fontSize: 11, color: "rgba(255,248,240,.35)", marginBottom: 8, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", display: "flex", alignItems: "center", gap: 5 }}>
                             <MessageCircle size={12} />
                             {lang === "en" ? "Comments from family" : "परिवार की टिप्पणियाँ"}
                           </div>
@@ -231,15 +231,15 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
                               <div
                                 key={c.id}
                                 style={{
-                                  background: "rgba(129,140,248,.1)",
-                                  border: "1px solid rgba(129,140,248,.15)",
+                                  background: "rgba(198,139,89,.1)",
+                                  border: "1px solid rgba(198,139,89,.15)",
                                   borderRadius: 12, padding: "10px 13px",
                                 }}
                               >
-                                <p style={{ color: "rgba(249,249,247,.75)", fontSize: 13, lineHeight: 1.5, margin: 0 }}>
+                                <p style={{ color: "rgba(255,248,240,.75)", fontSize: 13, lineHeight: 1.5, margin: 0 }}>
                                   {c.comment}
                                 </p>
-                                <div style={{ fontSize: 10, color: "rgba(249,249,247,.3)", marginTop: 5 }}>
+                                <div style={{ fontSize: 10, color: "rgba(255,248,240,.3)", marginTop: 5 }}>
                                   {formatDate(c.created_at)}
                                 </div>
                               </div>

@@ -293,7 +293,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
         position: "fixed",
         inset: 0,
         zIndex: 200,
-        background: "linear-gradient(160deg,#022c22 0%,#064E3B 40%,#065f46 70%,#0a3f34 100%)",
+        background: "linear-gradient(160deg,#1A0F0A 0%,#2C1810 40%,#3E2723 70%,#2A1B14 100%)",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -348,7 +348,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
             style={{
               fontFamily: "'Cormorant Garamond',serif",
               fontSize: 30,
-              color: "#F9F9F7",
+              color: "#FFF8F0",
               fontWeight: 600,
               marginBottom: 10,
             }}
@@ -366,7 +366,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
             position: "relative",
           }}>
             <p style={{
-              color: "#F9F9F7",
+              color: "#FFF8F0",
               fontSize: 18,
               fontWeight: 500,
               lineHeight: 1.5,
@@ -399,7 +399,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
             </button>
           </div>
 
-          <p style={{ color: "rgba(249,249,247,.5)", fontSize: 15, lineHeight: 1.6, marginBottom: 22 }}>
+          <p style={{ color: "rgba(255,248,240,.5)", fontSize: 15, lineHeight: 1.6, marginBottom: 22 }}>
             {lang === "hi"
               ? "इस सवाल का जवाब दें, या कुछ भी बोलें। साथी सुन रहा है।"
               : "Answer this prompt, or share anything on your mind. Sathi is listening."}
@@ -415,11 +415,11 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
                 borderRadius: 18,
                 border: "none",
                 cursor: "pointer",
-                background: "linear-gradient(135deg,#d97706,#B45309)",
-                color: "#F9F9F7",
+                background: "linear-gradient(135deg,#C68B59,#A1724A)",
+                color: "#FFF8F0",
                 fontSize: 18,
                 fontWeight: 700,
-                boxShadow: "0 8px 28px rgba(217,119,6,.35)",
+                boxShadow: "0 8px 28px rgba(198,139,89,.35)",
                 fontFamily: "'DM Sans', sans-serif",
                 display: "flex",
                 flexDirection: "column",
@@ -438,11 +438,11 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
                 borderRadius: 18,
                 border: "none",
                 cursor: "pointer",
-                background: "linear-gradient(135deg,#4F46E5,#3730A3)",
-                color: "#F9F9F7",
+                background: "linear-gradient(135deg,#5D4037,#3E2723)",
+                color: "#FFF8F0",
                 fontSize: 18,
                 fontWeight: 700,
-                boxShadow: "0 8px 28px rgba(79,70,229,.35)",
+                boxShadow: "0 8px 28px rgba(93,64,55,.35)",
                 fontFamily: "'DM Sans', sans-serif",
                 display: "flex",
                 flexDirection: "column",

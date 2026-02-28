@@ -111,7 +111,7 @@ export default function Login() {
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      background: "linear-gradient(160deg,#022c22 0%,#064E3B 40%,#065f46 70%,#0a3f34 100%)",
+      background: "linear-gradient(160deg,#1A0F0A 0%,#2C1810 40%,#3E2723 70%,#2A1B14 100%)",
       fontFamily: "'DM Sans', sans-serif",
       padding: 20,
     }}>
@@ -234,9 +234,9 @@ export default function Login() {
             <button type="submit" disabled={loading} style={{
               width: "100%", padding: "15px", borderRadius: 16, border: "none",
               cursor: loading ? "wait" : "pointer",
-              background: "linear-gradient(135deg,#059669,#065f46)",
-              color: "#F9F9F7", fontSize: 15, fontWeight: 700,
-              boxShadow: "0 8px 28px rgba(5,150,105,.35)",
+              background: "linear-gradient(135deg,#C68B59,#8D6E63)",
+              color: "#FFF8F0", fontSize: 15, fontWeight: 700,
+              boxShadow: "0 8px 28px rgba(198,139,89,.35)",
               fontFamily: "'DM Sans', sans-serif",
               opacity: loading ? 0.7 : 1, transition: "opacity .2s", marginTop: 4,
             }}>
