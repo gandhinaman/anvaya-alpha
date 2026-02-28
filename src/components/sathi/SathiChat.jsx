@@ -2,18 +2,94 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { X, Mic, MicOff, Send, MessageCircle, Volume2, Check, Pill } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-const SUGGESTED_EN = [
+// ─── Culturally-aware suggested prompts ───
+const ALL_SUGGESTED_EN = [
+  // Everyday wellness & companionship
   "Tell me a story",
   "Remind me of my medicines",
   "I'm feeling lonely",
   "What's good for joint pain?",
+  "Sing me a bhajan",
+  "Tell me a Panchatantra story",
+  "What should I eat today?",
+  "Help me do a simple yoga stretch",
+  "Tell me today's panchang",
+  "Read me something from the Gita",
+  // Indian culture & nostalgia
+  "What's the story of Lord Hanuman?",
+  "Tell me about Rani Lakshmibai",
+  "What are the health benefits of haldi?",
+  "Tell me a joke in Hindi",
+  "What's a good evening prayer?",
+  "How do I make masala chai?",
+  "Tell me about Rabindranath Tagore",
+  "What festivals are coming up?",
 ];
-const SUGGESTED_HI = [
+const ALL_SUGGESTED_HI = [
   "मुझे एक कहानी सुनाओ",
   "मेरी दवाइयाँ याद दिलाओ",
   "मैं अकेला महसूस कर रहा हूँ",
   "जोड़ों के दर्द के लिए क्या अच्छा है?",
+  "मुझे एक भजन सुनाओ",
+  "पंचतंत्र की कहानी सुनाओ",
+  "आज क्या खाना चाहिए?",
+  "कोई आसान योग बताओ",
+  "आज का पंचांग बताओ",
+  "गीता से कुछ सुनाओ",
+  "हनुमान जी की कहानी बताओ",
+  "रानी लक्ष्मीबाई के बारे में बताओ",
+  "हल्दी के क्या फ़ायदे हैं?",
+  "हिंदी में कोई चुटकुला सुनाओ",
+  "शाम की प्रार्थना बताओ",
+  "मसाला चाय कैसे बनाएँ?",
+  "रवींद्रनाथ टैगोर के बारे में बताओ",
+  "आने वाले त्योहार कौन से हैं?",
 ];
+
+// Indian holiday calendar — month-based seasonal prompts
+const SEASONAL_EN = {
+  0: ["Tell me about Makar Sankranti traditions", "What's special about Pongal?", "How is Lohri celebrated?"],
+  1: ["Tell me about Vasant Panchami", "What is the story of Saraswati Puja?"],
+  2: ["How is Holi celebrated across India?", "Tell me the legend behind Holika Dahan", "What's special about Ugadi?"],
+  3: ["Tell me about Ram Navami", "What is Baisakhi?", "How is Vishu celebrated in Kerala?"],
+  7: ["Tell me about Raksha Bandhan", "What's the story behind Krishna Janmashtami?", "How is Independence Day special?"],
+  8: ["Tell me about Ganesh Chaturthi", "What is the meaning of Onam?"],
+  9: ["Tell me about Navratri and Durga Puja", "What is Dussehra about?", "How is Karva Chauth observed?"],
+  10: ["Tell me the story of Diwali", "What are Diwali traditions in your family?", "Tell me about Bhai Dooj", "What is Chhath Puja?"],
+  11: ["Tell me about Christmas in India", "What is the story of Guru Nanak Jayanti?"],
+};
+const SEASONAL_HI = {
+  0: ["मकर संक्रांति की परंपराएँ बताओ", "पोंगल क्या है?", "लोहड़ी कैसे मनाते हैं?"],
+  1: ["वसंत पंचमी के बारे में बताओ", "सरस्वती पूजा की कहानी बताओ"],
+  2: ["होली कैसे मनाई जाती है?", "होलिका दहन की कथा बताओ", "उगादि क्या है?"],
+  3: ["राम नवमी के बारे में बताओ", "बैसाखी क्या है?", "केरल में विशु कैसे मनाते हैं?"],
+  7: ["रक्षाबंधन के बारे में बताओ", "कृष्ण जन्माष्टमी की कहानी बताओ", "स्वतंत्रता दिवस क्या खास है?"],
+  8: ["गणेश चतुर्थी के बारे में बताओ", "ओणम का क्या मतलब है?"],
+  9: ["नवरात्रि और दुर्गा पूजा के बारे में बताओ", "दशहरा किसलिए मनाते हैं?", "करवा चौथ कैसे मनाते हैं?"],
+  10: ["दिवाली की कहानी बताओ", "आपके परिवार में दिवाली कैसे मनाते थे?", "भाई दूज के बारे में बताओ", "छठ पूजा क्या है?"],
+  11: ["भारत में क्रिसमस कैसे मनाते हैं?", "गुरु नानक जयंती के बारे में बताओ"],
+};
+
+function getSeasonalPrompts(lang) {
+  const month = new Date().getMonth();
+  return lang === "hi" ? (SEASONAL_HI[month] || []) : (SEASONAL_EN[month] || []);
+}
+
+function pickRandomPrompts(lang, count = 4) {
+  const base = lang === "hi" ? ALL_SUGGESTED_HI : ALL_SUGGESTED_EN;
+  const seasonal = getSeasonalPrompts(lang);
+  // Always include 1 seasonal if available, fill rest from base
+  const picked = [];
+  if (seasonal.length > 0) {
+    picked.push(seasonal[Math.floor(Math.random() * seasonal.length)]);
+  }
+  const remaining = base.filter(p => !picked.includes(p));
+  const shuffled = remaining.sort(() => Math.random() - 0.5);
+  while (picked.length < count && shuffled.length > 0) {
+    picked.push(shuffled.pop());
+  }
+  return picked.sort(() => Math.random() - 0.5);
+}
 
 const GREETING_EN = "How can I help you? Type or speak now.";
 const GREETING_HI = "मैं आपकी कैसे मदद कर सकता हूँ? लिखें या बोलें।";
@@ -99,7 +175,7 @@ export default function SathiChat({ open, onClose, lang = "en", userId, initialM
   const messagesRef = useRef(messages);
   messagesRef.current = messages;
 
-  const suggested = lang === "hi" ? SUGGESTED_HI : SUGGESTED_EN;
+  const [suggested] = useState(() => pickRandomPrompts(lang, 4));
   const greeting = lang === "hi" ? GREETING_HI : GREETING_EN;
 
   // Load today's conversation history when chat opens
