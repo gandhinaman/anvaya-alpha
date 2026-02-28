@@ -11,15 +11,11 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Try Sarvam AI first, fall back to ElevenLabs
+  const SARVAM_API_KEY = Deno.env.get("SARVAM_API_KEY")?.trim();
   const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY")?.trim();
-  if (!ELEVENLABS_API_KEY) {
-    return new Response(JSON.stringify({ error: "ELEVENLABS_API_KEY not configured" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
 
-  const { text, voiceId } = await req.json();
+  const { text, voiceId, lang } = await req.json();
 
   if (!text) {
     return new Response(JSON.stringify({ error: "text is required" }), {
@@ -28,7 +24,67 @@ serve(async (req) => {
     });
   }
 
-  // Default to "Lily" - gentle, warm, kind female voice
+  // ── Sarvam AI TTS ──
+  if (SARVAM_API_KEY) {
+    try {
+      // Map lang to Sarvam language code
+      const targetLang = lang === "hi" ? "hi-IN" : "en-IN";
+
+      const response = await fetch("https://api.sarvam.ai/text-to-speech", {
+        method: "POST",
+        headers: {
+          "api-subscription-key": SARVAM_API_KEY,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text,
+          target_language_code: targetLang,
+          speaker: "anushka",
+          model: "bulbul:v2",
+          pitch: 0,
+          pace: 1.0,
+          loudness: 1.0,
+        }),
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error("Sarvam error:", response.status, errText);
+        // Fall through to ElevenLabs if available
+      } else {
+        const data = await response.json();
+        // Sarvam returns { audios: ["base64..."] }
+        if (data.audios && data.audios[0]) {
+          const audioBase64 = data.audios[0];
+          // Decode base64 to binary WAV
+          const binaryString = atob(audioBase64);
+          const bytes = new Uint8Array(binaryString.length);
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+
+          return new Response(bytes, {
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "audio/wav",
+            },
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Sarvam TTS error:", error);
+      // Fall through to ElevenLabs
+    }
+  }
+
+  // ── ElevenLabs fallback ──
+  if (!ELEVENLABS_API_KEY) {
+    return new Response(JSON.stringify({ error: "No TTS API key configured" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   const selectedVoice = voiceId || "pFZP5JQG7iQjIQuC4Bku";
 
   try {

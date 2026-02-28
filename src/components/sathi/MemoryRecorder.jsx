@@ -79,7 +79,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
             apikey: anonKey,
             Authorization: `Bearer ${anonKey}`,
           },
-          body: JSON.stringify({ text }),
+          body: JSON.stringify({ text, lang }),
         }
       );
 
