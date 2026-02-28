@@ -146,6 +146,14 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
     }
   };
 
+  // Connect video preview after the video element renders
+  useEffect(() => {
+    if (phase === "recording" && recordingMode === "video" && videoPreviewRef.current && streamRef.current) {
+      videoPreviewRef.current.srcObject = streamRef.current;
+      videoPreviewRef.current.play().catch(() => {});
+    }
+  }, [phase, recordingMode]);
+
   const startRecording = useCallback(async (mode) => {
     try {
       const constraints = mode === "video"
@@ -154,12 +162,6 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
 
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
-
-      // Show video preview if recording video
-      if (mode === "video" && videoPreviewRef.current) {
-        videoPreviewRef.current.srcObject = stream;
-        videoPreviewRef.current.play().catch(() => {});
-      }
 
       const mimeType = mode === "video"
         ? (MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus") ? "video/webm;codecs=vp9,opus" : "video/webm")
