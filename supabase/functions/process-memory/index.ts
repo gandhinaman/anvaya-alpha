@@ -6,7 +6,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SUMMARY_PROMPT = `Summarize this personal memory in 2 warm sentences. Identify the emotional tone (one of: joyful, nostalgic, peaceful, concerned). Extract a short title (max 5 words) that reflects the topic of the conversation prompt. Respond in this exact JSON format only, no other text:
+const SUMMARY_PROMPT = `Summarize this personal memory in 2 warm sentences. Identify the emotional tone (one of: joyful, nostalgic, peaceful, concerned). Extract a short descriptive title (max 6 words) that captures what the memory is about — e.g. "Childhood story about kite flying" or "Favourite meal from the village". Do NOT use generic titles like "Share a memory" or "Untitled". Respond in this exact JSON format only, no other text:
 {"title": "...", "summary": "...", "emotional_tone": "..."}`;
 
 Deno.serve(async (req) => {
@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
       }),
     });
 
-    const title = promptQuestion || "Share a memory";
+    let title = promptQuestion || "A shared memory";
     let summary = transcript;
     let emotional_tone = "peaceful";
 
@@ -106,7 +106,7 @@ Deno.serve(async (req) => {
         const jsonMatch = rawText.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0]);
-          // title stays as promptQuestion, don't override
+          title = parsed.title || title;
           summary = parsed.summary || summary;
           emotional_tone = parsed.emotional_tone || emotional_tone;
         }
