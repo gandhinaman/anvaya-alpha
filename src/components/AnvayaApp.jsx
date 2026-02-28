@@ -480,6 +480,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
     "Oslo, Norway","Helsinki, Finland","Prague, Czech Republic","Warsaw, Poland","Budapest, Hungary","Athens, Greece","Istanbul, Turkey",
     // Middle East
     "Dubai, UAE","Abu Dhabi, UAE","Riyadh, Saudi Arabia","Jeddah, Saudi Arabia","Doha, Qatar","Kuwait City, Kuwait","Muscat, Oman","Bahrain",
+    "Gaza, Palestine","Ramallah, Palestine","Nablus, Palestine","Hebron, Palestine","Bethlehem, Palestine","Jenin, Palestine","Tulkarm, Palestine","Jericho, Palestine",
     // Asia
     "Singapore","Tokyo, Japan","Osaka, Japan","Seoul, South Korea","Beijing, China","Shanghai, China","Hong Kong","Taipei, Taiwan",
     "Bangkok, Thailand","Jakarta, Indonesia","Kuala Lumpur, Malaysia","Manila, Philippines","Ho Chi Minh City, Vietnam","Hanoi, Vietnam",
