@@ -1097,7 +1097,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
           {icon:<BookOpen size={24} color="#FFF8F0"/>,label:lang==="en"?"Memory Log":"यादों की डायरी",sub:lang==="en"?"Your memories & family comments":"आपकी यादें और परिवार की टिप्पणियाँ",acc:"#C68B59",fn:()=>setMemoryLogOpen(true)},
           {icon:<MessageCircle size={24} color="#FFF8F0"/>,label:lang==="en"?"Ask Sathi":"साथी से पूछें",sub:lang==="en"?"Health · Reminders · Stories":"स्वास्थ्य · याद · कहानियाँ",acc:"#C68B59",fn:()=>setChatOpen(true)},
           {icon:<User size={24} color="#FFF8F0"/>,label:lang==="en"?"My Profile":"मेरी प्रोफ़ाइल",sub:lang==="en"?"Health · Medicines · Preferences":"स्वास्थ्य · दवाइयाँ · पसंद",acc:"#8D6E63",fn:()=>setProfileOpen(true)},
-          {icon:<Phone size={24} color="#FFF8F0"/>,label:lang==="en"?"Call Child":"बच्चे को कॉल करें",sub:linkedName||"Guardian",acc:"#C68B59",fn:()=>setCallOpen(true)},
+          {icon:<Phone size={24} color="#FFF8F0"/>,label:lang==="en"?"Call Child":"बच्चे को कॉल करें",sub:linkedName||"Caregiver",acc:"#C68B59",fn:()=>setCallOpen(true)},
         ].map((c,i)=>(
           <button key={i} onClick={c.fn} className="glass" style={{
             display:"flex",alignItems:"center",gap:14,padding:"16px 18px",
@@ -1135,7 +1135,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
                 {lang==="en"?"I heard you.":"मैंने सुना।"}
               </div>
               <div style={{color:"rgba(255,248,240,.6)",fontSize:14,marginTop:7,lineHeight:1.6}}>
-                {lang==="en"?<>Should I call <strong style={{color:"#FFF8F0"}}>{linkedName||"your guardian"}</strong>?</>:<>क्या मैं <strong style={{color:"#FFF8F0"}}>{linkedName||"आपके guardian"}</strong> को बुलाऊँ?</>}
+                {lang==="en"?<>Should I call <strong style={{color:"#FFF8F0"}}>{linkedName||"your caregiver"}</strong>?</>:<>क्या मैं <strong style={{color:"#FFF8F0"}}>{linkedName||"आपके caregiver"}</strong> को बुलाऊँ?</>}
               </div>
             </div>
             <button onClick={handleEmergencyCall} style={{
@@ -1155,7 +1155,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
               <Phone size={30} color="#FFF8F0"/>
             </div>
             <div style={{fontFamily:"'Playfair Display',serif",fontSize:22,color:"#FFF8F0",fontWeight:400,textAlign:"center"}}>
-              {lang==="en"?`Alerting ${linkedName||"guardian"}…`:`${linkedName||"guardian"} को सूचित कर रहे हैं…`}
+              {lang==="en"?`Alerting ${linkedName||"caregiver"}…`:`${linkedName||"caregiver"} को सूचित कर रहे हैं…`}
             </div>
             <div style={{display:"flex",gap:4}}>
               {[0,1,2].map(i=>(<div key={i} style={{width:8,height:8,borderRadius:"50%",background:"rgba(255,248,240,.5)",animation:`dotBounce 1.2s ease-in-out ${i*.2}s infinite`}}/>))}
@@ -1168,7 +1168,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
             </div>
             <div style={{textAlign:"center"}}>
               <div style={{fontFamily:"'Playfair Display',serif",fontSize:24,color:"#FFF8F0",fontWeight:400,lineHeight:1.4}}>
-                {lang==="en"?`${linkedName||"Guardian"} has been alerted.`:`${linkedName||"Guardian"} को सूचित कर दिया गया।`}
+                {lang==="en"?`${linkedName||"Caregiver"} has been alerted.`:`${linkedName||"Caregiver"} को सूचित कर दिया गया।`}
               </div>
               <div style={{color:"rgba(212,165,116,.8)",fontSize:14,marginTop:8}}>
                 {lang==="en"?"Help is coming.":"मदद आ रही है।"}
@@ -1353,7 +1353,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
             {linkCode && (
               <div style={{padding:"16px",background:"rgba(255,248,240,.06)",borderRadius:16,border:"1px solid rgba(255,248,240,.1)"}}>
                 <div style={{fontSize:13,color:"rgba(255,248,240,.5)",fontWeight:600,marginBottom:8}}>
-                  {lang==="en"?"Guardian Linking Code":"गार्डियन लिंकिंग कोड"}
+                  {lang==="en"?"Caregiver Linking Code":"केयरगिवर लिंकिंग कोड"}
                 </div>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                   <div style={{fontSize:28,fontWeight:700,color:"#D4A574",letterSpacing:"0.2em"}}>{linkCode}</div>
@@ -1726,7 +1726,7 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"0 20px 18px",borderBottom:"1px solid rgba(6,78,59,0.07)"}}>
         <div>
           <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:11,color:"rgba(6,78,59,0.35)",letterSpacing:"0.3em",fontWeight:300}}>ANVAYA</div>
-          <div className="gtxt" style={{fontFamily:"'Cormorant Garamond',serif",fontSize:24,fontWeight:600}}>Guardian</div>
+          <div className="gtxt" style={{fontFamily:"'Cormorant Garamond',serif",fontSize:24,fontWeight:600}}>Caregiver</div>
         </div>
         {mobile&&<button onClick={()=>setDrawer(false)} style={{background:"transparent",border:"none",cursor:"pointer"}}><X size={18} color="#FFF8F0"/></button>}
       </div>
@@ -1796,7 +1796,7 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
             )}
             <div>
               <h1 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:isMobile?24:30,fontWeight:700,color:"#064E3B",lineHeight:1.2}}>
-                {nav==="settings"?"Settings":"Guardian Dashboard"}
+                {nav==="settings"?"Settings":"Caregiver Dashboard"}
               </h1>
               <p style={{color:"#6b6b6b",fontSize:12,marginTop:3}}>
                 {nav==="settings"?"Manage your account & preferences":<>
@@ -2253,7 +2253,7 @@ export default function App() {
 
   const tabs=[
     {id:"sathi",   label:"Sathi"},
-    {id:"guardian",label:"Guardian"},
+    {id:"guardian",label:"Caregiver"},
     ...(!isMobile?[{id:"both",label:"Both"}]:[]),
   ];
 
