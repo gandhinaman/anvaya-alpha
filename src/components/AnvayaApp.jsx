@@ -478,7 +478,7 @@ function SathiScreen({inPanel=false, userId=null, linkedUserId=null, fullName=nu
             apikey: anonKey,
             Authorization: `Bearer ${anonKey}`,
           },
-          body: JSON.stringify({ text }),
+          body: JSON.stringify({ text, lang }),
         }
       );
 
