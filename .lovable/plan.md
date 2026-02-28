@@ -1,25 +1,33 @@
 
 
-## Auto-load Cities for Location Field
+## Restrict Phone Number Format for Calling
 
-Replace the plain text input for "Location" in Guardian settings with an autocomplete component that suggests cities worldwide as the user types.
-
-### Approach
-Use a static curated list of ~600 major world cities (embedded in a helper file) with client-side fuzzy filtering — no API key needed, instant results, works offline.
+Add phone number validation and formatting to both input locations (Login signup and Guardian Settings) to ensure numbers are in international format (`+<country_code><number>`) so `tel:` links work reliably.
 
 ### Changes
 
-**1. Create `src/lib/cities.ts`**
-- Export an array of ~600 major cities worldwide (format: `"City, Country"`)
-- Cover all continents, with strong Indian city coverage (~80 Indian cities)
+**1. Create `src/lib/phoneFormat.ts`**
+- `formatPhoneInput(value)` — auto-prepend `+`, strip non-digit characters (except leading `+`), limit to 15 digits (ITU max)
+- `isValidPhone(value)` — validate: starts with `+`, 7–15 digits after country code
+- Used by both input locations
 
-**2. Update `src/components/guardian/GuardianDashboard.jsx` (lines 752-757)**
-- Replace the plain `<input>` with an autocomplete widget:
-  - Text input that filters the city list on each keystroke (case-insensitive substring match)
-  - Dropdown of up to 8 matching suggestions below the input
-  - Click a suggestion to select it; typing a custom value is still allowed
-  - Dropdown closes on blur or selection
-- Add state: `cityQuery`, `showCitySuggestions`, `filteredCities`
+**2. Update `src/pages/Login.tsx` (line 202)**
+- Use `formatPhoneInput` in the `onChange` handler so input is auto-formatted
+- Show validation hint below the input (e.g. "Include country code, e.g. +91 98765 43210")
+- Prevent form submission if phone is present but invalid
 
-### No backend or database changes needed — the `location` column already exists as text.
+**3. Update `src/components/guardian/GuardianDashboard.jsx` (lines 751-754)**
+- Same `formatPhoneInput` in `onChange`
+- Show inline validation error if phone doesn't match international format
+- Disable save button if phone is invalid
+
+**4. Update `src/components/AnvayaApp.jsx` (line 213-214)**
+- No change needed — it already strips spaces with `.replace(/\s+/g, "")`, which works with the `+` prefix format
+
+### Format Rules
+- Auto-prepend `+` if user starts typing digits
+- Only allow digits after `+`
+- Allow spaces for readability (stripped before `tel:` use)
+- Min 8 chars, max 16 chars (including `+`)
+- Visual feedback: green border if valid, red if invalid
 
