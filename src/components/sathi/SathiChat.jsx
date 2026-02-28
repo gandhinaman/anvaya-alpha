@@ -38,6 +38,9 @@ export default function SathiChat({ open, onClose, lang = "en", userId, initialM
   useEffect(() => {
     if (open && userId) {
       loadConversationHistory();
+    } else if (open && !userId) {
+      // No userId yet — still show greeting so initialMessage can fire
+      setMessages([{ role: "assistant", content: greeting }]);
     }
     if (!open) {
       stopListening();
@@ -265,15 +268,18 @@ export default function SathiChat({ open, onClose, lang = "en", userId, initialM
   // Auto-send initial message from search bar
   const initialSentRef = useRef(false);
   useEffect(() => {
-    if (open && initialMessage && !streaming && !loadingHistory && !initialSentRef.current) {
+    if (open && initialMessage && !streaming && !loadingHistory && messages.length > 0 && !initialSentRef.current) {
       initialSentRef.current = true;
-      sendMessage(initialMessage);
-      if (onInitialMessageConsumed) onInitialMessageConsumed();
+      // Small delay to ensure state is fully settled after history load
+      setTimeout(() => {
+        sendMessage(initialMessage);
+        if (onInitialMessageConsumed) onInitialMessageConsumed();
+      }, 100);
     }
     if (!open) {
       initialSentRef.current = false;
     }
-  }, [open, initialMessage, streaming, loadingHistory]);
+  }, [open, initialMessage, streaming, loadingHistory, messages.length]);
 
   // Process pending voice sends
   useEffect(() => {
