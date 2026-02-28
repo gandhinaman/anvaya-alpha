@@ -1290,7 +1290,6 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
                   </div>
                 )}
               </div>
-              </label>
               <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
                 {[{v:"en",l:"English"},{v:"hi",l:"हिंदी"},{v:"bn",l:"বাংলা"},{v:"ta",l:"தமிழ்"},{v:"te",l:"తెలుగు"},{v:"mr",l:"मराठी"},{v:"gu",l:"ગુજરાતી"},{v:"kn",l:"ಕನ್ನಡ"}].map(opt=>(
                   <button key={opt.v} onClick={()=>{setProfileData(p=>({...p,language:opt.v}));switchLang(opt.v);}}
