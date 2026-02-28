@@ -885,24 +885,69 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               ))}
             </div>
 
-            {/* Recent Alerts + Recent Memories summary */}
+            {/* Cognitive + Weekly Trends */}
             <div style={{
               display: "grid",
-              gridTemplateColumns: isMobile ? "1fr" : inPanel ? "1fr" : "1fr 1fr",
+              gridTemplateColumns: isMobile ? "1fr" : inPanel ? "1fr" : "1fr 2fr",
               gap: 14, marginBottom: 14
             }}>
               <div className="gcard s3" style={{ padding: 20 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Recent Alerts</div>
-                  <button onClick={() => setNav("alerts")} style={{ fontSize: 11, fontWeight: 600, color: "#5D4037", background: "transparent", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 3 }}>
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Cognitive Vitality</div>
+                  <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Real-time cognitive assessment</div>
+                </div>
+                <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
+                  <CognitiveRing value={94} />
+                </div>
+                <div style={{
+                  display: "flex", alignItems: "flex-start", gap: 8, padding: "10px 12px",
+                  background: "rgba(198,139,89,0.06)", borderRadius: 12, border: "1px solid rgba(198,139,89,0.12)"
+                }}>
+                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#C68B59", marginTop: 4, flexShrink: 0 }} />
+                  <p style={{ fontSize: 11, color: "#6b6b6b", lineHeight: 1.5 }}>
+                    Pattern recognition and recall scores are within healthy range
+                  </p>
+                </div>
+              </div>
+
+              <div className="gcard s4" style={{ padding: 20 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Weekly Wellness Trends</div>
+                    <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Mood and energy levels over the past week</div>
+                  </div>
+                  <button onClick={() => setNav("health")} style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, fontWeight: 600, color: "#5D4037", background: "transparent", border: "none", cursor: "pointer" }}>
                     View all <ChevronRight size={12} />
                   </button>
                 </div>
+                <WeeklyTrendChart />
+              </div>
+            </div>
+
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: isMobile ? "1fr" : inPanel ? "1fr" : "2fr 1fr",
+              gap: 14, marginBottom: 14
+            }}>
+              <div className="gcard s5" style={{ padding: 20 }}>
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Acoustic Insights</div>
+                  <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>24-hour vocal and acoustic analysis</div>
+                </div>
+                <AcousticHeatmap />
+              </div>
+
+              <div className="gcard s6" style={{ padding: 20 }}>
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Recent Alerts</div>
+                  <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Today's notifications</div>
+                </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
                   {alerts.map((a, i) => (
-                    <div key={i} style={{
-                      padding: "10px 12px", borderRadius: 12, background: "rgba(255,248,240,0.6)",
-                      border: "1px solid rgba(93,64,55,0.06)"
+                    <div key={i} className="gcard" style={{
+                      padding: "10px 12px",
+                      animation: `fadeUp .5s ease ${.8 + i * .1}s both`,
+                      background: "rgba(255,255,255,0.6)"
                     }}>
                       <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
                         <div style={{
@@ -915,34 +960,10 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                   ))}
                 </div>
               </div>
-
-              <div className="gcard s4" style={{ padding: 20 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Recent Memories</div>
-                  <button onClick={() => setNav("memories")} style={{ fontSize: 11, fontWeight: 600, color: "#5D4037", background: "transparent", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 3 }}>
-                    View all <ChevronRight size={12} />
-                  </button>
-                </div>
-                {realMemories.length === 0 ? (
-                  <p style={{ fontSize: 12, color: "#9CA3AF", fontStyle: "italic" }}>No memories yet</p>
-                ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                    {memories.slice(0, 3).map((m, i) => (
-                      <div key={i} style={{
-                        padding: "10px 12px", borderRadius: 12, background: "rgba(255,248,240,0.6)",
-                        border: "1px solid rgba(93,64,55,0.06)"
-                      }}>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: "#3E2723" }}>{m.title}</div>
-                        <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2 }}>{m.date} · {m.duration}</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
             </div>
 
             {/* Medication Tracker */}
-            <div className="gcard s5" style={{ padding: 20, marginBottom: 14 }}>
+            <div className="gcard s6" style={{ padding: 20, marginBottom: 14 }}>
               <div style={{ marginBottom: 14 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Medication Tracker</div>
                 <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Today's medications</div>
@@ -979,6 +1000,38 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                         </span>
                       )}
                     </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Memory Archive preview */}
+            <div className="s7">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                <div>
+                  <h3 style={{ fontSize: 14, fontWeight: 700, color: "#1a1a1a" }}>Memory Archive</h3>
+                  <p style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>AI-summarized recordings with emotional context</p>
+                </div>
+                <button onClick={() => setNav("memories")} style={{ fontSize: 11, fontWeight: 600, color: "#5D4037", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", gap: 3 }}>
+                  View all <ChevronRight size={12} />
+                </button>
+              </div>
+              {realMemories.length === 0 ? (
+                <div className="gcard" style={{ padding: 28, textAlign: "center" }}>
+                  <Headphones size={28} color="#9CA3AF" style={{ margin: "0 auto 10px" }} />
+                  <p style={{ fontSize: 13, color: "#6b6b6b", lineHeight: 1.6 }}>
+                    No memories recorded yet.<br />
+                    <span style={{ color: "#9CA3AF", fontSize: 12 }}>Tap "Record a Memory" on the Sathi app to begin.</span>
+                  </p>
+                </div>
+              ) : (
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: isMobile ? "1fr" : inPanel ? "1fr" : "repeat(3,1fr)",
+                  gap: 13
+                }}>
+                  {memories.slice(0, 3).map((m, i) => (
+                    <MemoryCard key={i} {...m} index={i} />
                   ))}
                 </div>
               )}
