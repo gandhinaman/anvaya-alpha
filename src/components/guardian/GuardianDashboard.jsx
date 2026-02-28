@@ -150,7 +150,7 @@ function CognitiveRing({ value = 94 }) {
          <text x={cx} y={cy - 6} textAnchor="middle" fontSize={30} fontWeight={700} fill="#3E2723" fontFamily="DM Sans">{value}</text>
          <text x={cx} y={cy + 12} textAnchor="middle" fontSize={11} fill="#C68B59" fontFamily="DM Sans" fontWeight={500}>Stable</text>
        </svg>
-       <span style={{ fontSize: 12, color: "#6b6b6b", fontWeight: 500 }}>Cognitive Clarity</span>
+       <span style={{ fontSize: 12, color: "#6b6b6b", fontWeight: 500 }}>Cognitive Vitality</span>
     </div>
   );
 }
@@ -406,7 +406,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
 
   const stats = [
      { label: "Vocal Energy", value: derivedStats.vocalEnergy.value, icon: Mic, color: "#5D4037", trend: derivedStats.vocalEnergy.trend },
-     { label: "Cognitive Clarity", value: derivedStats.cognitiveClarity.value, icon: TrendingUp, color: "#8D6E63", trend: derivedStats.cognitiveClarity.trend },
+     { label: "Cognitive Vitality", value: derivedStats.cognitiveClarity.value, icon: TrendingUp, color: "#8D6E63", trend: derivedStats.cognitiveClarity.trend },
      { label: "Emotional Tone", value: derivedStats.emotionalTone.value, icon: Heart, color: "#C68B59", trend: derivedStats.emotionalTone.trend },
      { label: "Activity Level", value: derivedStats.activityLevel.value, icon: Zap, color: "#A1887F", trend: derivedStats.activityLevel.trend },
   ];
