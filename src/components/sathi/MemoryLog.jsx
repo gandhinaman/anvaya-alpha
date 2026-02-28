@@ -148,7 +148,7 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ color: "#F9F9F7", fontSize: 15, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {m.title || (lang === "en" ? "Untitled Memory" : "बिना शीर्षक")}
+                        {m.title || (lang === "en" ? "A shared memory" : "एक याद")}
                       </div>
                       <div style={{ color: "rgba(249,249,247,.4)", fontSize: 12, marginTop: 2, display: "flex", alignItems: "center", gap: 8 }}>
                         <span>{formatDate(m.created_at)}</span>
