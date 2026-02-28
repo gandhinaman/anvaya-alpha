@@ -55,8 +55,8 @@ function deriveStats(healthEvents: HealthEvent[], memories: Memory[]): Stats {
   const vocalScore = vocalEvent?.value?.score;
   const vocalTrend = vocalEvent?.value?.detail || "—";
 
-  // Cognitive Clarity: logic & coherence
-  const cogEvent = latestByType("cognitive_clarity");
+  // Cognitive Vitality: word retrieval, recall, coherence
+  const cogEvent = latestByType("cognitive_vitality") || latestByType("cognitive_clarity");
   const cogScore = cogEvent?.value?.score;
   const cogLabel = cogEvent?.value?.label || "No data";
   const cogTrend = cogEvent?.value?.detail || "—";

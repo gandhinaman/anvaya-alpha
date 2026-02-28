@@ -17,10 +17,10 @@ const SUMMARY_PROMPT = `Analyze this personal memory recording. Respond in this 
       "label": "one of: Low, Moderate, High, Very High",
       "detail": "Brief note on tone and pitch patterns detected"
     },
-    "cognitive_clarity": {
+    "cognitive_vitality": {
       "score": 0-100,
-      "label": "one of: Unclear, Fair, Clear, Very Clear",
-      "detail": "Brief note on logical coherence and structured thought"
+      "label": "one of: Declining, Fair, Sharp, Very Sharp",
+      "detail": "Brief note on word retrieval, narrative coherence, vocabulary richness, and recall accuracy"
     },
     "emotional_state": {
       "score": 0-100,
@@ -37,7 +37,7 @@ const SUMMARY_PROMPT = `Analyze this personal memory recording. Respond in this 
 
 Scoring guidance:
 - vocal_energy: Assess tone variation and pitch range. Monotone/flat = low, expressive/animated = high.
-- cognitive_clarity: Assess logical flow, coherence, sentence structure, and whether ideas connect. Rambling/confused = low, structured/clear = high.
+- cognitive_vitality: Assess word-finding ability (hesitations, substitutions), narrative coherence (does the story track logically?), vocabulary richness, temporal recall accuracy (dates, sequences), and self-correction frequency. Frequent word-finding pauses or confused timelines = declining, fluent recall with rich detail = very sharp.
 - emotional_state: Assess emotional cues in tone — trembling/rushed = distressed, warm/steady = calm/serene.
 - activity_level: Assess speech pace and enthusiasm. Slow/lethargic = low, fast/energetic = very active.
 
@@ -184,7 +184,7 @@ Deno.serve(async (req) => {
     if (voice_metrics) {
       const metricsToSave = [
         { event_type: "vocal_energy", value: voice_metrics.vocal_energy },
-        { event_type: "cognitive_clarity", value: voice_metrics.cognitive_clarity },
+        { event_type: "cognitive_vitality", value: voice_metrics.cognitive_vitality },
         { event_type: "emotional_state", value: voice_metrics.emotional_state },
         { event_type: "activity_level", value: voice_metrics.activity_level },
       ].filter(m => m.value);
