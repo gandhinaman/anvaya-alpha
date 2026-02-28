@@ -18,7 +18,7 @@ const SUGGESTED_HI = [
 const GREETING_EN = "How can I help you? Type or speak now.";
 const GREETING_HI = "मैं आपकी कैसे मदद कर सकता हूँ? लिखें या बोलें।";
 
-export default function SathiChat({ open, onClose, lang = "en", userId }) {
+export default function SathiChat({ open, onClose, lang = "en", userId, initialMessage, onInitialMessageConsumed }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
@@ -261,6 +261,19 @@ export default function SathiChat({ open, onClose, lang = "en", userId }) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, streaming]);
+
+  // Auto-send initial message from search bar
+  const initialSentRef = useRef(false);
+  useEffect(() => {
+    if (open && initialMessage && !streaming && !loadingHistory && !initialSentRef.current) {
+      initialSentRef.current = true;
+      sendMessage(initialMessage);
+      if (onInitialMessageConsumed) onInitialMessageConsumed();
+    }
+    if (!open) {
+      initialSentRef.current = false;
+    }
+  }, [open, initialMessage, streaming, loadingHistory]);
 
   // Process pending voice sends
   useEffect(() => {

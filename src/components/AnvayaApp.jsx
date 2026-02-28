@@ -322,6 +322,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
   const [callOpen,setCallOpen]=useState(false);
   const [memoryLogOpen,setMemoryLogOpen]=useState(false);
   const [inp,setInp]=useState("");
+  const [pendingChatMsg, setPendingChatMsg]=useState(null);
   const [linkCode,setLinkCode]=useState(null);
   const [showCode,setShowCode]=useState(false);
   const [codeCopied,setCodeCopied]=useState(false);
@@ -827,10 +828,10 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
       <div style={{padding:"12px 18px 0"}}>
         <div style={{background:"rgba(255,248,240,.1)",border:"1.5px solid rgba(255,248,240,.15)",borderRadius:16,padding:"10px 10px 10px 18px",display:"flex",alignItems:"center",gap:8}}>
           <input value={inp} onChange={e=>{setInp(e.target.value);if(checkTrigger(e.target.value)){setOverlay(true);setOverlayPhase("ask");}}}
-            onKeyDown={e=>{if(e.key==="Enter"&&inp.trim()){setChatOpen(true);}}  }
+            onKeyDown={e=>{if(e.key==="Enter"&&inp.trim()){const q=inp.trim();setInp("");setPendingChatMsg(q);setChatOpen(true);}}}  
             placeholder={lang==="en"?"Type anything… say 'help' if in trouble":"कुछ भी लिखें… मुश्किल में 'help' बोलें"}
             style={{flex:1,background:"transparent",border:"none",outline:"none",color:"#FFF8F0",fontSize:17}}/>
-          <button onClick={()=>{if(inp.trim())setChatOpen(true);}} style={{
+          <button onClick={()=>{if(inp.trim()){const q=inp.trim();setInp("");setPendingChatMsg(q);setChatOpen(true);}}} style={{
             width:48,height:48,borderRadius:14,border:"none",flexShrink:0,cursor:inp.trim()?"pointer":"default",
             background:inp.trim()?"linear-gradient(135deg,#C68B59,#8D6E63)":"rgba(255,248,240,.06)",
             display:"flex",alignItems:"center",justifyContent:"center",
@@ -948,7 +949,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
         </div>
       )}
 
-      <SathiChat open={chatOpen} onClose={()=>setChatOpen(false)} lang={lang} userId={userId}/>
+      <SathiChat open={chatOpen} onClose={()=>{setChatOpen(false);setPendingChatMsg(null);}} lang={lang} userId={userId} initialMessage={pendingChatMsg} onInitialMessageConsumed={()=>setPendingChatMsg(null)}/>
       <MemoryRecorder open={memoryOpen} onClose={()=>setMemoryOpen(false)} lang={lang} userId={userId} linkedName={linkedName}/>
       <CallOverlay open={callOpen} onClose={()=>setCallOpen(false)} lang={lang} userId={userId} linkedUserId={linkedUserId} fromName={linkedName||"Child"}/>
       <MemoryLog open={memoryLogOpen} onClose={()=>setMemoryLogOpen(false)} lang={lang} userId={userId}/>
