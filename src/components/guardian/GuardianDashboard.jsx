@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   Phone, Mic, MessageCircle, Heart, Activity, Pill,
-  Home, Bell, Settings, ChevronRight, Play, Pause,
+  Home, Bell, Settings, ChevronRight, ChevronDown, Play, Pause,
   User, LogOut, Headphones, Brain, Check, Menu, X,
   TrendingUp, Zap, PhoneOff, AlertTriangle, ShieldCheck,
   Loader2, Link2, Copy, Search
@@ -459,11 +459,17 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
   ];
 
   const stats = [
-     { label: "Vocal Energy", value: derivedStats.vocalEnergy.value, icon: Mic, color: "#5D4037", trend: derivedStats.vocalEnergy.trend },
-     { label: "Cognitive Vitality", value: derivedStats.cognitiveClarity.value, icon: TrendingUp, color: "#8D6E63", trend: derivedStats.cognitiveClarity.trend },
-     { label: "Emotional Tone", value: derivedStats.emotionalTone.value, icon: Heart, color: "#C68B59", trend: derivedStats.emotionalTone.trend },
-     { label: "Activity Level", value: derivedStats.activityLevel.value, icon: Zap, color: "#A1887F", trend: derivedStats.activityLevel.trend },
+     { label: "Vocal Energy", value: derivedStats.vocalEnergy.value, icon: Mic, color: "#5D4037", trend: derivedStats.vocalEnergy.trend,
+       desc: "Measures the strength, pitch variation, and resonance of your parent's voice during conversations. A score of 75%+ indicates strong vocal projection and healthy speech patterns. Lower scores may suggest fatigue, low mood, or respiratory changes. This is analyzed from recorded memories and voice interactions with Sathi." },
+     { label: "Cognitive Vitality", value: derivedStats.cognitiveClarity.value, icon: TrendingUp, color: "#8D6E63", trend: derivedStats.cognitiveClarity.trend,
+       desc: "Tracks word retrieval speed, sentence coherence, and recall accuracy during conversations. A score of 80%+ shows sharp cognitive function. Scores between 50-80% are normal for age-related changes. Below 50% may warrant a check-in. This metric is derived from speech pattern analysis in Sathi conversations." },
+     { label: "Emotional Tone", value: derivedStats.emotionalTone.value, icon: Heart, color: "#C68B59", trend: derivedStats.emotionalTone.trend,
+       desc: "Analyzes the emotional quality of your parent's voice — detecting joy, calm, sadness, or distress from tone and breathing patterns. A high percentage indicates positive emotional wellbeing. Labels like 'Joyful' or 'Peaceful' are good signs. 'Concerned' or lower scores may indicate they need extra support or a call." },
+     { label: "Activity Level", value: derivedStats.activityLevel.value, icon: Zap, color: "#A1887F", trend: derivedStats.activityLevel.trend,
+       desc: "Gauges overall engagement through speech speed, enthusiasm, and frequency of interactions with Sathi. A high score means your parent is actively talking, recording memories, and staying engaged. Low activity may indicate isolation, fatigue, or disinterest — a good cue to reach out." },
   ];
+
+  const [expandedStat, setExpandedStat] = useState(null);
 
   const alerts = healthEvents.slice(0, 5).map(e => {
     const time = e.recorded_at ? new Date(e.recorded_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
@@ -823,8 +829,11 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               gridTemplateColumns: isMobile ? "1fr 1fr" : inPanel ? "1fr 1fr" : "repeat(4,1fr)",
               gap: 12, marginBottom: 16
             }}>
-              {stats.map((st, i) => (
-                <div key={i} className="gcard" style={{ padding: 16, animation: `fadeUp .5s ease ${.1 + i * .07}s both` }}>
+              {stats.map((st, i) => {
+                const isOpen = expandedStat === `d-${i}`;
+                return (
+                <div key={i} className="gcard" style={{ padding: 16, animation: `fadeUp .5s ease ${.1 + i * .07}s both`, cursor: "pointer", transition: "all .3s" }}
+                  onClick={() => setExpandedStat(isOpen ? null : `d-${i}`)}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
                     <div style={{
                       width: 36, height: 36, borderRadius: 10,
@@ -833,15 +842,29 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                     }}>
                       <st.icon size={16} color={st.color} />
                     </div>
-                    <span style={{
-                      fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 100,
-                      background: `${st.color}10`, color: st.color
-                    }}>{st.trend}</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                      <span style={{
+                        fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 100,
+                        background: `${st.color}10`, color: st.color
+                      }}>{st.trend}</span>
+                      <ChevronDown size={14} color="#6b6b6b" style={{ transition: "transform .3s", transform: isOpen ? "rotate(180deg)" : "rotate(0)" }} />
+                    </div>
                   </div>
                   <div style={{ fontSize: 20, fontWeight: 700, color: "#1a1a1a" }}>{st.value}</div>
                   <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>{st.label}</div>
+                  {isOpen && (
+                    <div style={{
+                      marginTop: 10, padding: "10px 12px",
+                      background: `${st.color}08`, borderRadius: 10,
+                      border: `1px solid ${st.color}18`,
+                      animation: "fadeUp .3s ease both"
+                    }}>
+                      <p style={{ fontSize: 11, color: "#555", lineHeight: 1.6 }}>{st.desc}</p>
+                    </div>
+                  )}
                 </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Cognitive + Weekly Trends */}
@@ -985,8 +1008,11 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               gridTemplateColumns: isMobile ? "1fr 1fr" : inPanel ? "1fr 1fr" : "repeat(4,1fr)",
               gap: 12, marginBottom: 16
             }}>
-              {stats.map((st, i) => (
-                <div key={i} className="gcard" style={{ padding: 16, animation: `fadeUp .5s ease ${.1 + i * .07}s both` }}>
+              {stats.map((st, i) => {
+                const isOpen = expandedStat === `m-${i}`;
+                return (
+                <div key={i} className="gcard" style={{ padding: 16, animation: `fadeUp .5s ease ${.1 + i * .07}s both`, cursor: "pointer", transition: "all .3s" }}
+                  onClick={() => setExpandedStat(isOpen ? null : `m-${i}`)}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
                     <div style={{
                       width: 36, height: 36, borderRadius: 10,
@@ -995,15 +1021,29 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                     }}>
                       <st.icon size={16} color={st.color} />
                     </div>
-                    <span style={{
-                      fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 100,
-                      background: `${st.color}10`, color: st.color
-                    }}>{st.trend}</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                      <span style={{
+                        fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 100,
+                        background: `${st.color}10`, color: st.color
+                      }}>{st.trend}</span>
+                      <ChevronDown size={14} color="#6b6b6b" style={{ transition: "transform .3s", transform: isOpen ? "rotate(180deg)" : "rotate(0)" }} />
+                    </div>
                   </div>
                   <div style={{ fontSize: 20, fontWeight: 700, color: "#1a1a1a" }}>{st.value}</div>
                   <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>{st.label}</div>
+                  {isOpen && (
+                    <div style={{
+                      marginTop: 10, padding: "10px 12px",
+                      background: `${st.color}08`, borderRadius: 10,
+                      border: `1px solid ${st.color}18`,
+                      animation: "fadeUp .3s ease both"
+                    }}>
+                      <p style={{ fontSize: 11, color: "#555", lineHeight: 1.6 }}>{st.desc}</p>
+                    </div>
+                  )}
                 </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Cognitive + Weekly Trends */}
