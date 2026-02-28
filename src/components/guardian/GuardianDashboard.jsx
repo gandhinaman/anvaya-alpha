@@ -486,7 +486,6 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
   // Alerts: only actionable/problematic events + new recordings — not routine metrics
   const buildAlerts = () => {
     const items = [];
-    const fmtTime = (d) => d ? new Date(d).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
     const fmtAgo = (d) => {
       if (!d) return "";
       const mins = Math.floor((Date.now() - new Date(d).getTime()) / 60000);
@@ -498,7 +497,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
 
     // Emergencies
     healthEvents.filter(e => e.event_type === "emergency").forEach(e => {
-      items.push({ text: "🚨 Emergency alert triggered", type: "warning", time: fmtAgo(e.recorded_at), priority: 0 });
+      items.push({ text: "🚨 Emergency alert triggered", type: "warning", category: "urgent", time: fmtAgo(e.recorded_at), priority: 0 });
     });
 
     // Low scores (problematic — below thresholds)
@@ -506,41 +505,42 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
       const score = e.value?.score;
       if (score == null) return;
       if (e.event_type === "vocal_energy" && score < 40) {
-        items.push({ text: `🎙️ Low vocal energy (${score}%) — may indicate fatigue`, type: "warning", time: fmtAgo(e.recorded_at), priority: 1 });
+        items.push({ text: `🎙️ Low vocal energy (${score}%) — may indicate fatigue`, type: "warning", category: "health", time: fmtAgo(e.recorded_at), priority: 1 });
       } else if ((e.event_type === "cognitive_vitality" || e.event_type === "cognitive_clarity") && score < 50) {
-        items.push({ text: `🧠 Cognitive score dropped to ${score}%`, type: "warning", time: fmtAgo(e.recorded_at), priority: 1 });
+        items.push({ text: `🧠 Cognitive score dropped to ${score}%`, type: "warning", category: "health", time: fmtAgo(e.recorded_at), priority: 1 });
       } else if (e.event_type === "emotional_state" && (e.value?.label === "Distressed" || score < 30)) {
-        items.push({ text: `💔 Emotional distress detected${e.value?.label ? ` — ${e.value.label}` : ""}`, type: "warning", time: fmtAgo(e.recorded_at), priority: 1 });
+        items.push({ text: `💔 Emotional distress detected${e.value?.label ? ` — ${e.value.label}` : ""}`, type: "warning", category: "health", time: fmtAgo(e.recorded_at), priority: 1 });
       } else if (e.event_type === "activity_level" && score < 30) {
-        items.push({ text: `⚡ Very low activity (${score}%) — possible isolation`, type: "warning", time: fmtAgo(e.recorded_at), priority: 1 });
+        items.push({ text: `⚡ Very low activity (${score}%) — possible isolation`, type: "warning", category: "health", time: fmtAgo(e.recorded_at), priority: 1 });
       }
-    });
-
-    // Medication events (actionable)
-    healthEvents.filter(e => e.event_type === "medication_taken").forEach(e => {
-      items.push({ text: `💊 Took ${e.value?.medication_name || "medication"}`, type: "success", time: fmtAgo(e.recorded_at), priority: 2 });
     });
 
     // Missed medications (not taken today)
     medications.filter(m => !m.taken_today && m.scheduled_time).forEach(m => {
-      items.push({ text: `⏰ ${m.name} not yet taken today (scheduled ${m.scheduled_time})`, type: "warning", time: "", priority: 1 });
+      items.push({ text: `⏰ ${m.name} not yet taken (scheduled ${m.scheduled_time})`, type: "warning", category: "medication", time: "", priority: 1 });
+    });
+
+    // Medication events (actionable)
+    healthEvents.filter(e => e.event_type === "medication_taken").forEach(e => {
+      items.push({ text: `💊 Took ${e.value?.medication_name || "medication"}`, type: "success", category: "medication", time: fmtAgo(e.recorded_at), priority: 2 });
     });
 
     // New memories (recordings)
-    realMemories.slice(0, 3).forEach(m => {
+    realMemories.slice(0, 5).forEach(m => {
       items.push({
         text: `🎤 New memory: "${m.title || "Untitled"}"${m.emotional_tone ? ` · ${m.emotional_tone}` : ""}`,
-        type: "info", time: fmtAgo(m.created_at), priority: 3
+        type: "info", category: "activity", time: fmtAgo(m.created_at), priority: 3
       });
     });
 
-    // Sort by priority (emergencies first), then recency
+    // Sort by priority (emergencies first)
     items.sort((a, b) => a.priority - b.priority);
-    return items.slice(0, 8);
+    return items;
   };
 
-  const alerts = buildAlerts();
-  if (alerts.length === 0) alerts.push({ text: "No alerts — everything looks good ✓", type: "success", time: "" });
+  const allAlerts = buildAlerts();
+  const alerts = allAlerts.slice(0, 8);
+  if (alerts.length === 0) alerts.push({ text: "No alerts — everything looks good ✓", type: "success", category: "info", time: "" });
 
   const fmtDate = (d) => {
     if (!d) return "—";
@@ -1019,37 +1019,56 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
         {/* ══ ALERTS VIEW ══ */}
         {nav === "alerts" && (
           <div className="s2">
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 20 }}>
               <h2 style={{ fontSize: 16, fontWeight: 700, color: "#1a1a1a" }}>Alerts & Events</h2>
-              <p style={{ fontSize: 12, color: "#6b6b6b", marginTop: 3 }}>Recent health events and notifications</p>
+              <p style={{ fontSize: 12, color: "#6b6b6b", marginTop: 3 }}>Grouped by priority — only actionable items shown</p>
             </div>
-            {healthEvents.length === 0 ? (
-              <div className="gcard" style={{ padding: 28, textAlign: "center" }}>
+            {allAlerts.length === 0 ? (
+              <div className="gcard" style={{ padding: 32, textAlign: "center" }}>
                 <Bell size={28} color="#9CA3AF" style={{ margin: "0 auto 10px" }} />
-                <p style={{ fontSize: 13, color: "#6b6b6b" }}>No alerts yet</p>
+                <p style={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a" }}>All clear</p>
+                <p style={{ fontSize: 12, color: "#6b6b6b", marginTop: 4 }}>No alerts or concerns right now</p>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {healthEvents.map((e, i) => (
-                  <div key={e.id || i} className="gcard" style={{ padding: "14px 16px", animation: `fadeUp .5s ease ${.1 + i * .06}s both` }}>
-                    <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                      <div style={{
-                        width: 8, height: 8, borderRadius: "50%", marginTop: 5, flexShrink: 0,
-                        background: e.event_type === "medication_taken" ? "#C68B59" : e.event_type === "emergency" ? "#DC2626" : "#8D6E63"
-                      }} />
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a" }}>
-                          {e.event_type === "medication_taken"
-                            ? `Medication taken: ${e.value?.medication_name || "Unknown"}`
-                            : e.event_type.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}
-                        </div>
-                        <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 3 }}>
-                          {e.recorded_at ? new Date(e.recorded_at).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : "—"}
-                        </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+                {[
+                  { key: "urgent", title: "🚨 Urgent", color: "#DC2626", bg: "rgba(220,38,38,0.04)", border: "rgba(220,38,38,0.12)" },
+                  { key: "health", title: "💛 Health Concerns", color: "#D97706", bg: "rgba(217,119,6,0.04)", border: "rgba(217,119,6,0.12)" },
+                  { key: "medication", title: "💊 Medications", color: "#8D6E63", bg: "rgba(141,110,99,0.04)", border: "rgba(141,110,99,0.12)" },
+                  { key: "activity", title: "🎤 Recent Activity", color: "#5D4037", bg: "rgba(93,64,55,0.04)", border: "rgba(93,64,55,0.12)" },
+                ].map(group => {
+                  const groupAlerts = allAlerts.filter(a => a.category === group.key);
+                  if (groupAlerts.length === 0) return null;
+                  return (
+                    <div key={group.key}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: group.color, marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
+                        {group.title}
+                        <span style={{ fontSize: 10, fontWeight: 500, color: "#9CA3AF" }}>({groupAlerts.length})</span>
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                        {groupAlerts.map((a, i) => (
+                          <div key={i} className="gcard" style={{
+                            padding: "12px 14px",
+                            background: group.bg,
+                            border: `1px solid ${group.border}`,
+                            animation: `fadeUp .4s ease ${.05 + i * .05}s both`
+                          }}>
+                            <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                              <div style={{
+                                width: 7, height: 7, borderRadius: "50%", marginTop: 5, flexShrink: 0,
+                                background: a.type === "warning" ? group.color : a.type === "success" ? "#22C55E" : "#A1887F"
+                              }} />
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <p style={{ fontSize: 12, color: "#3E2723", lineHeight: 1.5, fontWeight: 500, margin: 0 }}>{a.text}</p>
+                                {a.time && <span style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2, display: "block" }}>{a.time}</span>}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
