@@ -13,6 +13,7 @@ import ChildApp from "./pages/ChildApp";
 import RoleRedirect from "./pages/RoleRedirect";
 import InstallPage from "./pages/InstallPage";
 import NotFound from "./pages/NotFound";
+import TestFlight from "./pages/TestFlight";
 
 const queryClient = new QueryClient();
 
