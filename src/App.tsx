@@ -57,6 +57,7 @@ return (
           <Route path="/login" element={<Login />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/install" element={<InstallPage />} />
+          <Route path="/testflight" element={<TestFlight />} />
           <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
           <Route path="/" element={<ProtectedRoute><RoleRedirect /></ProtectedRoute>} />
           <Route path="/sathi" element={<ProtectedRoute><ParentApp /></ProtectedRoute>} />
