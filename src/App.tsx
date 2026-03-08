@@ -13,6 +13,7 @@ import ChildApp from "./pages/ChildApp";
 import RoleRedirect from "./pages/RoleRedirect";
 import InstallPage from "./pages/InstallPage";
 import NotFound from "./pages/NotFound";
+import TestFlight from "./pages/TestFlight";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +57,7 @@ return (
           <Route path="/login" element={<Login />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/install" element={<InstallPage />} />
+          <Route path="/testflight" element={<TestFlight />} />
           <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
           <Route path="/" element={<ProtectedRoute><RoleRedirect /></ProtectedRoute>} />
           <Route path="/sathi" element={<ProtectedRoute><ParentApp /></ProtectedRoute>} />
