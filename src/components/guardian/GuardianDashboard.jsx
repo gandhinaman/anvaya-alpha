@@ -2648,29 +2648,34 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                   const name = parentProfile?.full_name?.split(" ")[0] || "Amma";
                   const skinLabel = latest.skin_pallor?.label;
                   const eyeLabel = latest.eye_engagement?.label;
-                  // Show observation note if something is off
                   if (skinLabel === "Pale" || skinLabel === "Slightly pale") {
                     return (
-                      <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 14, background: "rgba(255,152,0,0.06)", border: "1px solid rgba(255,152,0,0.12)" }}>
+                      <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 14, background: "rgba(107,138,158,0.06)", border: "1px solid rgba(107,138,158,0.12)" }}>
                         <p style={{ fontSize: 12, color: "#6b6b6b", margin: 0, lineHeight: 1.5 }}>
-                          <span style={{ fontSize: 10, fontWeight: 600, color: "#FF9800", padding: "2px 8px", borderRadius: 100, background: "rgba(255,152,0,0.1)", marginRight: 6 }}>Observation</span>
-                          {name} appears slightly pale today compared to recent recordings. This may be normal variation.
+                          <span style={{ fontSize: 10, fontWeight: 600, color: "#6B8A9E", padding: "2px 8px", borderRadius: 100, background: "rgba(107,138,158,0.1)", marginRight: 6 }}>Observation</span>
+                          Color reflectance for {name} shows variation compared to recent recordings. This may be due to lighting or other factors.
                         </p>
                       </div>
                     );
                   }
                   if (eyeLabel === "Low engagement" || eyeLabel === "Unfocused") {
                     return (
-                      <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 14, background: "rgba(255,152,0,0.06)", border: "1px solid rgba(255,152,0,0.12)" }}>
+                      <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 14, background: "rgba(107,138,158,0.06)", border: "1px solid rgba(107,138,158,0.12)" }}>
                         <p style={{ fontSize: 12, color: "#6b6b6b", margin: 0, lineHeight: 1.5 }}>
-                          <span style={{ fontSize: 10, fontWeight: 600, color: "#FF9800", padding: "2px 8px", borderRadius: 100, background: "rgba(255,152,0,0.1)", marginRight: 6 }}>Observation</span>
-                          {name}'s eye engagement seems lower today — could be tiredness or lighting. Worth checking in.
+                          <span style={{ fontSize: 10, fontWeight: 600, color: "#6B8A9E", padding: "2px 8px", borderRadius: 100, background: "rgba(107,138,158,0.1)", marginRight: 6 }}>Observation</span>
+                          {name}'s gaze patterns show reduced engagement compared to recent interactions — could be due to tiredness, lighting, or other factors.
                         </p>
                       </div>
                     );
                   }
                   return null;
                 })()}
+                {/* Disclaimer */}
+                <div style={{ marginTop: 16, padding: "10px 14px", borderRadius: 12, background: "rgba(93,64,55,0.03)", border: "1px solid rgba(93,64,55,0.06)" }}>
+                  <p style={{ fontSize: 10, color: "#9CA3AF", margin: 0, lineHeight: 1.5, textAlign: "center" }}>
+                    ℹ️ Anvaya provides behavioral observations based on AI analysis of voice and video. These are not medical diagnoses. Please consult a professional for health concerns.
+                  </p>
+                </div>
               </div>
             </div>
 
