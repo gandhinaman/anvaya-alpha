@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
     for (const memory of missing) {
       try {
         // Use AI to infer visual analysis from existing metadata
-        const prompt = `Based on this elderly person's video memory recording metadata, generate a plausible visual analysis. 
+        const prompt = `Based on this parent's video memory recording metadata, generate a plausible visual analysis. 
 Title: "${memory.title}"
 Summary: "${memory.ai_summary || 'No summary'}"
 Emotional tone: "${memory.emotional_tone || 'unknown'}"

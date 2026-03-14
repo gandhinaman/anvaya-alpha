@@ -335,7 +335,7 @@ function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null
         comment: commentText.trim() || (mediaType === "audio" ? "🎤 Voice reply" : "🎥 Video reply"),
         media_url: mediaUrl,
         media_type: mediaType,
-        author_name: prof?.full_name || "Caregiver",
+        author_name: prof?.full_name || "Care Partner",
       }).select();
       if (error) {
         console.error("Comment insert failed:", error);
@@ -1040,7 +1040,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 20px 18px", borderBottom: "1px solid rgba(93,64,55,0.07)" }}>
         <div>
            <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 13, color: "#3E2723", letterSpacing: "0.3em", fontWeight: 600 }}>ANVAYA</div>
-           <div className="gtxt" style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 24, fontWeight: 600 }}>Caregiver</div>
+           <div className="gtxt" style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 24, fontWeight: 600 }}>Care Partner</div>
         </div>
         {mobile && <button onClick={() => setDrawer(false)} style={{ background: "transparent", border: "none", cursor: "pointer" }}><X size={18} color="#FFF8F0" /></button>}
       </div>
@@ -1128,11 +1128,11 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
             )}
             <div>
                <h1 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: isMobile ? 24 : 30, fontWeight: 700, color: "#3E2723", lineHeight: 1.2 }}>
-                 {nav === "settings" ? "Settings" : "Caregiver Dashboard"}
+                 {nav === "settings" ? "Settings" : `${parentProfile?.full_name?.split(" ")[0] || "Amma"}'s Dashboard`}
               </h1>
               <p style={{ color: "#6b6b6b", fontSize: 12, marginTop: 3 }}>
                 {nav === "settings" ? "Manage your account & preferences" : <>
-                  Monitoring {parentProfile?.full_name || "Amma"}'s wellbeing
+                  Staying connected with {parentProfile?.full_name || "Amma"}
                   <span style={{ color: "#9CA3AF", fontSize: 10, marginLeft: 8 }}>
                     Updated {lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                   </span>
@@ -1186,8 +1186,8 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
           <div style={{ display: "flex", flexDirection: "column", gap: 14, maxWidth: 500 }}>
             {/* My Profile */}
             <div className="gcard" style={{ padding: 20 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a", marginBottom: 4 }}>My Profile</div>
-              <div style={{ fontSize: 11, color: "#6b6b6b", marginBottom: 14 }}>Your contact details — visible to your linked parent</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a", marginBottom: 4 }}>My Partner Profile</div>
+              <div style={{ fontSize: 11, color: "#6b6b6b", marginBottom: 14 }}>Your contact details — visible to {parentProfile?.full_name?.split(" ")[0] || "your parent"}</div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 <div>
@@ -1268,8 +1268,8 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
 
             {/* Link Account */}
             <div className="gcard" style={{ padding: 20 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a", marginBottom: 4 }}>Link Parent Account</div>
-              <div style={{ fontSize: 11, color: "#6b6b6b", marginBottom: 12 }}>Enter the 6-digit code from your parent's Sathi screen</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a", marginBottom: 4 }}>Connect with Parent</div>
+              <div style={{ fontSize: 11, color: "#6b6b6b", marginBottom: 12 }}>Enter the 6-digit code from your parent's Ela screen</div>
               {parentProfile ? (
                  <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", background: "rgba(198,139,89,0.06)", borderRadius: 12, border: "1px solid rgba(198,139,89,0.15)" }}>
                    <Check size={18} color="#C68B59" />
@@ -1308,7 +1308,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a", marginBottom: 4 }}>Notification Preferences</div>
               <div style={{ fontSize: 11, color: "#6b6b6b", marginBottom: 12 }}>Choose which notifications you receive</div>
               {[
-                 { key: "emergency", label: "Emergency Alerts", desc: "Critical alerts when parent needs help", icon: <AlertTriangle size={16} color="#DC2626" /> },
+                 { key: "emergency", label: "Emergency Alerts", desc: "Critical alerts when your parent needs help", icon: <AlertTriangle size={16} color="#DC2626" /> },
                  { key: "medication", label: "Medication Updates", desc: "When medications are taken or missed", icon: <Pill size={16} color="#8D6E63" /> },
                  { key: "memories", label: "New Memories", desc: "When a new memory is recorded", icon: <Headphones size={16} color="#C68B59" /> },
               ].map(n => (
@@ -1335,7 +1335,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
             {/* Linked Parent Info */}
             {parentProfile && (
               <div className="gcard" style={{ padding: 20 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a", marginBottom: 12 }}>Linked Parent</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a", marginBottom: 12 }}>Connected with</div>
                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                    <div style={{ width: 44, height: 44, borderRadius: "50%", background: "linear-gradient(135deg,#5D4037,#C68B59)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                      <User size={20} color="#FFF8F0" />
@@ -1710,8 +1710,8 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                 {/* Header with create button */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
                   <div>
-                    <h2 style={{ fontSize: 16, fontWeight: 700, color: "#1a1a1a", margin: 0 }}>Memory Archive</h2>
-                    <p style={{ fontSize: 12, color: "#6b6b6b", marginTop: 3 }}>AI-summarized recordings with emotional context</p>
+                    <h2 style={{ fontSize: 16, fontWeight: 700, color: "#1a1a1a", margin: 0 }}>{parentProfile?.full_name?.split(" ")[0] || "Amma"}'s Stories</h2>
+                    <p style={{ fontSize: 12, color: "#6b6b6b", marginTop: 3 }}>Memories and moments shared with love</p>
                   </div>
                 </div>
 
@@ -1946,7 +1946,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
           <div className="s2">
             {/* Section header */}
             <div style={{ marginBottom: 18 }}>
-            <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 22, fontWeight: 700, color: "#3E2723", margin: 0 }}>Daily Observations</h2>
+            <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 22, fontWeight: 700, color: "#3E2723", margin: 0 }}>{parentProfile?.full_name?.split(" ")[0] || "Amma"}'s Daily Pulse</h2>
               <p style={{ fontSize: 12, color: "#8D6E63", marginTop: 4 }}>Behavioral indicators, visual patterns, trends & medication logs</p>
             </div>
 
@@ -2279,7 +2279,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
 
                 <div className="gcard" style={{ padding: 20 }}>
                   <div style={{ marginBottom: 14 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Memory Highlights</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>{parentProfile?.full_name?.split(" ")[0] || "Amma"}'s Stories</div>
                     <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>{realMemories.length} memories shared</div>
                   </div>
                   {realMemories.length === 0 ? (
@@ -2804,8 +2804,8 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
             <div className="s4" style={{ marginBottom: 22 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                 <div>
-                  <h3 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 20, fontWeight: 700, color: "#3E2723", margin: 0 }}>Recent Memories</h3>
-                  <p style={{ fontSize: 12, color: "#8D6E63", marginTop: 4 }}>Stories and moments shared by {parentProfile?.full_name?.split(" ")[0] || "Amma"}</p>
+                  <h3 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 20, fontWeight: 700, color: "#3E2723", margin: 0 }}>{parentProfile?.full_name?.split(" ")[0] || "Amma"}'s Recent Stories</h3>
+                  <p style={{ fontSize: 12, color: "#8D6E63", marginTop: 4 }}>Moments shared by {parentProfile?.full_name?.split(" ")[0] || "Amma"}</p>
                 </div>
                 {realMemories.length > 3 && (
                   <button onClick={() => setNav("memories")} style={{
@@ -3005,7 +3005,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                                       memory_id: m.memoryId,
                                       user_id: profileId,
                                       comment: text,
-                                      author_name: prof?.full_name || "Caregiver",
+                                    author_name: prof?.full_name || "Care Partner",
                                     });
                                   } catch (err) { console.error("Quick reply error:", err); }
                                 }
@@ -3033,7 +3033,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                                         comment: "🎤 Voice reply",
                                         media_url: urlData.publicUrl,
                                         media_type: "audio",
-                                        author_name: prof?.full_name || "Caregiver",
+                                       author_name: prof?.full_name || "Care Partner",
                                       });
                                     }
                                   };
@@ -3072,7 +3072,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                                         comment: "🎥 Video reply",
                                         media_url: urlData.publicUrl,
                                         media_type: "video",
-                                        author_name: prof?.full_name || "Caregiver",
+                                        author_name: prof?.full_name || "Care Partner",
                                       });
                                     }
                                   };

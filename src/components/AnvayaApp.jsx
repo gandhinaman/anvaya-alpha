@@ -1126,7 +1126,12 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
 
       <div style={{textAlign:"center",marginTop:16}}>
         <div style={{fontFamily:"'Playfair Display',serif",fontSize:14,color:"rgba(255,248,240,.45)",letterSpacing:"0.3em",fontWeight:400}}>ANVAYA</div>
-        <div style={{fontFamily:"'Playfair Display',serif",fontSize:isMock?40:48,color:"#FFF8F0",fontWeight:600,letterSpacing:"0.05em",marginTop:2}}>
+        {voicePhase==="idle" && fullName && (
+          <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:isMock?20:24,color:"rgba(255,248,240,.7)",fontWeight:400,marginTop:8,letterSpacing:"0.02em"}}>
+            {lang==="en"?`Namaste ${fullName.split(" ")[0]}, how are you feeling today?`:`नमस्ते ${fullName.split(" ")[0]} जी, आज आप कैसा महसूस कर रहे हैं?`}
+          </div>
+        )}
+        <div style={{fontFamily:"'Playfair Display',serif",fontSize:isMock?40:48,color:"#FFF8F0",fontWeight:600,letterSpacing:"0.05em",marginTop:voicePhase==="idle"&&fullName?4:2}}>
           {lang==="en"?"Ela":"एला"}
         </div>
         {voicePhase==="idle"&&<div style={{fontSize:16,color:"rgba(255,248,240,.55)",marginTop:5}}>
@@ -1634,7 +1639,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
             {linkCode && (
               <div style={{padding:"16px",background:"rgba(255,248,240,.06)",borderRadius:16,border:"1px solid rgba(255,248,240,.1)"}}>
                 <div style={{fontSize:13,color:"rgba(255,248,240,.5)",fontWeight:600,marginBottom:8}}>
-                  {lang==="en"?"Caregiver Linking Code":"केयरगिवर लिंकिंग कोड"}
+                  {lang==="en"?"Care Partner Linking Code":"केयर पार्टनर लिंकिंग कोड"}
                 </div>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                   <div style={{fontSize:28,fontWeight:700,color:"#D4A574",letterSpacing:"0.2em"}}>{linkCode}</div>
