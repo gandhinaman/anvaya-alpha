@@ -1950,6 +1950,27 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               <p style={{ fontSize: 12, color: "#8D6E63", marginTop: 4 }}>Behavioral indicators, visual patterns, trends & medication logs</p>
             </div>
 
+            {/* Legal notice box */}
+            <div style={{
+              display: "flex", alignItems: "flex-start", gap: 10,
+              padding: isMobile ? "12px 14px" : "14px 18px",
+              borderRadius: 14, marginBottom: 20,
+              background: "rgba(107,138,158,0.06)",
+              border: "1px solid rgba(107,138,158,0.12)",
+            }}>
+              <Info size={16} color="#6B8A9E" style={{ flexShrink: 0, marginTop: 1 }} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: 11, color: "#5B7FA5", margin: 0, lineHeight: 1.6 }}>
+                  Anvaya is a companionship and wellness observation tool. This application does not provide medical advice, diagnoses, or treatment. Insights are based on automated analysis of visual and audio patterns and should not be used as a substitute for professional medical monitoring or clinical judgment. Anvaya is not a regulated medical device.
+                </p>
+                <button onClick={() => setShowDisclaimerModal(true)} style={{
+                  background: "none", border: "none", cursor: "pointer", padding: 0, marginTop: 6,
+                  fontSize: 11, fontWeight: 600, color: "#5B7FA5", textDecoration: "underline",
+                  textUnderlineOffset: 2
+                }}>Learn More</button>
+              </div>
+            </div>
+
             {/* ── 1. Voice Metrics ── */}
             <div style={{ marginBottom: 20 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
