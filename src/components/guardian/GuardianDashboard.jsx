@@ -587,9 +587,13 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
   const [nav, setNav] = useState("home");
   const [drawer, setDrawer] = useState(false);
 
+  const mainContentRef = useRef(null);
+
   // Mark memories as viewed when switching to memories tab
   const setNavWithMark = (id) => {
     setNav(id);
+    // Scroll main content to top
+    if (mainContentRef.current) mainContentRef.current.scrollTop = 0;
     if (id === "memories") {
       // delay slightly so data renders first
       setTimeout(() => markMemoriesViewed(), 300);
@@ -1111,7 +1115,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
       )}
 
       {/* Main content */}
-      <div className="scr" style={{ flex: 1, overflowY: "auto", padding: isMobile ? "14px 14px 80px" : "20px 24px" }}>
+      <div ref={mainContentRef} className="scr" style={{ flex: 1, overflowY: "auto", padding: isMobile ? "14px 14px 80px" : "20px 24px" }}>
 
         {/* Header */}
         <div className="s1" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, flexWrap: "wrap", gap: 10 }}>
