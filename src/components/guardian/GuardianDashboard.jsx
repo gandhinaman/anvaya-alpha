@@ -1951,7 +1951,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                 <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(198,139,89,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <Mic size={14} color="#C68B59" />
                 </div>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#3E2723" }}>Voice Metrics</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#3E2723" }}>Daily Indicators</span>
               </div>
               <div style={{
                 display: "grid",
