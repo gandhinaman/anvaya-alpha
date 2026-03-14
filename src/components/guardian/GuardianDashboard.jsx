@@ -708,6 +708,17 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
   const [memoryFilter, setMemoryFilter] = useState("all");
   const [deletingMemId, setDeletingMemId] = useState(null);
 
+  // Reaction recorder state
+  const [reactionOpen, setReactionOpen] = useState(false);
+  const [reactionMemoryId, setReactionMemoryId] = useState(null);
+  const [reactionMemoryTitle, setReactionMemoryTitle] = useState("");
+
+  const handleOpenReaction = (memId, memTitle) => {
+    setReactionMemoryId(memId);
+    setReactionMemoryTitle(memTitle || "A shared memory");
+    setReactionOpen(true);
+  };
+
   // Caregiver questions state
   const [questions, setQuestions] = useState([]);
   const [newQuestion, setNewQuestion] = useState("");
