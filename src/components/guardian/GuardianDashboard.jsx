@@ -448,7 +448,7 @@ function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null
           </div>
           {visualAnalysis.environment_notes && <p style={{ fontSize: 11, color: "#6b6b6b", margin: "4px 0", lineHeight: 1.4 }}>🏠 {visualAnalysis.environment_notes}</p>}
           {visualAnalysis.posture_mobility && <p style={{ fontSize: 11, color: "#6b6b6b", margin: "4px 0", lineHeight: 1.4 }}>🧍 {visualAnalysis.posture_mobility}</p>}
-          {visualAnalysis.concerns && <p style={{ fontSize: 11, color: "#DC2626", margin: "4px 0", lineHeight: 1.4, fontWeight: 600 }}>⚠️ {visualAnalysis.concerns}</p>}
+          {visualAnalysis.concerns && <p style={{ fontSize: 11, color: "#5B7FA5", margin: "4px 0", lineHeight: 1.4, fontWeight: 600 }}>📋 {visualAnalysis.concerns}</p>}
         </div>
       )}
 
