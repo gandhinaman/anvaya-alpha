@@ -906,6 +906,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
   const [showDeepDive, setShowDeepDive] = useState(false);
   const [compareIdx, setCompareIdx] = useState(null);
   const [activeVideoUrl, setActiveVideoUrl] = useState(null);
+  const [showDisclaimerModal, setShowDisclaimerModal] = useState(false);
 
   // Alerts: only actionable/problematic events + new recordings — not routine metrics
   const buildAlerts = () => {
