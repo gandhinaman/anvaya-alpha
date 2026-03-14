@@ -105,7 +105,7 @@ function capitalize(s: string) {
 export function useParentData(profileId: string | null) {
   const [parentProfile, setParentProfile] = useState<ParentProfile | null>(null);
   const [memories, setMemories] = useState<Memory[]>([]);
-  const [medications, setMedications] = useState<Medication[]>([]);
+  
   const [healthEvents, setHealthEvents] = useState<HealthEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
