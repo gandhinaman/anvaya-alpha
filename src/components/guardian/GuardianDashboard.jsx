@@ -604,7 +604,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
   const [callOpen, setCallOpen] = useState(false);
   const [parentOnline, setParentOnline] = useState(false);
 
-  const { parentProfile, memories: realMemories, medications, healthEvents, stats: derivedStats, loading: dataLoading, lastUpdated, toggleMedication, memoryComments, memoryReactions, unreadCount, unreadHearts, unreadComments, markMemoriesViewed } = useParentData(profileId);
+  const { parentProfile, memories: realMemories, healthEvents, stats: derivedStats, loading: dataLoading, lastUpdated, memoryComments, memoryReactions, unreadCount, unreadHearts, unreadComments, markMemoriesViewed } = useParentData(profileId);
 
   // Request notification permission
   useEffect(() => {
