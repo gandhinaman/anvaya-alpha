@@ -725,6 +725,86 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
   const [showCitySuggestions, setShowCitySuggestions] = useState(false);
   const cityRef = useRef(null);
 
+  // Memory collections / curation state
+  const [collections, setCollections] = useState([]);
+  const [collectionItems, setCollectionItems] = useState({}); // { collectionId: [memoryId, ...] }
+  const [activeCollection, setActiveCollection] = useState(null); // viewing a specific collection
+  const [showCreateCollection, setShowCreateCollection] = useState(false);
+  const [newCollectionTitle, setNewCollectionTitle] = useState("");
+  const [newCollectionDesc, setNewCollectionDesc] = useState("");
+  const [newCollectionEmoji, setNewCollectionEmoji] = useState("📚");
+  const [collectionCreating, setCollectionCreating] = useState(false);
+  const [addingToCollection, setAddingToCollection] = useState(null); // memoryId being added
+
+  // Fetch collections
+  useEffect(() => {
+    if (!profileId) return;
+    const fetchCollections = async () => {
+      const { data: cols } = await supabase.from("memory_collections")
+        .select("*")
+        .eq("user_id", profileId)
+        .order("created_at", { ascending: false });
+      if (cols) {
+        setCollections(cols);
+        // Fetch all items for these collections
+        if (cols.length > 0) {
+          const colIds = cols.map(c => c.id);
+          const { data: items } = await supabase.from("memory_collection_items")
+            .select("*")
+            .in("collection_id", colIds);
+          const grouped = {};
+          (items || []).forEach(item => {
+            if (!grouped[item.collection_id]) grouped[item.collection_id] = [];
+            grouped[item.collection_id].push(item.memory_id);
+          });
+          setCollectionItems(grouped);
+        }
+      }
+    };
+    fetchCollections();
+  }, [profileId]);
+
+  const createCollection = async () => {
+    if (!newCollectionTitle.trim() || !profileId) return;
+    setCollectionCreating(true);
+    try {
+      const { data, error } = await supabase.from("memory_collections").insert({
+        user_id: profileId,
+        title: newCollectionTitle.trim(),
+        description: newCollectionDesc.trim() || null,
+        emoji: newCollectionEmoji,
+      }).select().single();
+      if (data) {
+        setCollections(prev => [data, ...prev]);
+        setNewCollectionTitle("");
+        setNewCollectionDesc("");
+        setNewCollectionEmoji("📚");
+        setShowCreateCollection(false);
+      }
+    } catch (err) { console.error("Create collection error:", err); }
+    finally { setCollectionCreating(false); }
+  };
+
+  const deleteCollection = async (colId) => {
+    if (!window.confirm("Delete this collection? Memories won't be deleted.")) return;
+    await supabase.from("memory_collections").delete().eq("id", colId);
+    setCollections(prev => prev.filter(c => c.id !== colId));
+    setCollectionItems(prev => { const n = { ...prev }; delete n[colId]; return n; });
+    if (activeCollection === colId) setActiveCollection(null);
+  };
+
+  const toggleMemoryInCollection = async (colId, memId) => {
+    const items = collectionItems[colId] || [];
+    if (items.includes(memId)) {
+      await supabase.from("memory_collection_items").delete().eq("collection_id", colId).eq("memory_id", memId);
+      setCollectionItems(prev => ({ ...prev, [colId]: (prev[colId] || []).filter(id => id !== memId) }));
+    } else {
+      await supabase.from("memory_collection_items").insert({ collection_id: colId, memory_id: memId });
+      setCollectionItems(prev => ({ ...prev, [colId]: [...(prev[colId] || []), memId] }));
+    }
+    setAddingToCollection(null);
+  };
+
   useEffect(() => {
     if (!profileId) return;
     supabase.from("profiles").select("full_name, phone, location").eq("id", profileId).maybeSingle()
