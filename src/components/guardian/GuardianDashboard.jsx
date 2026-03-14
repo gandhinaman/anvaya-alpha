@@ -313,7 +313,7 @@ function WeeklyTrendChart({ healthEvents = [] }) {
 }
 
 // ─── MEMORY CARD ──────────────────────────────────────────────────────────────
-function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null, emotionalTone = null, promptQuestion = null, onDelete = null, deleting = false, comments = [], memoryId = null, profileId = null, visualAnalysis = null, reactions = [], onToggleHeart = null }) {
+function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null, emotionalTone = null, promptQuestion = null, onDelete = null, deleting = false, comments = [], memoryId = null, profileId = null, visualAnalysis = null, reactions = [], onToggleHeart = null, onReact = null }) {
   const toneColors = { joyful: "#C68B59", nostalgic: "#8D6E63", peaceful: "#5D4037", concerned: "#6B8A9E" };
   const tone = emotionalTone || "positive";
   const toneColor = toneColors[tone.toLowerCase()] || "#C68B59";
