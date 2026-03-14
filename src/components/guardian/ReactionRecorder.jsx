@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { X, Mic, Video, Play, Pause, RotateCcw, Send, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { buildMediaRecorder } from "@/lib/mediaRecorder";
 
 // ─── WAVEFORM VISUALIZER ──────────────────────────────────────────────────────
 function LiveWaveform({ analyserRef }) {
