@@ -1686,7 +1686,7 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
   const [linkLoading, setLinkLoading] = useState(false);
   const [linkError, setLinkError] = useState("");
   const [linkSuccess, setLinkSuccess] = useState("");
-  const [notifPref, setNotifPref] = useState({emergency:true,medication:true,memories:true});
+  const [notifPref, setNotifPref] = useState({emergency:true,memories:true,connection:true});
   const [signingOut, setSigningOut] = useState(false);
 
   const handleLinkAccount = async () => {
