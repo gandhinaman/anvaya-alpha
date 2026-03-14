@@ -130,7 +130,7 @@ function MedActionButtons({ userId, lang }) {
       borderRadius: 14, border: "1px solid rgba(255,248,240,.08)"
     }}>
       <div style={{ fontSize: 11, color: "rgba(255,248,240,.4)", fontWeight: 600, marginBottom: 2 }}>
-        <Pill size={12} style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }} />
+        <BookOpen size={12} style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }} />
         {lang === "en" ? "Quick actions:" : "त्वरित कार्रवाई:"}
       </div>
       {meds.map(med => (
