@@ -11,6 +11,7 @@ interface Profile {
   age: number | null;
   health_issues: string[] | null;
   onboarding_completed: boolean | null;
+  has_accepted_terms: boolean | null;
 }
 
 export function useProfile() {
