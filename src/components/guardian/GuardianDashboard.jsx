@@ -335,7 +335,7 @@ function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null
         comment: commentText.trim() || (mediaType === "audio" ? "🎤 Voice reply" : "🎥 Video reply"),
         media_url: mediaUrl,
         media_type: mediaType,
-        author_name: prof?.full_name || "Caregiver",
+        author_name: prof?.full_name || "Care Partner",
       }).select();
       if (error) {
         console.error("Comment insert failed:", error);
