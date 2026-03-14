@@ -920,18 +920,18 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
       items.push({ text: "🚨 Emergency alert triggered", type: "warning", category: "urgent", time: fmtAgo(e.recorded_at), priority: 0 });
     });
 
-    // Low scores (problematic — below thresholds)
+    // Significant deviations from typical patterns
     healthEvents.forEach(e => {
       const score = e.value?.score;
       if (score == null) return;
       if (e.event_type === "vocal_energy" && score < 40) {
-        items.push({ text: `🎙️ Low vocal energy (${score}%) — may indicate fatigue`, type: "warning", category: "health", time: fmtAgo(e.recorded_at), priority: 1 });
+        items.push({ text: `🎙️ Reduced acoustic volume observed (${score}%)`, type: "warning", category: "anomaly", time: fmtAgo(e.recorded_at), priority: 1 });
       } else if ((e.event_type === "cognitive_vitality" || e.event_type === "cognitive_clarity") && score < 50) {
-        items.push({ text: `🧠 Cognitive score dropped to ${score}%`, type: "warning", category: "health", time: fmtAgo(e.recorded_at), priority: 1 });
+        items.push({ text: `🧠 Communication clarity below typical range (${score}%)`, type: "warning", category: "anomaly", time: fmtAgo(e.recorded_at), priority: 1 });
       } else if (e.event_type === "emotional_state" && (e.value?.label === "Distressed" || score < 30)) {
-        items.push({ text: `💔 Emotional distress detected${e.value?.label ? ` — ${e.value.label}` : ""}`, type: "warning", category: "health", time: fmtAgo(e.recorded_at), priority: 1 });
+        items.push({ text: `💙 Subdued sentiment observed${e.value?.label ? ` — ${e.value.label}` : ""}`, type: "warning", category: "anomaly", time: fmtAgo(e.recorded_at), priority: 1 });
       } else if (e.event_type === "activity_level" && score < 30) {
-        items.push({ text: `⚡ Very low activity (${score}%) — possible isolation`, type: "warning", category: "health", time: fmtAgo(e.recorded_at), priority: 1 });
+        items.push({ text: `⚡ Reduced interaction engagement observed (${score}%)`, type: "warning", category: "anomaly", time: fmtAgo(e.recorded_at), priority: 1 });
       }
     });
 
