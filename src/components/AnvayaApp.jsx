@@ -1114,93 +1114,26 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
         </div>
       )}
 
-      {/* ─── MEDICATION TRACKER WIDGET ─── */}
-      {profileMeds.length > 0 && (
+      {/* ─── MEMORY OF THE DAY ─── */}
+      {memoryOfDay && voicePhase === "idle" && (
         <div style={{margin:"0 16px 4px",padding:"14px 16px",background:"rgba(255,248,240,.06)",
           border:"1.5px solid rgba(255,248,240,.1)",borderRadius:20,animation:"fadeUp .6s ease .15s both"}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
-            <div style={{display:"flex",alignItems:"center",gap:8}}>
-              <Pill size={18} color="#C68B59"/>
-              <span style={{color:"#FFF8F0",fontSize:16,fontWeight:600}}>
-                {lang==="en"?"Today's Medicines":"आज की दवाइयाँ"}
-              </span>
-            </div>
-            {medStreak > 0 && (
-              <div style={{display:"flex",alignItems:"center",gap:5,padding:"5px 12px",
-                background:"linear-gradient(135deg,rgba(255,152,0,.2),rgba(255,87,34,.15))",
-                borderRadius:100,border:"1px solid rgba(255,152,0,.25)"}}>
-                <Flame size={14} color="#FF9800"/>
-                <span style={{color:"#FF9800",fontSize:13,fontWeight:700}}>{medStreak}</span>
-                <span style={{color:"rgba(255,152,0,.7)",fontSize:11,fontWeight:500}}>
-                  {lang==="en"?"day streak":"दिन"}
-                </span>
-              </div>
-            )}
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+            <Sparkles size={18} color="#C68B59"/>
+            <span style={{color:"#FFF8F0",fontSize:16,fontWeight:600}}>
+              {lang==="en"?"Memory of the Day":"आज की याद"}
+            </span>
           </div>
-
-          {/* Progress bar */}
-          {(() => {
-            const taken = profileMeds.filter(m => m.taken_today).length;
-            const total = profileMeds.length;
-            const pct = Math.round((taken / total) * 100);
-            return (
-              <div style={{marginBottom:10}}>
-                <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                  <span style={{fontSize:12,color:"rgba(255,248,240,.45)"}}>
-                    {taken}/{total} {lang==="en"?"taken":"ली"}
-                  </span>
-                  <span style={{fontSize:12,color:pct===100?"#66BB6A":"rgba(255,248,240,.45)",fontWeight:600}}>
-                    {pct===100?(lang==="en"?"🎉 All done!":"🎉 सब हो गया!"):`${pct}%`}
-                  </span>
-                </div>
-                <div style={{height:6,borderRadius:100,background:"rgba(255,248,240,.08)",overflow:"hidden"}}>
-                  <div style={{height:"100%",borderRadius:100,transition:"width .5s ease",
-                    width:`${pct}%`,
-                    background:pct===100?"linear-gradient(90deg,#66BB6A,#43A047)":"linear-gradient(90deg,#C68B59,#D4A574)"
-                  }}/>
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* Medication items */}
-          <div style={{display:"flex",flexDirection:"column",gap:6}}>
-            {profileMeds.map(med => (
-              <button key={med.id} onClick={() => toggleMedTaken(med)} style={{
-                display:"flex",alignItems:"center",gap:10,padding:"10px 12px",
-                background:med.taken_today?"rgba(102,187,106,.1)":"rgba(255,248,240,.04)",
-                border:`1.5px solid ${med.taken_today?"rgba(102,187,106,.25)":"rgba(255,248,240,.08)"}`,
-                borderRadius:14,cursor:"pointer",width:"100%",textAlign:"left",
-                transition:"all .3s"
-              }}>
-                <div style={{
-                  width:28,height:28,borderRadius:8,flexShrink:0,
-                  background:med.taken_today?"rgba(102,187,106,.2)":"rgba(255,248,240,.08)",
-                  border:`1.5px solid ${med.taken_today?"#66BB6A":"rgba(255,248,240,.15)"}`,
-                  display:"flex",alignItems:"center",justifyContent:"center",
-                  transition:"all .3s"
-                }}>
-                  {med.taken_today && <Check size={16} color="#66BB6A" strokeWidth={3}/>}
-                </div>
-                <div style={{flex:1,minWidth:0}}>
-                  <div style={{
-                    color:med.taken_today?"rgba(255,248,240,.5)":"#FFF8F0",
-                    fontSize:15,fontWeight:600,
-                    textDecoration:med.taken_today?"line-through":"none",
-                    transition:"all .3s"
-                  }}>{med.name}</div>
-                  {(med.dose || med.scheduled_time || (med.frequency && med.frequency !== "daily")) && (
-                    <div style={{fontSize:12,color:"rgba(255,248,240,.35)",marginTop:1}}>
-                      {med.dose||""}{med.scheduled_time?` · ${med.scheduled_time}`:""}{med.frequency && med.frequency !== "daily" ? ` · ${med.frequency}` : ""}
-                    </div>
-                  )}
-                </div>
-                <span style={{fontSize:11,color:med.taken_today?"#66BB6A":"rgba(255,248,240,.3)",fontWeight:600}}>
-                  {med.taken_today?(lang==="en"?"✓ Taken":"✓ ली"):(lang==="en"?"Tap to take":"टैप करें")}
-                </span>
-              </button>
-            ))}
-          </div>
+          <p style={{color:"rgba(255,248,240,.7)",fontSize:14,lineHeight:1.6,margin:0}}>
+            {lang==="hi" ? memoryOfDay.hi : memoryOfDay.en}
+          </p>
+          <button onClick={()=>setMemoryOpen(true)} style={{
+            marginTop:10,padding:"10px 18px",borderRadius:14,border:"none",cursor:"pointer",
+            background:"linear-gradient(135deg,#C68B59,#8D6E63)",color:"#FFF8F0",fontSize:14,fontWeight:600,
+            boxShadow:"0 4px 14px rgba(198,139,89,.35)"
+          }}>
+            {lang==="en"?"Record this story":"यह कहानी रिकॉर्ड करें"}
+          </button>
         </div>
       )}
 
