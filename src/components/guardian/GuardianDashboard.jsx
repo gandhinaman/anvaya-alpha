@@ -2178,9 +2178,9 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                         </div>
                         {/* Video thumbnail */}
                         {m.audioUrl?.includes("/video_") && (
-                          <div style={{
+                          <div onClick={(e) => { e.stopPropagation(); setActiveVideoUrl(m.audioUrl); }} style={{
                             width: 72, height: 72, borderRadius: 14, overflow: "hidden",
-                            flexShrink: 0, position: "relative",
+                            flexShrink: 0, position: "relative", cursor: "pointer",
                             background: "#1a1a1a", border: "1px solid rgba(93,64,55,0.12)"
                           }}>
                             <video
