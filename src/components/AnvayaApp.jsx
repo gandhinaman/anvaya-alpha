@@ -2395,7 +2395,7 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
                   <Headphones size={28} color="#FFF8F0" style={{margin:"0 auto 10px"}}/>
                   <p style={{fontSize:13,color:"#6b6b6b",lineHeight:1.6}}>
                     No memories recorded yet.<br/>
-                    <span style={{color:"#9CA3AF",fontSize:12}}>Tap "Record a Memory" on the Ava app to begin.</span>
+                    <span style={{color:"#9CA3AF",fontSize:12}}>Tap "Record a Memory" on the Ela app to begin.</span>
                   </p>
                 </div>
               ) : (
