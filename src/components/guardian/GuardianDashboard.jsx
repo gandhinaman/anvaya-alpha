@@ -2332,6 +2332,45 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                             >
                               <Mic size={17} color="#FFF8F0" />
                             </button>
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                                  const recorder = new MediaRecorder(stream);
+                                  const chunks = [];
+                                  recorder.ondataavailable = e => chunks.push(e.data);
+                                  recorder.onstop = async () => {
+                                    stream.getTracks().forEach(t => t.stop());
+                                    const blob = new Blob(chunks, { type: "video/webm" });
+                                    const path = `comment_video_${Date.now()}.webm`;
+                                    const { data } = await supabase.storage.from("memories").upload(path, blob);
+                                    if (data) {
+                                      const { data: urlData } = supabase.storage.from("memories").getPublicUrl(data.path);
+                                      const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", profileId).maybeSingle();
+                                      await supabase.from("memory_comments").insert({
+                                        memory_id: m.memoryId,
+                                        user_id: profileId,
+                                        comment: "🎥 Video reply",
+                                        media_url: urlData.publicUrl,
+                                        media_type: "video",
+                                        author_name: prof?.full_name || "Caregiver",
+                                      });
+                                    }
+                                  };
+                                  recorder.start();
+                                  setTimeout(() => recorder.stop(), 15000); // max 15s
+                                } catch (err) { console.error("Video note error:", err); }
+                              }}
+                              style={{
+                                width: 44, height: 44, borderRadius: 14, border: "none", cursor: "pointer",
+                                background: "linear-gradient(135deg, #5D4037, #8D6E63)",
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                flexShrink: 0, boxShadow: "0 2px 8px rgba(93,64,55,0.3)"
+                              }}
+                              title="Send video reply"
+                            >
+                              <Video size={17} color="#FFF8F0" />
+                            </button>
                           </div>
                         </div>
                       )}
