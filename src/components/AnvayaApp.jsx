@@ -2100,45 +2100,40 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
               </div>
             </div>
 
-            {/* Medication Tracker */}
+            {/* Connection Pulse — replaced medication tracker */}
             <div className="gcard s6" style={{padding:20,marginBottom:14}}>
               <div style={{marginBottom:14}}>
-                <div style={{fontSize:13,fontWeight:700,color:"#1a1a1a"}}>Medication Tracker</div>
-                <div style={{fontSize:11,color:"#6b6b6b",marginTop:2}}>Today's medications</div>
+                <div style={{fontSize:13,fontWeight:700,color:"#1a1a1a"}}>Connection Pulse</div>
+                <div style={{fontSize:11,color:"#6b6b6b",marginTop:2}}>How {parentProfile?.full_name?.split(" ")[0] || "Amma"} is staying connected</div>
               </div>
-              {medications.length === 0 ? (
-                <p style={{fontSize:12,color:"#9CA3AF",fontStyle:"italic"}}>No medications configured</p>
-              ) : (
-                <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                  {medications.map(med => (
-                    <div key={med.id} style={{
-                      display:"flex",alignItems:"center",gap:10,padding:"10px 12px",
-                      background:med.taken_today?"rgba(5,150,105,0.06)":"rgba(255,255,255,0.6)",
-                      borderRadius:12,border:`1px solid ${med.taken_today?"rgba(5,150,105,0.15)":"rgba(6,78,59,0.08)"}`,
-                      cursor:"pointer",transition:"all .2s"
-                    }} onClick={() => toggleMedication(med.id, !med.taken_today)}>
-                      <div style={{
-                        width:22,height:22,borderRadius:6,flexShrink:0,
-                        border:med.taken_today?"none":"2px solid rgba(6,78,59,0.25)",
-                        background:med.taken_today?"#059669":"transparent",
-                        display:"flex",alignItems:"center",justifyContent:"center"
-                      }}>
-                        {med.taken_today && <Check size={13} color="#FFF8F0"/>}
-                      </div>
-                      <div style={{flex:1,minWidth:0}}>
-                        <div style={{fontSize:12,fontWeight:600,color:med.taken_today?"#059669":"#1a1a1a",
-                          textDecoration:med.taken_today?"line-through":"none"}}>{med.name}</div>
-                        <div style={{fontSize:10,color:"#9CA3AF"}}>{med.dose||""}{med.scheduled_time?` · ${med.scheduled_time}`:""}</div>
-                      </div>
-                      {med.taken_today && med.last_taken && (
-                        <span style={{fontSize:9,color:"#059669",fontWeight:500}}>
-                          {new Date(med.last_taken).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}
-                        </span>
-                      )}
-                    </div>
-                  ))}
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                <div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:"rgba(5,150,105,0.06)",borderRadius:12,border:"1px solid rgba(5,150,105,0.15)"}}>
+                  <span style={{fontSize:18}}>📖</span>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:12,fontWeight:600,color:"#064E3B"}}>{realMemories.length} Stories Shared</div>
+                    <div style={{fontSize:10,color:"#9CA3AF"}}>Total memories recorded</div>
+                  </div>
                 </div>
-              )}
+                <div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:"rgba(179,69,9,0.06)",borderRadius:12,border:"1px solid rgba(179,69,9,0.15)"}}>
+                  <span style={{fontSize:18}}>🎙️</span>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:12,fontWeight:600,color:"#B45309"}}>{(() => {
+                      const totalMin = Math.round(realMemories.reduce((s,m) => s + (m.duration_seconds || 0), 0) / 60);
+                      return `${totalMin} Minutes of Legacy`;
+                    })()}</div>
+                    <div style={{fontSize:10,color:"#9CA3AF"}}>Family history recorded this month</div>
+                  </div>
+                </div>
+                {realMemories.length > 0 && realMemories[0]?.emotional_tone && (
+                  <div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:"rgba(6,78,59,0.06)",borderRadius:12,border:"1px solid rgba(6,78,59,0.15)"}}>
+                    <span style={{fontSize:18}}>💛</span>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:12,fontWeight:600,color:"#064E3B"}}>{parentProfile?.full_name?.split(" ")[0] || "Amma"} is feeling {realMemories[0].emotional_tone}</div>
+                      <div style={{fontSize:10,color:"#9CA3AF"}}>Based on most recent story</div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Memory Archive */}
