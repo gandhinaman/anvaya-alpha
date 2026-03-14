@@ -244,6 +244,11 @@ export function useParentData(profileId: string | null) {
 
   const stats = deriveStats(healthEvents, memories);
 
+  // Compute parent's recording streak from loaded memories
+  const parentStreak = useMemo(() => {
+    const dates = memories.map(m => m.created_at).filter(Boolean) as string[];
+    return computeStreak(dates);
+  }, [memories]);
 
   // Fetch memory comments for all loaded memories
   const [memoryComments, setMemoryComments] = useState<Record<string, any[]>>({});
