@@ -1614,7 +1614,7 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
   const [callOpen, setCallOpen] = useState(false);
 
   // Real data hook
-  const { parentProfile, memories: realMemories, medications, healthEvents, stats: derivedStats, loading: dataLoading, lastUpdated, toggleMedication } = useParentData(profileId);
+  const { parentProfile, memories: realMemories, healthEvents, stats: derivedStats, loading: dataLoading, lastUpdated } = useParentData(profileId);
 
   // Request notification permission on mount
   useEffect(() => {
