@@ -2537,8 +2537,8 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                     <ShieldCheck size={20} color="#FFF8F0" />
                   </div>
                   <div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: "#3E2723" }}>Health Highlights</div>
-                    <div style={{ fontSize: 11, color: "#8D6E63" }}>At a glance — no numbers needed</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: "#3E2723" }}>Daily Indicators</div>
+                    <div style={{ fontSize: 11, color: "#8D6E63" }}>Trends at a glance</div>
                   </div>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
