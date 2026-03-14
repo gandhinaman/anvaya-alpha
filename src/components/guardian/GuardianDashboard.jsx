@@ -2085,8 +2085,8 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                         background: "rgba(229,57,53,0.06)", border: "1px solid rgba(229,57,53,0.15)",
                         display: "flex", alignItems: "center", gap: 8
                       }}>
-                        <AlertTriangle size={15} color="#E53935" />
-                        <span style={{ fontSize: 12, fontWeight: 600, color: "#E53935" }}>Priority review flagged — check visual markers below</span>
+                       <AlertTriangle size={15} color="#6B8A9E" />
+                        <span style={{ fontSize: 12, fontWeight: 600, color: "#5B7FA5" }}>Significant pattern deviation noted — review observations below</span>
                       </div>
                     )}
 
