@@ -2528,14 +2528,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                       else parts.push(`Observed sentiment is subdued (${emoVal}%).`);
                     }
 
-                    // Medication adherence
-                    const medsTaken = medications.filter(m => m.taken_today).length;
-                    const medsTotal = medications.length;
-                    if (medsTotal > 0) {
-                      if (medsTaken === medsTotal) parts.push(`Medication adherence: all ${medsTotal} logged by user. ✅`);
-                      else if (medsTaken > 0) parts.push(`Medication adherence: ${medsTaken} of ${medsTotal} logged so far. 💊`);
-                      else parts.push(`Medication adherence: none logged yet today. 💊`);
-                    }
+                    // Medication adherence removed — legacy-first pivot
 
                     if (parts.length === 0) return `Behavioral observations will appear here once ${name} starts recording interactions.`;
                     return parts.join(" ");
