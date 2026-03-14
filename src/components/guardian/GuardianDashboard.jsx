@@ -1710,8 +1710,8 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                 {/* Header with create button */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
                   <div>
-                    <h2 style={{ fontSize: 16, fontWeight: 700, color: "#1a1a1a", margin: 0 }}>Memory Archive</h2>
-                    <p style={{ fontSize: 12, color: "#6b6b6b", marginTop: 3 }}>AI-summarized recordings with emotional context</p>
+                    <h2 style={{ fontSize: 16, fontWeight: 700, color: "#1a1a1a", margin: 0 }}>{parentProfile?.full_name?.split(" ")[0] || "Amma"}'s Stories</h2>
+                    <p style={{ fontSize: 12, color: "#6b6b6b", marginTop: 3 }}>Memories and moments shared with love</p>
                   </div>
                 </div>
 
