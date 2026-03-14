@@ -3033,7 +3033,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                                         comment: "🎤 Voice reply",
                                         media_url: urlData.publicUrl,
                                         media_type: "audio",
-                                        author_name: prof?.full_name || "Caregiver",
+                                       author_name: prof?.full_name || "Care Partner",
                                       });
                                     }
                                   };
