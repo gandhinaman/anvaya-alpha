@@ -2531,13 +2531,97 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               gridTemplateColumns: isMobile ? "1fr" : inPanel ? "1fr" : "1fr 1fr",
               gap: 18, marginBottom: 22
             }}>
+              {/* ── Recording Streak Card ── */}
+              <div style={{
+                background: parentStreak.current >= 7
+                  ? "linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)"
+                  : parentStreak.current >= 3
+                    ? "linear-gradient(135deg, #FFF8F0 0%, #F5EDE4 100%)"
+                    : "linear-gradient(135deg, #FAFAF5 0%, #F0EDE8 100%)",
+                borderRadius: 24, padding: isMobile ? "18px 18px" : "22px 24px",
+                border: parentStreak.current >= 7 ? "1px solid rgba(198,139,89,0.3)" : "1px solid rgba(93,64,55,0.1)",
+                boxShadow: "0 4px 24px rgba(62,39,35,0.06)",
+                animation: "fadeUp .5s ease .1s both",
+                gridColumn: isMobile || inPanel ? "1" : "1 / -1"
+              }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <div style={{
+                      width: 48, height: 48, borderRadius: 14,
+                      background: parentStreak.current >= 3
+                        ? "linear-gradient(135deg, #FF9800, #F57C00)"
+                        : "linear-gradient(135deg, #8D6E63, #5D4037)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 24
+                    }}>
+                      🔥
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 28, fontWeight: 800, color: "#3E2723", lineHeight: 1 }}>
+                        {parentStreak.current}
+                        <span style={{ fontSize: 14, fontWeight: 500, color: "#8D6E63", marginLeft: 6 }}>
+                          {parentStreak.current === 1 ? "day" : "days"}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 12, color: "#8D6E63", marginTop: 2 }}>
+                        {parentStreak.current === 0
+                          ? `${parentProfile?.full_name?.split(" ")[0] || "Amma"} hasn't started a streak yet`
+                          : `${parentProfile?.full_name?.split(" ")[0] || "Amma"}'s recording streak`}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: 11, color: "#8D6E63" }}>Best streak</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: "#5D4037" }}>{parentStreak.longest} days</div>
+                  </div>
+                </div>
+                {/* 7-day dots */}
+                <div style={{ display: "flex", gap: 6, marginTop: 14, justifyContent: "center" }}>
+                  {Array.from({ length: 7 }).map((_, i) => {
+                    const d = new Date();
+                    d.setDate(d.getDate() - (6 - i));
+                    const dayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+                    const has = realMemories.some(m => {
+                      if (!m.created_at) return false;
+                      const md = new Date(m.created_at);
+                      return `${md.getFullYear()}-${String(md.getMonth() + 1).padStart(2, "0")}-${String(md.getDate()).padStart(2, "0")}` === dayStr;
+                    });
+                    const isToday = i === 6;
+                    const label = ["S", "M", "T", "W", "T", "F", "S"][d.getDay()];
+                    return (
+                      <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                        <div style={{
+                          width: 32, height: 32, borderRadius: "50%",
+                          background: has
+                            ? "linear-gradient(135deg, #C68B59, #8D6E63)"
+                            : isToday
+                              ? "rgba(198,139,89,0.15)"
+                              : "rgba(93,64,55,0.06)",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          border: isToday && !has ? "2px dashed rgba(198,139,89,0.4)" : "none",
+                          fontSize: 14
+                        }}>
+                          {has ? "✓" : ""}
+                        </div>
+                        <span style={{ fontSize: 10, color: "#8D6E63", fontWeight: isToday ? 700 : 400 }}>{label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                {parentStreak.current > 0 && !parentStreak.recordedToday && (
+                  <div style={{ marginTop: 10, textAlign: "center", fontSize: 12, color: "#C68B59", fontStyle: "italic" }}>
+                    No recording today yet — streak continues if they record before midnight 🌙
+                  </div>
+                )}
+              </div>
+
               {/* Daily Connection Card */}
               <div style={{
                 background: "linear-gradient(135deg, #FFF8F0 0%, #F5EDE4 100%)",
                 borderRadius: 24, padding: isMobile ? "22px 20px" : "28px 28px",
                 border: "1px solid rgba(198,139,89,0.15)",
                 boxShadow: "0 4px 24px rgba(62,39,35,0.06)",
-                animation: "fadeUp .5s ease .1s both"
+                animation: "fadeUp .5s ease .25s both"
               }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
                   <div style={{
@@ -2640,90 +2724,6 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                     return parts.join(" ");
                   })()}
                 </p>
-              </div>
-
-              {/* ── Recording Streak Card ── */}
-              <div style={{
-                background: parentStreak.current >= 7
-                  ? "linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)"
-                  : parentStreak.current >= 3
-                    ? "linear-gradient(135deg, #FFF8F0 0%, #F5EDE4 100%)"
-                    : "linear-gradient(135deg, #FAFAF5 0%, #F0EDE8 100%)",
-                borderRadius: 24, padding: isMobile ? "18px 18px" : "22px 24px",
-                border: parentStreak.current >= 7 ? "1px solid rgba(198,139,89,0.3)" : "1px solid rgba(93,64,55,0.1)",
-                boxShadow: "0 4px 24px rgba(62,39,35,0.06)",
-                animation: "fadeUp .5s ease .25s both",
-                gridColumn: isMobile || inPanel ? "1" : "1 / -1"
-              }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <div style={{
-                      width: 48, height: 48, borderRadius: 14,
-                      background: parentStreak.current >= 3
-                        ? "linear-gradient(135deg, #FF9800, #F57C00)"
-                        : "linear-gradient(135deg, #8D6E63, #5D4037)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 24
-                    }}>
-                      🔥
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 28, fontWeight: 800, color: "#3E2723", lineHeight: 1 }}>
-                        {parentStreak.current}
-                        <span style={{ fontSize: 14, fontWeight: 500, color: "#8D6E63", marginLeft: 6 }}>
-                          {parentStreak.current === 1 ? "day" : "days"}
-                        </span>
-                      </div>
-                      <div style={{ fontSize: 12, color: "#8D6E63", marginTop: 2 }}>
-                        {parentStreak.current === 0
-                          ? `${parentProfile?.full_name?.split(" ")[0] || "Amma"} hasn't started a streak yet`
-                          : `${parentProfile?.full_name?.split(" ")[0] || "Amma"}'s recording streak`}
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: 11, color: "#8D6E63" }}>Best streak</div>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: "#5D4037" }}>{parentStreak.longest} days</div>
-                  </div>
-                </div>
-                {/* 7-day dots */}
-                <div style={{ display: "flex", gap: 6, marginTop: 14, justifyContent: "center" }}>
-                  {Array.from({ length: 7 }).map((_, i) => {
-                    const d = new Date();
-                    d.setDate(d.getDate() - (6 - i));
-                    const dayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-                    const has = realMemories.some(m => {
-                      if (!m.created_at) return false;
-                      const md = new Date(m.created_at);
-                      return `${md.getFullYear()}-${String(md.getMonth() + 1).padStart(2, "0")}-${String(md.getDate()).padStart(2, "0")}` === dayStr;
-                    });
-                    const isToday = i === 6;
-                    const label = ["S", "M", "T", "W", "T", "F", "S"][d.getDay()];
-                    return (
-                      <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                        <div style={{
-                          width: 32, height: 32, borderRadius: "50%",
-                          background: has
-                            ? "linear-gradient(135deg, #C68B59, #8D6E63)"
-                            : isToday
-                              ? "rgba(198,139,89,0.15)"
-                              : "rgba(93,64,55,0.06)",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          border: isToday && !has ? "2px dashed rgba(198,139,89,0.4)" : "none",
-                          fontSize: 14
-                        }}>
-                          {has ? "✓" : ""}
-                        </div>
-                        <span style={{ fontSize: 10, color: "#8D6E63", fontWeight: isToday ? 700 : 400 }}>{label}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-                {parentStreak.current > 0 && !parentStreak.recordedToday && (
-                  <div style={{ marginTop: 10, textAlign: "center", fontSize: 12, color: "#C68B59", fontStyle: "italic" }}>
-                    No recording today yet — streak continues if they record before midnight 🌙
-                  </div>
-                )}
               </div>
 
               {/* Health Highlights Card */}
