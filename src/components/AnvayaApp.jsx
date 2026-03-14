@@ -2112,7 +2112,7 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
             <Link2 size={32} color="#064E3B" style={{margin:"0 auto 12px"}}/>
             <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:22,fontWeight:600,color:"#064E3B",marginBottom:8}}>No parent linked yet</div>
             <p style={{fontSize:13,color:"#6b6b6b",lineHeight:1.6,marginBottom:16}}>
-              Ask your parent to share their 6-digit linking code from the Ava app, then enter it in Settings.
+              Ask your parent to share their 6-digit linking code from the Ela app, then enter it in Settings.
             </p>
             <button onClick={()=>setNav("settings")} style={{
               padding:"12px 24px",borderRadius:14,border:"none",cursor:"pointer",
