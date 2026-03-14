@@ -1963,13 +1963,23 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                   return (
                   <div key={i} className="gcard" style={{ padding: 16, cursor: "pointer", transition: "all .3s", border: isOpen ? `1.5px solid ${st.color}40` : undefined }}
                     onClick={() => setExpandedStat(isOpen ? null : `d-${i}`)}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
-                      <div style={{
-                        width: 36, height: 36, borderRadius: 10,
-                        background: `${st.color}12`,
-                        display: "flex", alignItems: "center", justifyContent: "center"
-                      }}>
-                        <st.icon size={16} color={st.color} />
+                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div style={{
+                          width: 36, height: 36, borderRadius: 10,
+                          background: `${st.color}12`,
+                          display: "flex", alignItems: "center", justifyContent: "center"
+                        }}>
+                          <st.icon size={16} color={st.color} />
+                        </div>
+                        {st.infoNote && (
+                          <div title={st.infoNote} style={{
+                            width: 18, height: 18, borderRadius: "50%", cursor: "help",
+                            background: "rgba(93,64,55,0.06)", display: "flex", alignItems: "center", justifyContent: "center"
+                          }}>
+                            <HelpCircle size={11} color="#9CA3AF" />
+                          </div>
+                        )}
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                         <span style={{
