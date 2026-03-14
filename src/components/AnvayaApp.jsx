@@ -372,6 +372,9 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
   const [showCode,setShowCode]=useState(false);
   const [codeCopied,setCodeCopied]=useState(false);
   const isMock = inPanel;
+  const [newIllness, setNewIllness]=useState("");
+  const [illnessDropOpen, setIllnessDropOpen]=useState(false);
+  const [newInterest, setNewInterest]=useState("");
   const [seniorUnreadHearts, setSeniorUnreadHearts]=useState(0);
   const [seniorUnreadComments, setSeniorUnreadComments]=useState(0);
   const seniorUnreadCount = seniorUnreadHearts + seniorUnreadComments;
