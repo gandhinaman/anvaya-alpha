@@ -550,6 +550,22 @@ function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null
                 <Mic size={14} color="#5D4037" />
               </button>
             )}
+            {videoRecording ? (
+              <button onClick={stopVideoReply} style={{
+                width: 32, height: 32, borderRadius: "50%", border: "none", cursor: "pointer",
+                background: "#DC2626", display: "flex", alignItems: "center", justifyContent: "center",
+                animation: "callPulse 1.5s ease infinite",
+              }}>
+                <Pause size={14} color="#FFF8F0" />
+              </button>
+            ) : (
+              <button onClick={startVideoReply} style={{
+                width: 32, height: 32, borderRadius: "50%", border: "none", cursor: "pointer",
+                background: "rgba(93,64,55,0.1)", display: "flex", alignItems: "center", justifyContent: "center",
+              }} title="Record video reply">
+                <Video size={14} color="#5D4037" />
+              </button>
+            )}
             <button onClick={() => sendComment()} disabled={sending || !commentText.trim()} style={{
               padding: "8px 14px", borderRadius: 10, border: "none", cursor: "pointer",
               background: "#5D4037", color: "#FFF8F0", fontSize: 11, fontWeight: 600,
