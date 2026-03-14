@@ -738,6 +738,12 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
   const [collectionSearchQuery, setCollectionSearchQuery] = useState("");
   const [showCollectionAddPanel, setShowCollectionAddPanel] = useState(false);
 
+  // Playlist state
+  const [playlistActive, setPlaylistActive] = useState(false);
+  const [playlistIndex, setPlaylistIndex] = useState(0);
+  const playlistAudioRef = useRef(null);
+  const playlistVideoRef = useRef(null);
+
   // Fetch collections
   useEffect(() => {
     if (!profileId) return;
@@ -1378,7 +1384,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               return (
                 <>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-                    <button onClick={() => { setActiveCollection(null); setShowCollectionAddPanel(false); setCollectionSearchQuery(""); }} style={{
+                    <button onClick={() => { setActiveCollection(null); setShowCollectionAddPanel(false); setCollectionSearchQuery(""); setPlaylistActive(false); }} style={{
                       width: 36, height: 36, borderRadius: 10, border: "none", cursor: "pointer",
                       background: "rgba(93,64,55,0.06)", display: "flex", alignItems: "center", justifyContent: "center"
                     }}>
@@ -1511,6 +1517,149 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                       </div>
                     )}
                   </div>
+
+                  {/* Playlist Player */}
+                  {colMemories.length >= 2 && (
+                    <div style={{ marginBottom: 16 }}>
+                      {!playlistActive ? (
+                        <button onClick={() => { setPlaylistActive(true); setPlaylistIndex(0); }} style={{
+                          width: "100%", padding: "14px 18px", borderRadius: 16, cursor: "pointer",
+                          border: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+                          background: "linear-gradient(135deg, #5D4037 0%, #8D6E63 100%)",
+                          color: "#fff", fontSize: 14, fontWeight: 700, boxShadow: "0 4px 16px rgba(93,64,55,0.18)",
+                          transition: "all .2s"
+                        }}>
+                          <Play size={18} fill="#fff" /> Play All ({colMemories.length} memories)
+                        </button>
+                      ) : (
+                        <div className="gcard" style={{ padding: 18, animation: "fadeUp .25s ease both" }}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <div style={{
+                                width: 32, height: 32, borderRadius: 10,
+                                background: "linear-gradient(135deg, #5D4037, #8D6E63)",
+                                display: "flex", alignItems: "center", justifyContent: "center"
+                              }}>
+                                <Headphones size={16} color="#fff" />
+                              </div>
+                              <div>
+                                <div style={{ fontSize: 12, fontWeight: 700, color: "#3E2723" }}>Now Playing</div>
+                                <div style={{ fontSize: 10, color: "#9CA3AF" }}>{playlistIndex + 1} of {colMemories.length}</div>
+                              </div>
+                            </div>
+                            <button onClick={() => { setPlaylistActive(false); setPlaylistIndex(0); }} style={{
+                              background: "rgba(93,64,55,0.06)", border: "none", borderRadius: 8,
+                              width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer"
+                            }}>
+                              <X size={14} color="#5D4037" />
+                            </button>
+                          </div>
+
+                          {/* Current memory info */}
+                          {colMemories[playlistIndex] && (() => {
+                            const cm = colMemories[playlistIndex];
+                            const isVideo = cm.audioUrl?.includes("/video_");
+                            return (
+                              <div>
+                                <div style={{
+                                  fontSize: 14, fontWeight: 700, color: "#3E2723", marginBottom: 4,
+                                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
+                                }}>{cm.title}</div>
+                                {cm.emotionalTone && (
+                                  <span style={{
+                                    fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 100,
+                                    background: "rgba(198,139,89,0.1)", color: "#C68B59", marginBottom: 10, display: "inline-block"
+                                  }}>{cm.emotionalTone}</span>
+                                )}
+
+                                {/* Media player */}
+                                {isVideo ? (
+                                  <video
+                                    ref={playlistVideoRef}
+                                    src={cm.audioUrl}
+                                    controls
+                                    autoPlay
+                                    onEnded={() => {
+                                      if (playlistIndex < colMemories.length - 1) {
+                                        setPlaylistIndex(playlistIndex + 1);
+                                      } else {
+                                        setPlaylistActive(false);
+                                        setPlaylistIndex(0);
+                                      }
+                                    }}
+                                    style={{
+                                      width: "100%", borderRadius: 12, marginTop: 10,
+                                      maxHeight: 280, background: "#000"
+                                    }}
+                                  />
+                                ) : (
+                                  <div style={{ marginTop: 10 }}>
+                                    <audio
+                                      ref={playlistAudioRef}
+                                      src={cm.audioUrl}
+                                      controls
+                                      autoPlay
+                                      onEnded={() => {
+                                        if (playlistIndex < colMemories.length - 1) {
+                                          setPlaylistIndex(playlistIndex + 1);
+                                        } else {
+                                          setPlaylistActive(false);
+                                          setPlaylistIndex(0);
+                                        }
+                                      }}
+                                      style={{ width: "100%", borderRadius: 10 }}
+                                    />
+                                  </div>
+                                )}
+
+                                {/* Summary */}
+                                {cm.summary && (
+                                  <p style={{
+                                    fontSize: 11, color: "#6b6b6b", fontStyle: "italic",
+                                    lineHeight: 1.5, margin: "10px 0 0", padding: "10px 12px",
+                                    background: "rgba(255,248,240,0.6)", borderRadius: 10,
+                                    borderLeft: "3px solid rgba(198,139,89,0.3)"
+                                  }}>"{cm.summary.slice(0, 150)}{cm.summary.length > 150 ? "…" : ""}"</p>
+                                )}
+                              </div>
+                            );
+                          })()}
+
+                          {/* Playlist track list */}
+                          <div style={{
+                            marginTop: 14, maxHeight: 180, overflowY: "auto",
+                            display: "flex", flexDirection: "column", gap: 4
+                          }}>
+                            {colMemories.map((cm, idx) => (
+                              <button key={cm.id} onClick={() => setPlaylistIndex(idx)} style={{
+                                display: "flex", alignItems: "center", gap: 10, padding: "8px 12px",
+                                borderRadius: 10, border: "none", cursor: "pointer", textAlign: "left", width: "100%",
+                                background: idx === playlistIndex ? "rgba(198,139,89,0.1)" : "transparent",
+                                transition: "all .15s"
+                              }}>
+                                <div style={{
+                                  width: 22, height: 22, borderRadius: 6, flexShrink: 0,
+                                  background: idx === playlistIndex ? "linear-gradient(135deg, #5D4037, #8D6E63)" : "rgba(93,64,55,0.08)",
+                                  display: "flex", alignItems: "center", justifyContent: "center",
+                                  fontSize: 10, fontWeight: 700, color: idx === playlistIndex ? "#fff" : "#8D6E63"
+                                }}>
+                                  {idx === playlistIndex ? <Play size={10} fill="#fff" /> : idx + 1}
+                                </div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{
+                                    fontSize: 12, fontWeight: idx === playlistIndex ? 700 : 500,
+                                    color: idx === playlistIndex ? "#3E2723" : "#6b6b6b",
+                                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
+                                  }}>{cm.title}</div>
+                                  <div style={{ fontSize: 10, color: "#9CA3AF" }}>{cm.duration}</div>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Collection memories */}
                   {colMemories.length === 0 ? (
