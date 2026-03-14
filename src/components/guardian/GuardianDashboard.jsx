@@ -2004,7 +2004,70 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                         </div>
                       )}
 
-                      {/* Heart + existing comments */}
+                      {/* Visual Wellness Report — for video memories */}
+                      {m.audioUrl?.includes("/video_") && (() => {
+                        const va = visualAnalysisMap[m.memoryId];
+                        if (!va) return null;
+                        const badges = [];
+                        // Eye engagement badge
+                        if (va.eye_engagement?.score != null) {
+                          badges.push({
+                            icon: "👁️", label: va.eye_engagement.score >= 70 ? "High Engagement" : va.eye_engagement.score >= 40 ? "Moderate Focus" : "Low Engagement",
+                            color: va.eye_engagement.score >= 70 ? "#4CAF50" : va.eye_engagement.score >= 40 ? "#FF9800" : "#E53935"
+                          });
+                        }
+                        // Skin pallor badge
+                        if (va.skin_pallor?.label) {
+                          const isHealthy = va.skin_pallor.label === "Healthy glow";
+                          badges.push({
+                            icon: "🌡️", label: isHealthy ? "Healthy Glow" : va.skin_pallor.label,
+                            color: isHealthy ? "#4CAF50" : va.skin_pallor.label === "Slightly pale" ? "#FF9800" : "#E53935"
+                          });
+                        }
+                        // Facial symmetry badge
+                        if (va.facial_symmetry?.label) {
+                          const isNormal = va.facial_symmetry.label === "Symmetric";
+                          badges.push({
+                            icon: "🪞", label: isNormal ? "Symmetric" : va.facial_symmetry.label,
+                            color: isNormal ? "#4CAF50" : "#FF9800"
+                          });
+                        }
+                        // Motor control badge
+                        if (va.motor_control?.label) {
+                          const isSteady = va.motor_control.label === "Steady";
+                          badges.push({
+                            icon: "✋", label: isSteady ? "Steady" : va.motor_control.label,
+                            color: isSteady ? "#4CAF50" : va.motor_control.label.includes("Significant") ? "#E53935" : "#FF9800"
+                          });
+                        }
+                        if (badges.length === 0) return null;
+                        return (
+                          <div style={{
+                            padding: "12px 14px", borderRadius: 16, marginBottom: 16,
+                            background: va.priority_review ? "rgba(229,57,53,0.04)" : "rgba(93,64,55,0.03)",
+                            border: `1px solid ${va.priority_review ? "rgba(229,57,53,0.12)" : "rgba(93,64,55,0.08)"}`
+                          }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                              <Eye size={13} color={va.priority_review ? "#E53935" : "#8D6E63"} />
+                              <span style={{ fontSize: 11, fontWeight: 600, color: va.priority_review ? "#E53935" : "#5D4037" }}>
+                                {va.priority_review ? "⚠️ Priority Visual Review" : "Visual Wellness Check"}
+                              </span>
+                            </div>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                              {badges.map((b, bi) => (
+                                <span key={bi} style={{
+                                  display: "inline-flex", alignItems: "center", gap: 4,
+                                  padding: "3px 10px", borderRadius: 100, fontSize: 10, fontWeight: 600,
+                                  background: `${b.color}10`, color: b.color
+                                }}>
+                                  {b.icon} {b.label}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })()}
+
                       <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
                         <button onClick={() => handleToggleHeart(m.memoryId, (m.reactions || []).some(r => r.user_id === profileId))} style={{
                           display: "flex", alignItems: "center", gap: 5, background: "transparent",
