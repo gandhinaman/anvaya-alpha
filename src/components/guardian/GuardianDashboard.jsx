@@ -2125,10 +2125,10 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                             </div>
                             {latest && (
                               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 6 }}>
-                                <span style={{
+                                 <span style={{
                                   fontSize: 10, fontWeight: 600, padding: "2px 10px", borderRadius: 100,
-                                  background: latest.score >= 70 ? "rgba(76,175,80,0.1)" : latest.score >= 40 ? "rgba(255,152,0,0.1)" : "rgba(229,57,53,0.1)",
-                                  color: latest.score >= 70 ? "#4CAF50" : latest.score >= 40 ? "#FF9800" : "#E53935"
+                                  background: latest.score >= 70 ? "rgba(93,138,107,0.1)" : latest.score >= 40 ? "rgba(107,138,158,0.1)" : "rgba(141,141,141,0.1)",
+                                  color: latest.score >= 70 ? "#5D8A6B" : latest.score >= 40 ? "#6B8A9E" : "#8D8D8D"
                                 }}>{latest.label}</span>
                               </div>
                             )}
