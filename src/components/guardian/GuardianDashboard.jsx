@@ -5,12 +5,14 @@ import {
   User, LogOut, Headphones, Brain, Check, Menu, X,
   TrendingUp, Zap, PhoneOff, AlertTriangle, ShieldCheck,
   Loader2, Link2, Copy, Search, Trash2, Eye, Scan, Hand, ArrowUpRight,
-  Video, Send, HelpCircle, Plus, FolderPlus, Bookmark, Layers, ChevronLeft, Info
+  Video, Send, HelpCircle, Plus, FolderPlus, Bookmark, Layers, ChevronLeft, Info,
+  Sparkles
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useParentData } from "@/hooks/useParentData";
 import { filterCities } from "@/lib/cities";
 import { formatPhoneInput, isValidPhone } from "@/lib/phoneFormat";
+import ReactionRecorder from "./ReactionRecorder";
 
 // ─── STYLES (shared with AnvayaApp) ────────────────────────────────────────────
 export const guardianStyles = `
