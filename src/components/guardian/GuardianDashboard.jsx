@@ -2308,8 +2308,8 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               }}>
                 <div className="gcard" style={{ padding: 20 }}>
                   <div style={{ marginBottom: 14 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Weekly Wellness</div>
-                    <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Emotional state & vocal energy over 7 days</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Weekly Patterns</div>
+                    <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Observed sentiment & acoustic energy over 7 days</div>
                   </div>
                   <WeeklyTrendChart healthEvents={healthEvents} />
                 </div>
