@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { X, Mic, MicOff, Send, MessageCircle, Volume2, Check, Pill } from "lucide-react";
+import { X, Mic, MicOff, Send, MessageCircle, Volume2, Check, BookOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 // ─── Culturally-aware suggested prompts ───
@@ -130,7 +130,7 @@ function MedActionButtons({ userId, lang }) {
       borderRadius: 14, border: "1px solid rgba(255,248,240,.08)"
     }}>
       <div style={{ fontSize: 11, color: "rgba(255,248,240,.4)", fontWeight: 600, marginBottom: 2 }}>
-        <Pill size={12} style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }} />
+        <BookOpen size={12} style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }} />
         {lang === "en" ? "Quick actions:" : "त्वरित कार्रवाई:"}
       </div>
       {meds.map(med => (

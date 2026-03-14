@@ -3099,7 +3099,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                   background: "linear-gradient(135deg, #8D6E63, #5D4037)",
                   display: "flex", alignItems: "center", justifyContent: "center"
                 }}>
-                  <Pill size={18} color="#FFF8F0" />
+                  <BookOpen size={18} color="#FFF8F0" />
                 </div>
                 <div>
                   <div style={{ fontSize: 15, fontWeight: 700, color: "#3E2723" }}>Medication Tracker</div>
