@@ -2358,12 +2358,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               </div>
             </div>
 
-            {/* Health tab disclaimer */}
-            <div style={{ padding: "10px 14px", borderRadius: 12, background: "rgba(93,64,55,0.03)", border: "1px solid rgba(93,64,55,0.06)" }}>
-              <p style={{ fontSize: 10, color: "#9CA3AF", margin: 0, lineHeight: 1.5, textAlign: "center" }}>
-                ℹ️ Anvaya provides behavioral observations based on AI analysis of voice and video. These are not medical diagnoses. Please consult a professional for health concerns.
-              </p>
-            </div>
+            {/* Health tab footer disclaimer (removed — now at top as notice box) */}
 
           </div>
         )}
