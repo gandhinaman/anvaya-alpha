@@ -2162,9 +2162,9 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                             </div>
                             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
                               {[
-                                { label: "Symmetry", key: "facial_symmetry" },
-                                { label: "Skin Tone", key: "skin_pallor" },
-                                { label: "Eye Engagement", key: "eye_engagement" },
+                                { label: "Bilateral Movement", key: "facial_symmetry" },
+                                { label: "Color Reflectance", key: "skin_pallor" },
+                                { label: "Gaze Patterns", key: "eye_engagement" },
                               ].map(m => {
                                 const curr = visualEvents[0]?.value?.[m.key]?.score;
                                 const prev = visualEvents[compareIdx]?.value?.[m.key]?.score;
