@@ -587,9 +587,13 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
   const [nav, setNav] = useState("home");
   const [drawer, setDrawer] = useState(false);
 
+  const mainContentRef = useRef(null);
+
   // Mark memories as viewed when switching to memories tab
   const setNavWithMark = (id) => {
     setNav(id);
+    // Scroll main content to top
+    if (mainContentRef.current) mainContentRef.current.scrollTop = 0;
     if (id === "memories") {
       // delay slightly so data renders first
       setTimeout(() => markMemoriesViewed(), 300);
