@@ -2992,33 +2992,51 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                             />
                             <button
                               onClick={async () => {
-                                // Quick voice note placeholder
+                                if (!profileId || !m.memoryId) return;
                                 try {
                                   const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                                   const recorder = new MediaRecorder(stream);
                                   const chunks = [];
-                                  recorder.ondataavailable = e => chunks.push(e.data);
+                                  recorder.ondataavailable = (e) => chunks.push(e.data);
                                   recorder.onstop = async () => {
-                                    stream.getTracks().forEach(t => t.stop());
-                                    const blob = new Blob(chunks, { type: "audio/webm" });
-                                    const path = `comment_audio_${Date.now()}.webm`;
-                                    const { data } = await supabase.storage.from("memories").upload(path, blob);
-                                    if (data) {
-                                      const { data: urlData } = supabase.storage.from("memories").getPublicUrl(data.path);
-                                      const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", profileId).maybeSingle();
-                                      await supabase.from("memory_comments").insert({
-                                        memory_id: m.memoryId,
-                                        user_id: profileId,
-                                        comment: "🎤 Voice reply",
-                                        media_url: urlData.publicUrl,
-                                        media_type: "audio",
-                                       author_name: prof?.full_name || "Care Partner",
-                                      });
+                                    try {
+                                      stream.getTracks().forEach((t) => t.stop());
+                                      const blob = new Blob(chunks, { type: "audio/webm" });
+                                      const path = `${profileId}/comment_audio_${Date.now()}.webm`;
+                                      const { data, error: uploadError } = await supabase.storage
+                                        .from("memories")
+                                        .upload(path, blob, { contentType: "audio/webm" });
+                                      if (uploadError) {
+                                        console.error("Voice note upload error:", uploadError);
+                                        alert("Could not upload voice reply. Please try again.");
+                                        return;
+                                      }
+                                      if (data) {
+                                        const { data: urlData } = supabase.storage.from("memories").getPublicUrl(data.path);
+                                        const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", profileId).maybeSingle();
+                                        const { error: insertError } = await supabase.from("memory_comments").insert({
+                                          memory_id: m.memoryId,
+                                          user_id: profileId,
+                                          comment: "🎤 Voice reply",
+                                          media_url: urlData.publicUrl,
+                                          media_type: "audio",
+                                          author_name: prof?.full_name || "Care Partner",
+                                        });
+                                        if (insertError) {
+                                          console.error("Voice note comment insert error:", insertError);
+                                          alert("Could not send voice reply. Please try again.");
+                                        }
+                                      }
+                                    } finally {
+                                      stream.getTracks().forEach((t) => t.stop());
                                     }
                                   };
                                   recorder.start();
-                                  setTimeout(() => recorder.stop(), 10000); // max 10s
-                                } catch (err) { console.error("Voice note error:", err); }
+                                  setTimeout(() => recorder.stop(), 10000);
+                                } catch (err) {
+                                  console.error("Voice note error:", err);
+                                  alert("Microphone access failed. Please allow permissions and try again.");
+                                }
                               }}
                               style={{
                                 width: 44, height: 44, borderRadius: 14, border: "none", cursor: "pointer",
@@ -3032,32 +3050,51 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                             </button>
                             <button
                               onClick={async () => {
+                                if (!profileId || !m.memoryId) return;
                                 try {
                                   const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                                   const recorder = new MediaRecorder(stream);
                                   const chunks = [];
-                                  recorder.ondataavailable = e => chunks.push(e.data);
+                                  recorder.ondataavailable = (e) => chunks.push(e.data);
                                   recorder.onstop = async () => {
-                                    stream.getTracks().forEach(t => t.stop());
-                                    const blob = new Blob(chunks, { type: "video/webm" });
-                                    const path = `comment_video_${Date.now()}.webm`;
-                                    const { data } = await supabase.storage.from("memories").upload(path, blob);
-                                    if (data) {
-                                      const { data: urlData } = supabase.storage.from("memories").getPublicUrl(data.path);
-                                      const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", profileId).maybeSingle();
-                                      await supabase.from("memory_comments").insert({
-                                        memory_id: m.memoryId,
-                                        user_id: profileId,
-                                        comment: "🎥 Video reply",
-                                        media_url: urlData.publicUrl,
-                                        media_type: "video",
-                                        author_name: prof?.full_name || "Care Partner",
-                                      });
+                                    try {
+                                      stream.getTracks().forEach((t) => t.stop());
+                                      const blob = new Blob(chunks, { type: "video/webm" });
+                                      const path = `${profileId}/comment_video_${Date.now()}.webm`;
+                                      const { data, error: uploadError } = await supabase.storage
+                                        .from("memories")
+                                        .upload(path, blob, { contentType: "video/webm" });
+                                      if (uploadError) {
+                                        console.error("Video note upload error:", uploadError);
+                                        alert("Could not upload video reply. Please try again.");
+                                        return;
+                                      }
+                                      if (data) {
+                                        const { data: urlData } = supabase.storage.from("memories").getPublicUrl(data.path);
+                                        const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", profileId).maybeSingle();
+                                        const { error: insertError } = await supabase.from("memory_comments").insert({
+                                          memory_id: m.memoryId,
+                                          user_id: profileId,
+                                          comment: "🎥 Video reply",
+                                          media_url: urlData.publicUrl,
+                                          media_type: "video",
+                                          author_name: prof?.full_name || "Care Partner",
+                                        });
+                                        if (insertError) {
+                                          console.error("Video note comment insert error:", insertError);
+                                          alert("Could not send video reply. Please try again.");
+                                        }
+                                      }
+                                    } finally {
+                                      stream.getTracks().forEach((t) => t.stop());
                                     }
                                   };
                                   recorder.start();
-                                  setTimeout(() => recorder.stop(), 15000); // max 15s
-                                } catch (err) { console.error("Video note error:", err); }
+                                  setTimeout(() => recorder.stop(), 15000);
+                                } catch (err) {
+                                  console.error("Video note error:", err);
+                                  alert("Camera/microphone access failed. Please allow permissions and try again.");
+                                }
                               }}
                               style={{
                                 width: 44, height: 44, borderRadius: 14, border: "none", cursor: "pointer",
