@@ -1684,6 +1684,32 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                       })(),
                       icon: "🧠"
                     },
+                    // Visual Health / Physical Appearance summary
+                    {
+                      label: "Physical Appearance",
+                      status: (() => {
+                        const name = parentProfile?.full_name?.split(" ")[0] || "Amma";
+                        const visualEvents = healthEvents.filter(e => e.event_type === "visual_analysis");
+                        if (visualEvents.length === 0) return { text: "No video data", color: "#8D6E63", bg: "rgba(141,110,99,0.08)" };
+                        const latest = visualEvents[0]?.value;
+                        if (!latest) return { text: "No video data", color: "#8D6E63", bg: "rgba(141,110,99,0.08)" };
+                        if (latest.priority_review) return { text: "Review needed", color: "#E53935", bg: "rgba(229,57,53,0.08)" };
+                        // Check key markers
+                        const symScore = latest.facial_symmetry?.score;
+                        const skinScore = latest.skin_pallor?.score;
+                        const eyeScore = latest.eye_engagement?.score;
+                        const avgScore = [symScore, skinScore, eyeScore].filter(s => s != null);
+                        const avg = avgScore.length > 0 ? avgScore.reduce((a, b) => a + b, 0) / avgScore.length : null;
+                        if (avg != null && avg >= 75) return { text: `${name} looks bright & alert`, color: "#4CAF50", bg: "rgba(76,175,80,0.08)" };
+                        if (avg != null && avg >= 50) return { text: "Normal appearance", color: "#FF9800", bg: "rgba(255,152,0,0.08)" };
+                        if (avg != null) return { text: "Worth a closer look", color: "#E53935", bg: "rgba(229,57,53,0.08)" };
+                        // Fallback to expression
+                        if (latest.facial_expression === "happy" || latest.facial_expression === "calm") return { text: `${name} looks well`, color: "#4CAF50", bg: "rgba(76,175,80,0.08)" };
+                        if (latest.facial_expression === "distressed" || latest.facial_expression === "pain") return { text: "May need attention", color: "#E53935", bg: "rgba(229,57,53,0.08)" };
+                        return { text: "Normal", color: "#8D6E63", bg: "rgba(141,110,99,0.08)" };
+                      })(),
+                      icon: "👁️"
+                    },
                   ].map((item, idx) => (
                     <div key={idx} style={{
                       display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -1703,11 +1729,210 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                     </div>
                   ))}
                 </div>
+
+                {/* Visual observation note */}
+                {(() => {
+                  const visualEvents = healthEvents.filter(e => e.event_type === "visual_analysis");
+                  if (visualEvents.length === 0) return null;
+                  const latest = visualEvents[0]?.value;
+                  if (!latest) return null;
+                  const name = parentProfile?.full_name?.split(" ")[0] || "Amma";
+                  const skinLabel = latest.skin_pallor?.label;
+                  const eyeLabel = latest.eye_engagement?.label;
+                  // Show observation note if something is off
+                  if (skinLabel === "Pale" || skinLabel === "Slightly pale") {
+                    return (
+                      <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 14, background: "rgba(255,152,0,0.06)", border: "1px solid rgba(255,152,0,0.12)" }}>
+                        <p style={{ fontSize: 12, color: "#6b6b6b", margin: 0, lineHeight: 1.5 }}>
+                          <span style={{ fontSize: 10, fontWeight: 600, color: "#FF9800", padding: "2px 8px", borderRadius: 100, background: "rgba(255,152,0,0.1)", marginRight: 6 }}>Observation</span>
+                          {name} appears slightly pale today compared to recent recordings. This may be normal variation.
+                        </p>
+                      </div>
+                    );
+                  }
+                  if (eyeLabel === "Low engagement" || eyeLabel === "Unfocused") {
+                    return (
+                      <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 14, background: "rgba(255,152,0,0.06)", border: "1px solid rgba(255,152,0,0.12)" }}>
+                        <p style={{ fontSize: 12, color: "#6b6b6b", margin: 0, lineHeight: 1.5 }}>
+                          <span style={{ fontSize: 10, fontWeight: 600, color: "#FF9800", padding: "2px 8px", borderRadius: 100, background: "rgba(255,152,0,0.1)", marginRight: 6 }}>Observation</span>
+                          {name}'s eye engagement seems lower today — could be tiredness or lighting. Worth checking in.
+                        </p>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
             </div>
 
+            {/* ── Visual Health Deep Dive Toggle ── */}
+            {healthEvents.some(e => e.event_type === "visual_analysis") && (
+              <div className="s3" style={{ marginBottom: 22 }}>
+                <button onClick={() => setShowDeepDive(d => !d)} style={{
+                  display: "flex", alignItems: "center", gap: 10, width: "100%",
+                  padding: "14px 20px", borderRadius: 18,
+                  background: showDeepDive ? "rgba(93,64,55,0.06)" : "rgba(255,255,255,0.8)",
+                  backdropFilter: "blur(12px)",
+                  border: `1px solid ${showDeepDive ? "rgba(93,64,55,0.15)" : "rgba(255,255,255,0.6)"}`,
+                  boxShadow: "0 4px 16px rgba(62,39,35,0.04)",
+                  cursor: "pointer", transition: "all .3s",
+                  textAlign: "left"
+                }}>
+                  <div style={{
+                    width: 36, height: 36, borderRadius: 10,
+                    background: "linear-gradient(135deg, #5D4037, #8D6E63)",
+                    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+                  }}>
+                    <Scan size={16} color="#FFF8F0" />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#3E2723" }}>Technical Deep Dive</div>
+                    <div style={{ fontSize: 11, color: "#8D6E63" }}>Visual biometric sparklines & detailed markers</div>
+                  </div>
+                  <ChevronDown size={16} color="#8D6E63" style={{ transition: "transform .3s", transform: showDeepDive ? "rotate(180deg)" : "rotate(0)" }} />
+                </button>
+
+                {showDeepDive && (() => {
+                  const visualEvents = healthEvents.filter(e => e.event_type === "visual_analysis").slice(0, 7);
+                  if (visualEvents.length === 0) return null;
+
+                  // Build sparkline data from visual events
+                  const markers = [
+                    { key: "micro_expressions", label: "Micro-Expressions", desc: "Flat affect vs. Animated", icon: "😊", color: "#C68B59" },
+                    { key: "motor_control", label: "Motor Control", desc: "Tremors & head tilting", icon: "✋", color: "#8D6E63" },
+                    { key: "vocal_visual_sync", label: "Vocal-Visual Sync", desc: "Speech & facial timing", icon: "🔄", color: "#5D4037" },
+                    { key: "facial_symmetry", label: "Facial Symmetry", desc: "Neurological indicator", icon: "🪞", color: "#4CAF50" },
+                    { key: "skin_pallor", label: "Skin Tone", desc: "Circulation & wellness", icon: "🌡️", color: "#FF9800" },
+                    { key: "eye_engagement", label: "Eye Engagement", desc: "Cognitive presence", icon: "👁️", color: "#2196F3" },
+                  ];
+
+                  // Mini SVG sparkline component
+                  const Sparkline = ({ data, color }) => {
+                    const valid = data.filter(v => v != null);
+                    if (valid.length < 2) return <span style={{ fontSize: 10, color: "#9CA3AF", fontStyle: "italic" }}>Insufficient data</span>;
+                    const W = 80, H = 24, pad = 2;
+                    const min = Math.max(0, Math.min(...valid) - 10);
+                    const max = Math.min(100, Math.max(...valid) + 10);
+                    const range = max - min || 1;
+                    const points = valid.map((v, i) => ({
+                      x: pad + i * ((W - pad * 2) / (valid.length - 1)),
+                      y: H - pad - ((v - min) / range) * (H - pad * 2)
+                    }));
+                    const path = "M" + points.map(p => `${p.x},${p.y}`).join(" L");
+                    return (
+                      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ overflow: "visible" }}>
+                        <path d={path} fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+                        {points.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r={1.5} fill={color} />)}
+                      </svg>
+                    );
+                  };
+
+                  return (
+                    <div style={{
+                      marginTop: 12, padding: isMobile ? "16px" : "20px 24px",
+                      background: "rgba(255,255,255,0.7)", backdropFilter: "blur(12px)",
+                      borderRadius: 20, border: "1px solid rgba(93,64,55,0.08)",
+                      animation: "fadeUp .3s ease both"
+                    }}>
+                      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
+                        {markers.map(marker => {
+                          const scores = visualEvents.map(e => e.value?.[marker.key]?.score).reverse();
+                          const latest = visualEvents[0]?.value?.[marker.key];
+                          return (
+                            <div key={marker.key} style={{
+                              padding: "14px 16px", borderRadius: 16,
+                              background: "rgba(255,248,240,0.6)",
+                              border: "1px solid rgba(93,64,55,0.06)"
+                            }}>
+                              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                  <span style={{ fontSize: 16 }}>{marker.icon}</span>
+                                  <div>
+                                    <div style={{ fontSize: 12, fontWeight: 600, color: "#3E2723" }}>{marker.label}</div>
+                                    <div style={{ fontSize: 10, color: "#9CA3AF" }}>{marker.desc}</div>
+                                  </div>
+                                </div>
+                                {latest && (
+                                  <span style={{
+                                    fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 100,
+                                    background: latest.score >= 70 ? "rgba(76,175,80,0.1)" : latest.score >= 40 ? "rgba(255,152,0,0.1)" : "rgba(229,57,53,0.1)",
+                                    color: latest.score >= 70 ? "#4CAF50" : latest.score >= 40 ? "#FF9800" : "#E53935"
+                                  }}>{latest.label}</span>
+                                )}
+                              </div>
+                              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                <Sparkline data={scores} color={marker.color} />
+                                {latest?.score != null && (
+                                  <span style={{ fontSize: 18, fontWeight: 700, color: "#3E2723" }}>{latest.score}%</span>
+                                )}
+                              </div>
+                              {latest?.detail && (
+                                <p style={{ fontSize: 10, color: "#6b6b6b", marginTop: 6, lineHeight: 1.4, margin: "6px 0 0 0" }}>{latest.detail}</p>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Compare with yesterday */}
+                      {visualEvents.length >= 2 && (
+                        <div style={{ marginTop: 14, textAlign: "center" }}>
+                          <button onClick={() => setCompareIdx(compareIdx != null ? null : 1)} style={{
+                            padding: "8px 20px", borderRadius: 100, border: "1px solid rgba(93,64,55,0.15)",
+                            background: compareIdx != null ? "rgba(93,64,55,0.06)" : "transparent",
+                            color: "#5D4037", fontSize: 12, fontWeight: 600, cursor: "pointer",
+                            display: "inline-flex", alignItems: "center", gap: 6
+                          }}>
+                            <Eye size={14} /> {compareIdx != null ? "Hide Comparison" : "Compare with Previous"}
+                          </button>
+                          {compareIdx != null && visualEvents[compareIdx] && (
+                            <div style={{
+                              marginTop: 12, padding: "14px 18px", borderRadius: 16,
+                              background: "rgba(198,139,89,0.04)", border: "1px solid rgba(198,139,89,0.1)",
+                              textAlign: "left"
+                            }}>
+                              <div style={{ fontSize: 11, fontWeight: 600, color: "#8D6E63", marginBottom: 8 }}>
+                                Previous recording · {new Date(visualEvents[compareIdx].recorded_at).toLocaleDateString()}
+                              </div>
+                              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                                {[
+                                  { label: "Symmetry", key: "facial_symmetry" },
+                                  { label: "Skin Tone", key: "skin_pallor" },
+                                  { label: "Eye Engagement", key: "eye_engagement" },
+                                ].map(m => {
+                                  const curr = visualEvents[0]?.value?.[m.key]?.score;
+                                  const prev = visualEvents[compareIdx]?.value?.[m.key]?.score;
+                                  const diff = curr != null && prev != null ? curr - prev : null;
+                                  return (
+                                    <div key={m.key} style={{ textAlign: "center" }}>
+                                      <div style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 4 }}>{m.label}</div>
+                                      <div style={{ fontSize: 14, fontWeight: 700, color: "#3E2723" }}>
+                                        {curr != null ? `${curr}%` : "—"}
+                                      </div>
+                                      {diff != null && (
+                                        <div style={{
+                                          fontSize: 10, fontWeight: 600, marginTop: 2,
+                                          color: diff > 0 ? "#4CAF50" : diff < 0 ? "#E53935" : "#9CA3AF"
+                                        }}>
+                                          {diff > 0 ? `+${diff}` : diff < 0 ? `${diff}` : "—"}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
             {/* ── Recent Memories Feed ── */}
-            <div className="s3" style={{ marginBottom: 22 }}>
+            <div className="s4" style={{ marginBottom: 22 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                 <div>
                   <h3 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 20, fontWeight: 700, color: "#3E2723", margin: 0 }}>Recent Memories</h3>
