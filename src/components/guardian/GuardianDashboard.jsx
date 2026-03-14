@@ -2687,7 +2687,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                 {/* Overview footer disclaimer */}
                 <div style={{ marginTop: 16, padding: "10px 14px", borderRadius: 12, background: "transparent" }}>
                   <p style={{ fontSize: 10, color: "#9CA3AF", margin: 0, lineHeight: 1.6, textAlign: "center" }}>
-                    Anvaya is a companionship and wellness observation tool. This application does not provide medical advice, diagnoses, or treatment. Insights are based on automated analysis of visual and audio patterns and should not be used as a substitute for professional medical monitoring or clinical judgment. Anvaya is not a regulated medical device.
+                    Anvaya is a memory preservation and social connection tool. Insights are based on automated analysis of visual and audio patterns to track behavioral trends and emotional well-being. Not a regulated medical device.
                   </p>
                 </div>
               </div>
