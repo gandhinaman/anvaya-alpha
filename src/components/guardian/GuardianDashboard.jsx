@@ -4,7 +4,7 @@ import {
   Home, Bell, Settings, ChevronRight, ChevronDown, Play, Pause,
   User, LogOut, Headphones, Brain, Check, Menu, X,
   TrendingUp, Zap, PhoneOff, AlertTriangle, ShieldCheck,
-  Loader2, Link2, Copy, Search, Trash2
+  Loader2, Link2, Copy, Search, Trash2, Eye, Scan, Hand
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useParentData } from "@/hooks/useParentData";
