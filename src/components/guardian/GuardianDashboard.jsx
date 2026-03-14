@@ -1268,8 +1268,8 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
 
             {/* Link Account */}
             <div className="gcard" style={{ padding: 20 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a", marginBottom: 4 }}>Link Parent Account</div>
-              <div style={{ fontSize: 11, color: "#6b6b6b", marginBottom: 12 }}>Enter the 6-digit code from your parent's Sathi screen</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a", marginBottom: 4 }}>Connect with Parent</div>
+              <div style={{ fontSize: 11, color: "#6b6b6b", marginBottom: 12 }}>Enter the 6-digit code from your parent's Ela screen</div>
               {parentProfile ? (
                  <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", background: "rgba(198,139,89,0.06)", borderRadius: 12, border: "1px solid rgba(198,139,89,0.15)" }}>
                    <Check size={18} color="#C68B59" />
