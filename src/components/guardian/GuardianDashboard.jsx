@@ -2316,8 +2316,8 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
 
                 <div className="gcard" style={{ padding: 20 }}>
                   <div style={{ marginBottom: 14 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Acoustic Insights</div>
-                    <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>24-hour vocal activity heatmap</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Acoustic Patterns</div>
+                    <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>24-hour acoustic activity heatmap</div>
                   </div>
                   <AcousticHeatmap healthEvents={healthEvents} />
                   <div style={{
