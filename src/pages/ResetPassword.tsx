@@ -13,12 +13,10 @@ export default function ResetPassword() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    // Check for recovery token in URL hash
     const hash = window.location.hash;
     if (hash.includes("type=recovery")) {
       setReady(true);
     } else {
-      // Listen for PASSWORD_RECOVERY event
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
         if (event === "PASSWORD_RECOVERY") {
           setReady(true);
@@ -63,7 +61,7 @@ export default function ResetPassword() {
   return (
     <div style={{
       minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-      background: "linear-gradient(160deg,#022c22 0%,#064E3B 40%,#065f46 70%,#0a3f34 100%)",
+      background: "linear-gradient(160deg,#1A0F0A 0%,#2C1810 40%,#3E2723 70%,#2A1B14 100%)",
       fontFamily: "'DM Sans', sans-serif", padding: 20,
     }}>
       <style>{fontStyle}</style>
@@ -88,11 +86,11 @@ export default function ResetPassword() {
           <div style={{ textAlign: "center", animation: "fadeUp .4s ease both" }}>
             <div style={{
               width: 52, height: 52, borderRadius: "50%",
-              background: "rgba(5,150,105,0.2)",
+              background: "rgba(198,139,89,0.2)",
               display: "flex", alignItems: "center", justifyContent: "center",
               margin: "0 auto 14px",
             }}>
-              <span style={{ fontSize: 24, color: "#34D399" }}>✓</span>
+              <span style={{ fontSize: 24, color: "#C68B59" }}>✓</span>
             </div>
             <p style={{ color: "#F9F9F7", fontSize: 15, fontWeight: 600 }}>Password updated!</p>
             <p style={{ color: "rgba(249,249,247,.5)", fontSize: 12, marginTop: 6 }}>Redirecting to sign in…</p>
@@ -105,6 +103,7 @@ export default function ResetPassword() {
               border: "1px solid rgba(255,255,255,.15)",
               color: "rgba(249,249,247,.6)", padding: "10px 24px",
               borderRadius: 100, cursor: "pointer", fontSize: 13,
+              fontFamily: "'DM Sans', sans-serif",
             }}>
               Back to sign in
             </button>
@@ -129,9 +128,9 @@ export default function ResetPassword() {
             <button type="submit" disabled={loading} style={{
               width: "100%", padding: "15px", borderRadius: 16, border: "none",
               cursor: loading ? "wait" : "pointer",
-              background: "linear-gradient(135deg,#059669,#065f46)",
-              color: "#F9F9F7", fontSize: 15, fontWeight: 700,
-              boxShadow: "0 8px 28px rgba(5,150,105,.35)",
+              background: "linear-gradient(135deg,#C68B59,#8D6E63)",
+              color: "#FFF8F0", fontSize: 15, fontWeight: 700,
+              boxShadow: "0 8px 28px rgba(198,139,89,.35)",
               fontFamily: "'DM Sans', sans-serif",
               opacity: loading ? 0.7 : 1,
             }}>

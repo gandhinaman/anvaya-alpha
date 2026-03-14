@@ -322,7 +322,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
             </div>
             <div
               style={{
-                fontFamily: "'Playfair Display',serif",
+                fontFamily: "'Cormorant Garamond',serif",
                 fontSize: 32,
                 color: "#FFF8F0",
                 fontWeight: 600,
@@ -347,7 +347,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
                 fontWeight: 500,
                 lineHeight: 1.6,
                 fontStyle: "italic",
-                fontFamily: "'Playfair Display',serif",
+                fontFamily: "'Cormorant Garamond',serif",
                 margin: 0,
                 paddingRight: 44,
               }}>
