@@ -2072,7 +2072,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                       <Scan size={14} color="#5D4037" />
                     </div>
                     <div>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: "#3E2723" }}>Visual Biometrics</span>
+                     <span style={{ fontSize: 13, fontWeight: 700, color: "#3E2723" }}>Visual Observations</span>
                       <span style={{ fontSize: 11, color: "#8D6E63", marginLeft: 8 }}>{visualEvents.length} recording{visualEvents.length !== 1 ? "s" : ""}</span>
                     </div>
                   </div>
