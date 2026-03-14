@@ -299,11 +299,11 @@ function WeeklyTrendChart({ healthEvents = [] }) {
       <div style={{ display: "flex", gap: 14, marginTop: 8 }}>
          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
            <div style={{ width: 16, height: 2, borderRadius: 2, background: "#5D4037" }} />
-           <span style={{ fontSize: 11, color: "#6b6b6b" }}>Emotional State</span>
-         </div>
-         <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-           <div style={{ width: 16, height: 2, borderRadius: 2, background: "#C68B59" }} />
-          <span style={{ fontSize: 11, color: "#6b6b6b" }}>Vocal Energy</span>
+            <span style={{ fontSize: 11, color: "#6b6b6b" }}>Observed Sentiment</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            <div style={{ width: 16, height: 2, borderRadius: 2, background: "#C68B59" }} />
+           <span style={{ fontSize: 11, color: "#6b6b6b" }}>Acoustic Energy</span>
         </div>
       </div>
     </div>
