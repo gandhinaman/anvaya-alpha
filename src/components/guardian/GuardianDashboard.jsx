@@ -2325,7 +2325,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                     background: "rgba(141,110,99,0.04)", borderRadius: 10
                   }}>
                     <p style={{ fontSize: 10, color: "#8D6E63", lineHeight: 1.5, margin: 0 }}>
-                      Brighter cells = higher vocal energy. Patterns reveal daily routines and social activity windows.
+                      Brighter cells = higher acoustic energy. Patterns reveal daily routines and interaction windows.
                     </p>
                   </div>
                 </div>
