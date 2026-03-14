@@ -208,11 +208,6 @@ export function useParentData(profileId: string | null) {
       )
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "medications" },
-        () => fetchAll()
-      )
-      .on(
-        "postgres_changes",
         { event: "*", schema: "public", table: "memory_comments" },
         () => fetchAll()
       )
