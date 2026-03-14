@@ -153,7 +153,7 @@ function CognitiveRing({ value = 0, label = "" }) {
          <text x={cx} y={cy - 6} textAnchor="middle" fontSize={30} fontWeight={700} fill="#3E2723" fontFamily="DM Sans">{value}</text>
          <text x={cx} y={cy + 12} textAnchor="middle" fontSize={11} fill="#C68B59" fontFamily="DM Sans" fontWeight={500}>{label || "—"}</text>
        </svg>
-       <span style={{ fontSize: 12, color: "#6b6b6b", fontWeight: 500 }}>Cognitive Vitality</span>
+       <span style={{ fontSize: 12, color: "#6b6b6b", fontWeight: 500 }}>Communication Clarity</span>
     </div>
   );
 }
