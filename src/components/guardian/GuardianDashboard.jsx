@@ -2011,13 +2011,13 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                       <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 6 }}>How it's measured</div>
                       <p style={{ fontSize: 11.5, color: "#555", lineHeight: 1.5, margin: 0 }}>{st.how}</p>
                     </div>
-                    <div style={{ flex: 1, minWidth: 200 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>What the score means</div>
+                     <div style={{ flex: 1, minWidth: 200 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>What the range indicates</div>
                       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                         {[
-                          { dot: "#4CAF50", text: st.meaning.high },
-                          { dot: "#FF9800", text: st.meaning.mid },
-                          { dot: "#E53935", text: st.meaning.low },
+                          { dot: "#5D8A6B", text: st.meaning.high },
+                          { dot: "#6B8A9E", text: st.meaning.mid },
+                          { dot: "#8D8D8D", text: st.meaning.low },
                         ].map((row, ri) => (
                           <div key={ri} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
                             <div style={{ width: 6, height: 6, borderRadius: "50%", background: row.dot, marginTop: 5, flexShrink: 0 }} />
