@@ -21,14 +21,6 @@ interface Memory {
   prompt_question: string | null;
 }
 
-interface Medication {
-  id: string;
-  name: string;
-  dose: string | null;
-  scheduled_time: string | null;
-  taken_today: boolean | null;
-  last_taken: string | null;
-}
 
 interface HealthEvent {
   id: string;
@@ -113,7 +105,7 @@ function capitalize(s: string) {
 export function useParentData(profileId: string | null) {
   const [parentProfile, setParentProfile] = useState<ParentProfile | null>(null);
   const [memories, setMemories] = useState<Memory[]>([]);
-  const [medications, setMedications] = useState<Medication[]>([]);
+  
   const [healthEvents, setHealthEvents] = useState<HealthEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
@@ -151,12 +143,6 @@ export function useParentData(profileId: string | null) {
         .limit(10);
       if (mems) setMemories(mems as Memory[]);
 
-      // Fetch medications
-      const { data: meds } = await supabase
-        .from("medications")
-        .select("*")
-        .eq("user_id", parentId);
-      if (meds) setMedications(meds as Medication[]);
 
       // Fetch health events from last 7 days
       const sevenDaysAgo = new Date();
@@ -222,11 +208,6 @@ export function useParentData(profileId: string | null) {
       )
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "medications" },
-        () => fetchAll()
-      )
-      .on(
-        "postgres_changes",
         { event: "*", schema: "public", table: "memory_comments" },
         () => fetchAll()
       )
@@ -262,33 +243,6 @@ export function useParentData(profileId: string | null) {
 
   const stats = deriveStats(healthEvents, memories);
 
-  const toggleMedication = async (medId: string, taken: boolean) => {
-    // Get parent id
-    const { data: myProfile } = await supabase
-      .from("profiles")
-      .select("linked_user_id")
-      .eq("id", profileId!)
-      .maybeSingle();
-    const parentId = myProfile?.linked_user_id;
-    if (!parentId) return;
-
-    const now = new Date().toISOString();
-    await supabase
-      .from("medications")
-      .update({ taken_today: taken, last_taken: taken ? now : null })
-      .eq("id", medId);
-
-    if (taken) {
-      const med = medications.find(m => m.id === medId);
-      await supabase.from("health_events").insert({
-        user_id: parentId,
-        event_type: "medication_taken",
-        value: { medication_name: med?.name, medication_id: medId },
-      });
-    }
-
-    fetchAll();
-  };
 
   // Fetch memory comments for all loaded memories
   const [memoryComments, setMemoryComments] = useState<Record<string, any[]>>({});
@@ -337,5 +291,5 @@ export function useParentData(profileId: string | null) {
     setMemoriesLastViewedAt(now);
   };
 
-  return { parentProfile, memories, medications, healthEvents, stats, loading, lastUpdated, toggleMedication, memoryComments, memoryReactions, unreadCount, unreadHearts, unreadComments, markMemoriesViewed };
+  return { parentProfile, memories, healthEvents, stats, loading, lastUpdated, memoryComments, memoryReactions, unreadCount, unreadHearts, unreadComments, markMemoriesViewed };
 }

@@ -1614,7 +1614,7 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
   const [callOpen, setCallOpen] = useState(false);
 
   // Real data hook
-  const { parentProfile, memories: realMemories, medications, healthEvents, stats: derivedStats, loading: dataLoading, lastUpdated, toggleMedication } = useParentData(profileId);
+  const { parentProfile, memories: realMemories, healthEvents, stats: derivedStats, loading: dataLoading, lastUpdated } = useParentData(profileId);
 
   // Request notification permission on mount
   useEffect(() => {
@@ -1724,7 +1724,7 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
     {label:"Activity Level",value:derivedStats.activityLevel.value, icon:Zap,         color:"#d97706", trend:derivedStats.activityLevel.trend},
   ];
 
-  // Derive alerts from recent health events (exclude medication events)
+  // Derive alerts from recent health events
   const alerts = healthEvents.filter(e => e.event_type !== "medication_taken").slice(0,3).map(e => ({
     text: `${e.event_type.replace(/_/g," ")} recorded`,
     type: "info"
