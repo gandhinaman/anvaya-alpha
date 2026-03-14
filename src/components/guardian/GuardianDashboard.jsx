@@ -2804,8 +2804,8 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
             <div className="s4" style={{ marginBottom: 22 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                 <div>
-                  <h3 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 20, fontWeight: 700, color: "#3E2723", margin: 0 }}>Recent Memories</h3>
-                  <p style={{ fontSize: 12, color: "#8D6E63", marginTop: 4 }}>Stories and moments shared by {parentProfile?.full_name?.split(" ")[0] || "Amma"}</p>
+                  <h3 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 20, fontWeight: 700, color: "#3E2723", margin: 0 }}>{parentProfile?.full_name?.split(" ")[0] || "Amma"}'s Recent Stories</h3>
+                  <p style={{ fontSize: 12, color: "#8D6E63", marginTop: 4 }}>Moments shared by {parentProfile?.full_name?.split(" ")[0] || "Amma"}</p>
                 </div>
                 {realMemories.length > 3 && (
                   <button onClick={() => setNav("memories")} style={{
