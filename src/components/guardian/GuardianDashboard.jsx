@@ -500,6 +500,25 @@ function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null
         </div>
       </div>
 
+      {/* React to this Story button */}
+      {memoryId && onReact && (
+        <button onClick={() => onReact(memoryId, title)} style={{
+          width: "100%", marginTop: 12, padding: "11px 16px", borderRadius: 14,
+          background: "linear-gradient(135deg, rgba(198,139,89,0.08), rgba(93,64,55,0.04))",
+          border: "1.5px solid rgba(198,139,89,0.2)",
+          color: "#5D4037", fontSize: 12, fontWeight: 700, cursor: "pointer",
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+          transition: "all .2s",
+        }}
+        onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(198,139,89,0.15), rgba(93,64,55,0.08))"; e.currentTarget.style.borderColor = "rgba(198,139,89,0.35)"; }}
+        onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(198,139,89,0.08), rgba(93,64,55,0.04))"; e.currentTarget.style.borderColor = "rgba(198,139,89,0.2)"; }}
+        >
+          <Sparkles size={14} color="#C68B59" />
+          React to this Story
+          <span style={{ fontSize: 10, color: "#9CA3AF", fontWeight: 500 }}>🎤 🎥</span>
+        </button>
+      )}
+
       {/* Collapsible Comments Section */}
       {showComments && (
         <div style={{ marginTop: 12, borderTop: "1px solid rgba(93,64,55,0.08)", paddingTop: 12 }}>
