@@ -2140,8 +2140,8 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
             <div className="s7">
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
                 <div>
-                  <h3 style={{fontSize:14,fontWeight:700,color:"#1a1a1a"}}>Memory Archive</h3>
-                  <p style={{fontSize:11,color:"#6b6b6b",marginTop:2}}>AI-summarized recordings with emotional context</p>
+                  <h3 style={{fontSize:14,fontWeight:700,color:"#1a1a1a"}}>{parentProfile?.full_name?.split(" ")[0] || "Amma"}'s Stories</h3>
+                  <p style={{fontSize:11,color:"#6b6b6b",marginTop:2}}>Memories and moments shared with love</p>
                 </div>
                 <button style={{fontSize:11,fontWeight:600,color:"#064E3B",border:"none",background:"transparent",cursor:"pointer",display:"flex",alignItems:"center",gap:3}}>
                   View all <ChevronRight size={12}/>
