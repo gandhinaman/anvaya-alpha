@@ -1841,11 +1841,11 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
             )}
             <div>
               <h1 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:isMobile?24:30,fontWeight:700,color:"#064E3B",lineHeight:1.2}}>
-                {nav==="settings"?"Settings":"Caregiver Dashboard"}
+                {nav==="settings"?"Settings":`${parentProfile?.full_name?.split(" ")[0] || "Amma"}'s Dashboard`}
               </h1>
               <p style={{color:"#6b6b6b",fontSize:12,marginTop:3}}>
                 {nav==="settings"?"Manage your account & preferences":<>
-                  Monitoring {parentProfile?.full_name || "Amma"}'s wellbeing
+                  Staying connected with {parentProfile?.full_name || "Amma"}
                   <span style={{color:"#9CA3AF",fontSize:10,marginLeft:8}}>
                     Updated {lastUpdated.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}
                   </span>
