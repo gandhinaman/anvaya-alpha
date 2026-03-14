@@ -376,6 +376,35 @@ function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null
     }
   };
 
+  const startVideoReply = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      const recorder = new MediaRecorder(stream);
+      const chunks = [];
+      recorder.ondataavailable = e => chunks.push(e.data);
+      recorder.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        const blob = new Blob(chunks, { type: "video/webm" });
+        const path = `comment_video_${Date.now()}.webm`;
+        const { data } = await supabase.storage.from("memories").upload(path, blob);
+        if (data) {
+          const { data: urlData } = supabase.storage.from("memories").getPublicUrl(data.path);
+          await sendComment(urlData.publicUrl, "video");
+        }
+        setVideoRecording(false);
+      };
+      recorderRef.current = recorder;
+      recorder.start();
+      setVideoRecording(true);
+    } catch (err) { console.error("Video record error:", err); }
+  };
+
+  const stopVideoReply = () => {
+    if (recorderRef.current && recorderRef.current.state === "recording") {
+      recorderRef.current.stop();
+    }
+  };
+
   return (
     <div className="gcard" style={{ padding: 18, animation: `fadeUp .5s ease ${.6 + index * .1}s both` }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
