@@ -217,7 +217,7 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 18px 10px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <BookOpen size={22} color="#C68B59" />
-          <span style={{ fontFamily: "'Playfair Display',serif", fontSize: 24, color: "#FFF8F0", fontWeight: 600 }}>
+          <span style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 24, color: "#FFF8F0", fontWeight: 600 }}>
             {lang === "en" ? "My Memories" : "मेरी यादें"}
           </span>
         </div>
