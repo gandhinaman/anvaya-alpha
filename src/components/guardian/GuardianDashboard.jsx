@@ -1516,46 +1516,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               );
             })()}
 
-            {/* ── 3. Trends & Patterns ── */}
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(93,64,55,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <TrendingUp size={14} color="#5D4037" />
-                </div>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#3E2723" }}>Trends & Patterns</span>
-              </div>
-              <div style={{
-                display: "grid",
-                gridTemplateColumns: isMobile ? "1fr" : inPanel ? "1fr" : "1fr 1fr",
-                gap: 14
-              }}>
-                <div className="gcard" style={{ padding: 20 }}>
-                  <div style={{ marginBottom: 14 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Weekly Wellness</div>
-                    <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Emotional state & vocal energy over 7 days</div>
-                  </div>
-                  <WeeklyTrendChart healthEvents={healthEvents} />
-                </div>
-
-                <div className="gcard" style={{ padding: 20 }}>
-                  <div style={{ marginBottom: 14 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Acoustic Insights</div>
-                    <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>24-hour vocal activity heatmap</div>
-                  </div>
-                  <AcousticHeatmap healthEvents={healthEvents} />
-                  <div style={{
-                    marginTop: 12, padding: "8px 10px",
-                    background: "rgba(141,110,99,0.04)", borderRadius: 10
-                  }}>
-                    <p style={{ fontSize: 10, color: "#8D6E63", lineHeight: 1.5, margin: 0 }}>
-                      Brighter cells = higher vocal energy. Patterns reveal daily routines and social activity windows.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* ── 4. Daily Tracking ── */}
+            {/* ── 3. Daily Tracking ── */}
             <div style={{ marginBottom: 20 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                 <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(198,139,89,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -1648,6 +1609,45 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                       </div>
                     </div>
                   )}
+                </div>
+              </div>
+            </div>
+
+            {/* ── 4. Trends & Patterns ── */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(93,64,55,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <TrendingUp size={14} color="#5D4037" />
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#3E2723" }}>Trends & Patterns</span>
+              </div>
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: isMobile ? "1fr" : inPanel ? "1fr" : "1fr 1fr",
+                gap: 14
+              }}>
+                <div className="gcard" style={{ padding: 20 }}>
+                  <div style={{ marginBottom: 14 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Weekly Wellness</div>
+                    <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Emotional state & vocal energy over 7 days</div>
+                  </div>
+                  <WeeklyTrendChart healthEvents={healthEvents} />
+                </div>
+
+                <div className="gcard" style={{ padding: 20 }}>
+                  <div style={{ marginBottom: 14 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Acoustic Insights</div>
+                    <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>24-hour vocal activity heatmap</div>
+                  </div>
+                  <AcousticHeatmap healthEvents={healthEvents} />
+                  <div style={{
+                    marginTop: 12, padding: "8px 10px",
+                    background: "rgba(141,110,99,0.04)", borderRadius: 10
+                  }}>
+                    <p style={{ fontSize: 10, color: "#8D6E63", lineHeight: 1.5, margin: 0 }}>
+                      Brighter cells = higher vocal energy. Patterns reveal daily routines and social activity windows.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
