@@ -1335,7 +1335,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
             {/* Linked Parent Info */}
             {parentProfile && (
               <div className="gcard" style={{ padding: 20 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a", marginBottom: 12 }}>Linked Parent</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a", marginBottom: 12 }}>Connected with</div>
                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                    <div style={{ width: 44, height: 44, borderRadius: "50%", background: "linear-gradient(135deg,#5D4037,#C68B59)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                      <User size={20} color="#FFF8F0" />

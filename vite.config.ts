@@ -25,7 +25,7 @@ export default defineConfig(({ mode }) => ({
       manifest: {
         name: "Anvaya",
         short_name: "Anvaya",
-        description: "A caring companion app for seniors — chat, voice, memories, and health tracking.",
+        description: "A caring companion app for parents — chat, voice, memories, and health tracking.",
         theme_color: "#2C1810",
         background_color: "#1A0F0A",
         display: "standalone",

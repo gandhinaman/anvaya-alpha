@@ -678,8 +678,8 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
           )}
           <p style={{ color: "rgba(249,249,247,.5)", fontSize: 16, lineHeight: 1.6, marginTop: 6 }}>
             {lang === "hi"
-              ? `${linkedName||"Caregiver"} इसे सुन सकेगा।`
-              : `${linkedName||"Your caregiver"} will be able to ${recordingMode === "video" ? "watch" : "hear"} this.`}
+              ? `${linkedName||"आपका परिवार"} इसे सुन सकेगा।`
+              : `${linkedName||"Your family"} will be able to ${recordingMode === "video" ? "watch" : "hear"} this.`}
           </p>
           <button
             onClick={onClose}

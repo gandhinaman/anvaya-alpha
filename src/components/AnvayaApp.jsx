@@ -1639,7 +1639,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
             {linkCode && (
               <div style={{padding:"16px",background:"rgba(255,248,240,.06)",borderRadius:16,border:"1px solid rgba(255,248,240,.1)"}}>
                 <div style={{fontSize:13,color:"rgba(255,248,240,.5)",fontWeight:600,marginBottom:8}}>
-                  {lang==="en"?"Caregiver Linking Code":"केयरगिवर लिंकिंग कोड"}
+                  {lang==="en"?"Care Partner Linking Code":"केयर पार्टनर लिंकिंग कोड"}
                 </div>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                   <div style={{fontSize:28,fontWeight:700,color:"#D4A574",letterSpacing:"0.2em"}}>{linkCode}</div>

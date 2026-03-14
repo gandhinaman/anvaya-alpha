@@ -110,7 +110,7 @@ Add this to your JSON response:
   "priority_review": false
 }
 
-IMPORTANT: Set "priority_review" to true ONLY if you detect significant facial drooping, labored breathing, or severe motor control issues. This triggers a caregiver alert.`;
+IMPORTANT: Set "priority_review" to true ONLY if you detect significant facial drooping, labored breathing, or severe motor control issues. This triggers a care partner alert.`;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
