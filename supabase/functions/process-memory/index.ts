@@ -79,7 +79,7 @@ const SUMMARY_PROMPT_TEXT_ONLY = `Analyze this personal memory recording from tr
 
 Do NOT use generic titles like "Share a memory" or "Untitled".`;
 
-const VIDEO_VISUAL_PROMPT = `You are also analyzing a VIDEO recording of an elderly person. In addition to the audio/transcript analysis above, also provide a comprehensive visual analysis section.
+const VIDEO_VISUAL_PROMPT = `You are also analyzing a VIDEO recording of a parent. In addition to the audio/transcript analysis above, also provide a comprehensive visual analysis section.
 
 Carefully examine the video frame(s) for:
 - Facial expression: Is the person calm, happy, distressed, neutral, or in pain?
