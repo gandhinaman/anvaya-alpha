@@ -1127,7 +1127,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
       <div style={{textAlign:"center",marginTop:16}}>
         <div style={{fontFamily:"'Playfair Display',serif",fontSize:14,color:"rgba(255,248,240,.45)",letterSpacing:"0.3em",fontWeight:400}}>ANVAYA</div>
         <div style={{fontFamily:"'Playfair Display',serif",fontSize:isMock?40:48,color:"#FFF8F0",fontWeight:600,letterSpacing:"0.05em",marginTop:2}}>
-          {lang==="en"?"Ava":"एवा"}
+          {lang==="en"?"Ela":"एला"}
         </div>
         {voicePhase==="idle"&&<div style={{fontSize:16,color:"rgba(255,248,240,.55)",marginTop:5}}>
           {lang==="en"?"Your trusted companion":"आपका विश्वसनीय साथी"}
