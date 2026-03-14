@@ -738,6 +738,12 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
   const [collectionSearchQuery, setCollectionSearchQuery] = useState("");
   const [showCollectionAddPanel, setShowCollectionAddPanel] = useState(false);
 
+  // Playlist state
+  const [playlistActive, setPlaylistActive] = useState(false);
+  const [playlistIndex, setPlaylistIndex] = useState(0);
+  const playlistAudioRef = useRef(null);
+  const playlistVideoRef = useRef(null);
+
   // Fetch collections
   useEffect(() => {
     if (!profileId) return;
