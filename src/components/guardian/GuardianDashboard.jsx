@@ -1467,6 +1467,170 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               </div>
             </div>
 
+            {/* ── Visual Health Deep Dive ── */}
+            {healthEvents.some(e => e.event_type === "visual_analysis") && (
+              <div style={{ marginBottom: 22 }}>
+                <button onClick={() => setShowDeepDive(d => !d)} style={{
+                  display: "flex", alignItems: "center", gap: 10, width: "100%",
+                  padding: "14px 20px", borderRadius: 18,
+                  background: showDeepDive ? "rgba(93,64,55,0.06)" : "rgba(255,255,255,0.8)",
+                  backdropFilter: "blur(12px)",
+                  border: `1px solid ${showDeepDive ? "rgba(93,64,55,0.15)" : "rgba(255,255,255,0.6)"}`,
+                  boxShadow: "0 4px 16px rgba(62,39,35,0.04)",
+                  cursor: "pointer", transition: "all .3s",
+                  textAlign: "left"
+                }}>
+                  <div style={{
+                    width: 36, height: 36, borderRadius: 10,
+                    background: "linear-gradient(135deg, #5D4037, #8D6E63)",
+                    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+                  }}>
+                    <Scan size={16} color="#FFF8F0" />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#3E2723" }}>Visual Biometric Analysis</div>
+                    <div style={{ fontSize: 11, color: "#8D6E63" }}>Sparklines & detailed markers from video recordings</div>
+                  </div>
+                  <ChevronDown size={16} color="#8D6E63" style={{ transition: "transform .3s", transform: showDeepDive ? "rotate(180deg)" : "rotate(0)" }} />
+                </button>
+
+                {showDeepDive && (() => {
+                  const visualEvents = healthEvents.filter(e => e.event_type === "visual_analysis").slice(0, 7);
+                  if (visualEvents.length === 0) return null;
+
+                  const markers = [
+                    { key: "micro_expressions", label: "Micro-Expressions", desc: "Flat affect vs. Animated", icon: "😊", color: "#C68B59" },
+                    { key: "motor_control", label: "Motor Control", desc: "Tremors & head tilting", icon: "✋", color: "#8D6E63" },
+                    { key: "vocal_visual_sync", label: "Vocal-Visual Sync", desc: "Speech & facial timing", icon: "🔄", color: "#5D4037" },
+                    { key: "facial_symmetry", label: "Facial Symmetry", desc: "Neurological indicator", icon: "🪞", color: "#4CAF50" },
+                    { key: "skin_pallor", label: "Skin Tone", desc: "Circulation & wellness", icon: "🌡️", color: "#FF9800" },
+                    { key: "eye_engagement", label: "Eye Engagement", desc: "Cognitive presence", icon: "👁️", color: "#2196F3" },
+                  ];
+
+                  const Sparkline = ({ data, color }) => {
+                    const valid = data.filter(v => v != null);
+                    if (valid.length < 2) return <span style={{ fontSize: 10, color: "#9CA3AF", fontStyle: "italic" }}>Insufficient data</span>;
+                    const W = 80, H = 24, pad = 2;
+                    const min = Math.max(0, Math.min(...valid) - 10);
+                    const max = Math.min(100, Math.max(...valid) + 10);
+                    const range = max - min || 1;
+                    const points = valid.map((v, i) => ({
+                      x: pad + i * ((W - pad * 2) / (valid.length - 1)),
+                      y: H - pad - ((v - min) / range) * (H - pad * 2)
+                    }));
+                    const path = "M" + points.map(p => `${p.x},${p.y}`).join(" L");
+                    return (
+                      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ overflow: "visible" }}>
+                        <path d={path} fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+                        {points.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r={1.5} fill={color} />)}
+                      </svg>
+                    );
+                  };
+
+                  return (
+                    <div style={{
+                      marginTop: 12, padding: isMobile ? "16px" : "20px 24px",
+                      background: "rgba(255,255,255,0.7)", backdropFilter: "blur(12px)",
+                      borderRadius: 20, border: "1px solid rgba(93,64,55,0.08)",
+                      animation: "fadeUp .3s ease both"
+                    }}>
+                      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : inPanel ? "1fr" : "1fr 1fr", gap: 14 }}>
+                        {markers.map(marker => {
+                          const scores = visualEvents.map(e => e.value?.[marker.key]?.score).reverse();
+                          const latest = visualEvents[0]?.value?.[marker.key];
+                          return (
+                            <div key={marker.key} style={{
+                              padding: "14px 16px", borderRadius: 16,
+                              background: "rgba(255,248,240,0.6)",
+                              border: "1px solid rgba(93,64,55,0.06)"
+                            }}>
+                              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                  <span style={{ fontSize: 16 }}>{marker.icon}</span>
+                                  <div>
+                                    <div style={{ fontSize: 12, fontWeight: 600, color: "#3E2723" }}>{marker.label}</div>
+                                    <div style={{ fontSize: 10, color: "#9CA3AF" }}>{marker.desc}</div>
+                                  </div>
+                                </div>
+                                {latest && (
+                                  <span style={{
+                                    fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 100,
+                                    background: latest.score >= 70 ? "rgba(76,175,80,0.1)" : latest.score >= 40 ? "rgba(255,152,0,0.1)" : "rgba(229,57,53,0.1)",
+                                    color: latest.score >= 70 ? "#4CAF50" : latest.score >= 40 ? "#FF9800" : "#E53935"
+                                  }}>{latest.label}</span>
+                                )}
+                              </div>
+                              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                <Sparkline data={scores} color={marker.color} />
+                                {latest?.score != null && (
+                                  <span style={{ fontSize: 18, fontWeight: 700, color: "#3E2723" }}>{latest.score}%</span>
+                                )}
+                              </div>
+                              {latest?.detail && (
+                                <p style={{ fontSize: 10, color: "#6b6b6b", marginTop: 6, lineHeight: 1.4, margin: "6px 0 0 0" }}>{latest.detail}</p>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Compare with previous */}
+                      {visualEvents.length >= 2 && (
+                        <div style={{ marginTop: 14, textAlign: "center" }}>
+                          <button onClick={() => setCompareIdx(compareIdx != null ? null : 1)} style={{
+                            padding: "8px 20px", borderRadius: 100, border: "1px solid rgba(93,64,55,0.15)",
+                            background: compareIdx != null ? "rgba(93,64,55,0.06)" : "transparent",
+                            color: "#5D4037", fontSize: 12, fontWeight: 600, cursor: "pointer",
+                            display: "inline-flex", alignItems: "center", gap: 6
+                          }}>
+                            <Eye size={14} /> {compareIdx != null ? "Hide Comparison" : "Compare with Previous"}
+                          </button>
+                          {compareIdx != null && visualEvents[compareIdx] && (
+                            <div style={{
+                              marginTop: 12, padding: "14px 18px", borderRadius: 16,
+                              background: "rgba(198,139,89,0.04)", border: "1px solid rgba(198,139,89,0.1)",
+                              textAlign: "left"
+                            }}>
+                              <div style={{ fontSize: 11, fontWeight: 600, color: "#8D6E63", marginBottom: 8 }}>
+                                Previous recording · {new Date(visualEvents[compareIdx].recorded_at).toLocaleDateString()}
+                              </div>
+                              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                                {[
+                                  { label: "Symmetry", key: "facial_symmetry" },
+                                  { label: "Skin Tone", key: "skin_pallor" },
+                                  { label: "Eye Engagement", key: "eye_engagement" },
+                                ].map(m => {
+                                  const curr = visualEvents[0]?.value?.[m.key]?.score;
+                                  const prev = visualEvents[compareIdx]?.value?.[m.key]?.score;
+                                  const diff = curr != null && prev != null ? curr - prev : null;
+                                  return (
+                                    <div key={m.key} style={{ textAlign: "center" }}>
+                                      <div style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 4 }}>{m.label}</div>
+                                      <div style={{ fontSize: 14, fontWeight: 700, color: "#3E2723" }}>
+                                        {curr != null ? `${curr}%` : "—"}
+                                      </div>
+                                      {diff != null && (
+                                        <div style={{
+                                          fontSize: 10, fontWeight: 600, marginTop: 2,
+                                          color: diff > 0 ? "#4CAF50" : diff < 0 ? "#E53935" : "#9CA3AF"
+                                        }}>
+                                          {diff > 0 ? `+${diff}` : diff < 0 ? `${diff}` : "—"}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
           </div>
         )}
 
