@@ -357,6 +357,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
     supabase.from("profiles").select("full_name").eq("id",linkedUserId).maybeSingle()
       .then(({data})=>{ if(data?.full_name) setLinkedName(data.full_name); });
   },[linkedUserId]);
+  const { current: streakDays, longest: longestStreak, recordedToday: streakRecordedToday } = useStreak(userId);
   const [rec,setRec]=useState(false);
   const [overlay,setOverlay]=useState(false);
   const [overlayPhase,setOverlayPhase]=useState("ask"); // ask | alerting | confirmed
