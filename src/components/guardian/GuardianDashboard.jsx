@@ -1384,7 +1384,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               return (
                 <>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-                    <button onClick={() => { setActiveCollection(null); setShowCollectionAddPanel(false); setCollectionSearchQuery(""); }} style={{
+                    <button onClick={() => { setActiveCollection(null); setShowCollectionAddPanel(false); setCollectionSearchQuery(""); setPlaylistActive(false); }} style={{
                       width: 36, height: 36, borderRadius: 10, border: "none", cursor: "pointer",
                       background: "rgba(93,64,55,0.06)", display: "flex", alignItems: "center", justifyContent: "center"
                     }}>
