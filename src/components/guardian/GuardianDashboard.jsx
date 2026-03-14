@@ -3459,6 +3459,16 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
           </div>
         </div>
       )}
+
+      {/* Reaction Recorder Modal */}
+      <ReactionRecorder
+        open={reactionOpen}
+        onClose={() => setReactionOpen(false)}
+        memoryId={reactionMemoryId}
+        memoryTitle={reactionMemoryTitle}
+        profileId={profileId}
+        parentName={parentProfile?.full_name?.split(" ")[0] || "Amma"}
+      />
     </div>
   );
 }
