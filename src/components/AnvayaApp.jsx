@@ -2605,7 +2605,7 @@ export default function App() {
               padding:"28px 12px",borderRight:"1px solid rgba(255,255,255,.06)",
               overflowY:"auto"
             }}>
-              <div style={{fontSize:10,color:"rgba(249,249,247,.28)",letterSpacing:"0.14em",marginBottom:14,fontWeight:600}}>AVA — PARENT COMPANION</div>
+              <div style={{fontSize:10,color:"rgba(249,249,247,.28)",letterSpacing:"0.14em",marginBottom:14,fontWeight:600}}>ELA — PARENT COMPANION</div>
               <SathiScreen inPanel/>
               <div style={{marginTop:14,padding:"6px 13px",borderRadius:100,background:"rgba(6,78,59,.2)",border:"1px solid rgba(6,78,59,.3)"}}>
                 <span style={{fontSize:11,color:"#34D399"}}>If you're in trouble, type or say "help" to Ava</span>
