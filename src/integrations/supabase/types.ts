@@ -196,6 +196,69 @@ export type Database = {
           },
         ]
       }
+      memory_collection_items: {
+        Row: {
+          added_at: string
+          collection_id: string
+          id: string
+          memory_id: string
+        }
+        Insert: {
+          added_at?: string
+          collection_id: string
+          id?: string
+          memory_id: string
+        }
+        Update: {
+          added_at?: string
+          collection_id?: string
+          id?: string
+          memory_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "memory_collection_items_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "memory_collections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "memory_collection_items_memory_id_fkey"
+            columns: ["memory_id"]
+            isOneToOne: false
+            referencedRelation: "memories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      memory_collections: {
+        Row: {
+          created_at: string
+          description: string | null
+          emoji: string | null
+          id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          emoji?: string | null
+          id?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          emoji?: string | null
+          id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       memory_comments: {
         Row: {
           author_name: string | null
