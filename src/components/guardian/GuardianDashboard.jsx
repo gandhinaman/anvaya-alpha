@@ -735,6 +735,8 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
   const [newCollectionEmoji, setNewCollectionEmoji] = useState("📚");
   const [collectionCreating, setCollectionCreating] = useState(false);
   const [addingToCollection, setAddingToCollection] = useState(null); // memoryId being added
+  const [collectionSearchQuery, setCollectionSearchQuery] = useState("");
+  const [showCollectionAddPanel, setShowCollectionAddPanel] = useState(false);
 
   // Fetch collections
   useEffect(() => {
