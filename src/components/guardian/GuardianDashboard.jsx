@@ -1738,57 +1738,98 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                     <div style={{ fontSize: 11, color: "#8D6E63" }}>How {parentProfile?.full_name || "Amma"}'s day is going</div>
                   </div>
                 </div>
+                {/* Memory blurb */}
+                <div style={{ marginBottom: 16 }}>
+                  <p style={{
+                    fontSize: 14, color: "#3E2723", lineHeight: 1.7,
+                    fontFamily: "'DM Sans', sans-serif", margin: 0,
+                    letterSpacing: "0.01em"
+                  }}>
+                    {(() => {
+                      const name = parentProfile?.full_name?.split(" ")[0] || "Amma";
+                      const memCount = realMemories.length;
+                      if (memCount === 0) {
+                        return `${name} hasn't recorded any memories yet. Once they start sharing stories, you'll see updates here. 💛`;
+                      }
+                      // Recent memories (last 24h)
+                      const now = new Date();
+                      const recent = realMemories.filter(m => m.created_at && (now - new Date(m.created_at)) < 86400000);
+                      if (recent.length === 0) {
+                        const latest = realMemories[0];
+                        const daysAgo = Math.floor((now - new Date(latest.created_at)) / 86400000);
+                        const topicText = latest.title && latest.title !== "Untitled" ? `"${latest.title}"` : "a story";
+                        return `${name} hasn't recorded anything today. Their last memory was ${topicText}, ${daysAgo === 1 ? "yesterday" : `${daysAgo} days ago`}. Maybe a gentle nudge? 🌿`;
+                      }
+                      const totalDur = recent.reduce((s, m) => s + (m.duration_seconds || 0), 0);
+                      const durMin = Math.max(1, Math.round(totalDur / 60));
+                      const titles = recent.filter(m => m.title && m.title !== "Untitled").map(m => `"${m.title}"`);
+                      const tones = [...new Set(recent.map(m => m.emotional_tone).filter(Boolean))];
+                      let text = `${name} recorded ${recent.length} ${recent.length === 1 ? "memory" : "memories"} today, totaling ${durMin} minute${durMin > 1 ? "s" : ""} of sharing. `;
+                      if (titles.length > 0) {
+                        text += titles.length <= 2 ? `Topics include ${titles.join(" and ")}. ` : `Topics include ${titles.slice(0, 2).join(", ")} and more. `;
+                      }
+                      if (tones.length > 0) {
+                        const emoMap = { joyful: "😊", nostalgic: "🌅", peaceful: "🕊️", distressed: "💙" };
+                        const primary = tones[0];
+                        text += `The overall tone feels ${primary}. ${emoMap[primary] || ""}`;
+                      }
+                      return text;
+                    })()}
+                  </p>
+                </div>
+
+                {/* Health metrics blurb */}
                 <p style={{
-                  fontSize: 14, color: "#3E2723", lineHeight: 1.7,
+                  fontSize: 14, color: "#4a3f3a", lineHeight: 1.7,
                   fontFamily: "'DM Sans', sans-serif", margin: 0,
-                  letterSpacing: "0.01em"
+                  letterSpacing: "0.01em",
+                  paddingTop: 14, borderTop: "1px solid rgba(198,139,89,0.12)"
                 }}>
                   {(() => {
                     const name = parentProfile?.full_name?.split(" ")[0] || "Amma";
-                    const latestMem = realMemories[0];
+                    const parts = [];
+
+                    // Vocal energy
+                    const vocalVal = parseInt(derivedStats.vocalEnergy.value);
+                    if (!isNaN(vocalVal)) {
+                      if (vocalVal >= 70) parts.push(`${name}'s voice sounds strong and clear (${vocalVal}%).`);
+                      else if (vocalVal >= 40) parts.push(`Vocal energy is moderate at ${vocalVal}% — within normal range.`);
+                      else parts.push(`Vocal energy is low at ${vocalVal}% — could indicate fatigue or low mood.`);
+                    }
+
+                    // Cognitive
+                    const cogVal = parseInt(derivedStats.cognitiveClarity.value);
+                    if (!isNaN(cogVal)) {
+                      if (cogVal >= 70) parts.push(`Cognitive clarity looks sharp at ${cogVal}%.`);
+                      else if (cogVal >= 45) parts.push(`Cognitive scores show normal variation (${cogVal}%).`);
+                      else parts.push(`Cognitive score dipped to ${cogVal}% — worth a check-in.`);
+                    }
+
+                    // Emotional
+                    const emoTrend = derivedStats.emotionalTone.trend;
+                    const emoVal = parseInt(derivedStats.emotionalTone.value);
+                    if (emoTrend) {
+                      if (/joy|happy/i.test(emoTrend)) parts.push(`Emotionally, ${name} seems upbeat and cheerful. 😊`);
+                      else if (/peace|calm/i.test(emoTrend)) parts.push(`Emotionally, ${name} seems peaceful and relaxed. 🕊️`);
+                      else if (/nostalg/i.test(emoTrend)) parts.push(`${name} has been feeling nostalgic today. 🌅`);
+                      else if (/distress|concern/i.test(emoTrend)) parts.push(`${name} may need some support — mood seems low. 💙`);
+                      else parts.push(`Emotional state: ${emoTrend}.`);
+                    } else if (!isNaN(emoVal)) {
+                      if (emoVal >= 60) parts.push(`Emotional wellbeing looks positive (${emoVal}%).`);
+                      else if (emoVal >= 35) parts.push(`Emotional state is stable (${emoVal}%).`);
+                      else parts.push(`Emotional score is low (${emoVal}%) — consider reaching out.`);
+                    }
+
+                    // Medication
                     const medsTaken = medications.filter(m => m.taken_today).length;
                     const medsTotal = medications.length;
-                    const emotionalVal = derivedStats.emotionalTone.trend || "calm";
-                    const memCount = realMemories.length;
-
-                    if (!latestMem && medsTotal === 0) {
-                      return `Once ${name} starts sharing stories and logging medications, you'll see a warm summary of their day here. 💛`;
-                    }
-
-                    let parts = [];
-                    // Emotional state
-                    const emoLower = emotionalVal.toLowerCase();
-                    if (emoLower.includes("joy") || emoLower.includes("happy")) {
-                      parts.push(`${name} sounds cheerful today! 😊`);
-                    } else if (emoLower.includes("peace") || emoLower.includes("calm")) {
-                      parts.push(`${name} seems peaceful and relaxed today. 🕊️`);
-                    } else if (emoLower.includes("nostalg")) {
-                      parts.push(`${name} is feeling nostalgic today, reminiscing about the past. 🌅`);
-                    } else if (emoLower.includes("concern") || emoLower.includes("distress")) {
-                      parts.push(`${name} seems a bit low today — might be a good time to call. 💙`);
-                    } else {
-                      parts.push(`${name} is doing okay today.`);
-                    }
-
-                    // Memory info
-                    if (latestMem) {
-                      const durMin = latestMem.duration_seconds ? Math.round(latestMem.duration_seconds / 60) : null;
-                      const durText = durMin ? `${durMin} minute${durMin > 1 ? "s" : ""}` : "a moment";
-                      const topicText = latestMem.title && latestMem.title !== "Untitled" ? `about "${latestMem.title}"` : "sharing stories";
-                      parts.push(`They spent ${durText} ${topicText}.`);
-                    }
-
-                    // Medication info
                     if (medsTotal > 0) {
-                      if (medsTaken === medsTotal) {
-                        parts.push(`All ${medsTotal} medications taken today. ✅`);
-                      } else if (medsTaken > 0) {
-                        parts.push(`${medsTaken} of ${medsTotal} medications confirmed so far.`);
-                      } else {
-                        parts.push(`No medications marked yet today — a gentle check-in might help. 💊`);
-                      }
+                      if (medsTaken === medsTotal) parts.push(`All ${medsTotal} medications taken today. ✅`);
+                      else if (medsTaken > 0) parts.push(`${medsTaken} of ${medsTotal} medications confirmed so far. 💊`);
+                      else parts.push(`No medications marked yet today — a gentle reminder might help. 💊`);
                     }
 
+                    if (parts.length === 0) return `Health metrics will appear here once ${name} starts recording memories and logging medications.`;
                     return parts.join(" ");
                   })()}
                 </p>
