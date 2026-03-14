@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { X, Mic, MicOff, Send, MessageCircle, Volume2, Check, Pill } from "lucide-react";
+import { X, Mic, MicOff, Send, MessageCircle, Volume2, Check, BookOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 // ─── Culturally-aware suggested prompts ───
