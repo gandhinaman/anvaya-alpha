@@ -1724,12 +1724,10 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
     {label:"Activity Level",value:derivedStats.activityLevel.value, icon:Zap,         color:"#d97706", trend:derivedStats.activityLevel.trend},
   ];
 
-  // Derive alerts from recent health events
-  const alerts = healthEvents.slice(0,3).map(e => ({
-    text: e.event_type === "medication_taken"
-      ? `Medication taken: ${e.value?.medication_name || "Unknown"}`
-      : `${e.event_type.replace(/_/g," ")} recorded`,
-    type: e.event_type === "medication_taken" ? "success" : "info"
+  // Derive alerts from recent health events (exclude medication events)
+  const alerts = healthEvents.filter(e => e.event_type !== "medication_taken").slice(0,3).map(e => ({
+    text: `${e.event_type.replace(/_/g," ")} recorded`,
+    type: "info"
   }));
   if (alerts.length === 0) {
     alerts.push({text:"No recent events", type:"info"});
