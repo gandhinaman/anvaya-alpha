@@ -11,6 +11,7 @@ import MemoryRecorder from "./sathi/MemoryRecorder";
 import MemoryLog from "./sathi/MemoryLog";
 import { supabase } from "@/integrations/supabase/client";
 import { useParentData } from "@/hooks/useParentData";
+import { useStreak } from "@/hooks/useStreak";
 
 // ─── RESPONSIVE HOOK ──────────────────────────────────────────────────────────
 function useWindowSize() {
