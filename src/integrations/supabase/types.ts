@@ -337,6 +337,7 @@ export type Database = {
           age: number | null
           created_at: string | null
           full_name: string | null
+          has_accepted_terms: boolean
           health_issues: string[] | null
           id: string
           interests: string[] | null
@@ -352,6 +353,7 @@ export type Database = {
           age?: number | null
           created_at?: string | null
           full_name?: string | null
+          has_accepted_terms?: boolean
           health_issues?: string[] | null
           id: string
           interests?: string[] | null
@@ -367,6 +369,7 @@ export type Database = {
           age?: number | null
           created_at?: string | null
           full_name?: string | null
+          has_accepted_terms?: boolean
           health_issues?: string[] | null
           id?: string
           interests?: string[] | null
