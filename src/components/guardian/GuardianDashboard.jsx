@@ -872,25 +872,29 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
   ];
 
   const stats = [
-     { label: "Vocal Energy", value: derivedStats.vocalEnergy.value, icon: Mic, color: "#5D4037", trend: derivedStats.vocalEnergy.trend,
-       what: "Strength, pitch variation, and resonance of your parent's voice.",
-       how: "Analyzed directly from the audio waveform of recorded memories — not just words.",
-       meaning: { high: "75%+ = strong projection, healthy speech", mid: "40–75% = normal variation", low: "Below 40% = possible fatigue or respiratory changes" }
+     { label: "Acoustic Volume / Pitch", value: derivedStats.vocalEnergy.value, icon: Mic, color: "#5D4037", trend: derivedStats.vocalEnergy.trend,
+       what: "Observed volume, pitch variation, and resonance patterns in speech.",
+       how: "Analyzed directly from the audio waveform of recorded interactions.",
+       meaning: { high: "75%+ = strong projection, typical speech pattern", mid: "40–75% = normal variation in volume/pitch", low: "Below 40% = reduced volume or pitch range observed" },
+       infoNote: "This tracks the physical characteristics of speech — volume, pitch, and resonance patterns."
      },
-     { label: "Cognitive Vitality", value: derivedStats.cognitiveClarity.value, icon: TrendingUp, color: "#8D6E63", trend: derivedStats.cognitiveClarity.trend,
-       what: "Word retrieval speed, sentence coherence, and recall accuracy.",
+     { label: "Communication Clarity", value: derivedStats.cognitiveClarity.value, icon: TrendingUp, color: "#8D6E63", trend: derivedStats.cognitiveClarity.trend,
+       what: "Word retrieval pace, sentence flow, and vocabulary usage patterns.",
        how: "Derived from transcript analysis — vocabulary richness, logical flow, and self-corrections.",
-       meaning: { high: "80%+ = sharp, fluent recall", mid: "50–80% = normal age-related variation", low: "Below 50% = may warrant a check-in" }
+       meaning: { high: "80%+ = fluent, varied vocabulary", mid: "50–80% = typical variation", low: "Below 50% = reduced fluency observed" },
+       infoNote: "This monitors vocabulary use and response patterns during interactions."
      },
-     { label: "Emotional Wellbeing", value: derivedStats.emotionalTone.value, icon: Heart, color: "#C68B59", trend: derivedStats.emotionalTone.trend,
-       what: "Emotional quality detected from voice — joy, calm, sadness, or distress.",
-       how: "Measured from audio tone, breathing patterns, and vocal trembling.",
-       meaning: { high: "Joyful / Peaceful = positive wellbeing", mid: "Calm / Nostalgic = stable", low: "Concerned / Distressed = may need support" }
+     { label: "Observed Sentiment", value: derivedStats.emotionalTone.value, icon: Heart, color: "#C68B59", trend: derivedStats.emotionalTone.trend,
+       what: "Tone of voice and word choice patterns observed during interactions.",
+       how: "Assessed from audio tone patterns, breathing rhythm, and vocal characteristics.",
+       meaning: { high: "Joyful / Peaceful = positive tone observed", mid: "Calm / Nostalgic = steady tone", low: "Concerned / Subdued = lower tone observed" },
+       infoNote: "This monitors tone of voice and word choice during recorded interactions."
      },
-     { label: "Activity Level", value: derivedStats.activityLevel.value, icon: Zap, color: "#A1887F", trend: derivedStats.activityLevel.trend,
-       what: "Overall engagement through speech speed and interaction frequency.",
-       how: "Measured from audio speech rate, rhythm, and enthusiasm in delivery.",
-       meaning: { high: "Active = engaged and talkative", mid: "Moderate = normal", low: "Low = possible isolation or fatigue" }
+     { label: "Interaction Engagement", value: derivedStats.activityLevel.value, icon: Zap, color: "#A1887F", trend: derivedStats.activityLevel.trend,
+       what: "Speech pace, interaction duration, and engagement patterns.",
+       how: "Assessed from speech rate, rhythm, and interaction duration patterns.",
+       meaning: { high: "Active = frequent, engaged interaction", mid: "Moderate = typical pattern", low: "Low = reduced interaction frequency observed" },
+       infoNote: "This monitors the rhythm and pace of speech and interaction frequency."
      },
   ];
 
