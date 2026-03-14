@@ -2222,13 +2222,13 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               );
             })()}
 
-            {/* ── 3. Daily Tracking ── */}
+            {/* ── 3. Legacy Progress & Stories ── */}
             <div style={{ marginBottom: 20 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                 <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(198,139,89,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Pill size={14} color="#C68B59" />
+                  <BookOpen size={14} color="#C68B59" />
                 </div>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#3E2723" }}>Daily Tracking</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#3E2723" }}>Legacy & Connection</span>
               </div>
               <div style={{
                 display: "grid",
@@ -2237,44 +2237,39 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               }}>
                 <div className="gcard" style={{ padding: 20 }}>
                   <div style={{ marginBottom: 14 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Medication Tracker</div>
-                    <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Today's medications</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Legacy Progress</div>
+                    <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Family history recorded</div>
                   </div>
-                  {medications.length === 0 ? (
-                    <p style={{ fontSize: 12, color: "#9CA3AF", fontStyle: "italic" }}>No medications configured</p>
-                  ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                      {medications.map(med => (
-                        <div key={med.id} style={{
-                          display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
-                          background: med.taken_today ? "rgba(198,139,89,0.06)" : "rgba(255,248,240,0.6)",
-                          borderRadius: 12, border: `1px solid ${med.taken_today ? "rgba(198,139,89,0.15)" : "rgba(93,64,55,0.08)"}`,
-                          cursor: "pointer", transition: "all .2s"
-                        }} onClick={() => toggleMedication(med.id, !med.taken_today)}>
-                          <div style={{
-                            width: 22, height: 22, borderRadius: 6, flexShrink: 0,
-                            border: med.taken_today ? "none" : "2px solid rgba(93,64,55,0.25)",
-                            background: med.taken_today ? "#C68B59" : "transparent",
-                            display: "flex", alignItems: "center", justifyContent: "center"
-                          }}>
-                            {med.taken_today && <Check size={13} color="#fff" />}
+                  {(() => {
+                    const totalMin = Math.round(realMemories.reduce((s, m) => s + (m.duration_seconds || 0), 0) / 60);
+                    const thisMonth = realMemories.filter(m => {
+                      const d = new Date(m.created_at);
+                      const now = new Date();
+                      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                    });
+                    const monthMin = Math.round(thisMonth.reduce((s, m) => s + (m.duration_seconds || 0), 0) / 60);
+                    return (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", background: "rgba(198,139,89,0.06)", borderRadius: 14, border: "1px solid rgba(198,139,89,0.12)" }}>
+                          <span style={{ fontSize: 24 }}>📖</span>
+                          <div>
+                            <div style={{ fontSize: 20, fontWeight: 700, color: "#3E2723" }}>{realMemories.length}</div>
+                            <div style={{ fontSize: 11, color: "#8D6E63" }}>Total stories shared</div>
                           </div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{
-                              fontSize: 12, fontWeight: 600, color: med.taken_today ? "#C68B59" : "#1a1a1a",
-                              textDecoration: med.taken_today ? "line-through" : "none"
-                            }}>{med.name}</div>
-                            <div style={{ fontSize: 10, color: "#9CA3AF" }}>{med.dose || ""}{med.scheduled_time ? ` · ${med.scheduled_time}` : ""}</div>
-                          </div>
-                          {med.taken_today && med.last_taken && (
-                            <span style={{ fontSize: 9, color: "#C68B59", fontWeight: 500 }}>
-                              {new Date(med.last_taken).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                            </span>
-                          )}
                         </div>
-                      ))}
-                    </div>
-                  )}
+                        <div style={{ display: "flex", gap: 10 }}>
+                          <div style={{ flex: 1, padding: "12px 14px", background: "rgba(93,64,55,0.04)", borderRadius: 14, border: "1px solid rgba(93,64,55,0.08)", textAlign: "center" }}>
+                            <div style={{ fontSize: 18, fontWeight: 700, color: "#5D4037" }}>{totalMin}</div>
+                            <div style={{ fontSize: 10, color: "#8D6E63" }}>Total minutes</div>
+                          </div>
+                          <div style={{ flex: 1, padding: "12px 14px", background: "rgba(93,64,55,0.04)", borderRadius: 14, border: "1px solid rgba(93,64,55,0.08)", textAlign: "center" }}>
+                            <div style={{ fontSize: 18, fontWeight: 700, color: "#5D4037" }}>{monthMin}</div>
+                            <div style={{ fontSize: 10, color: "#8D6E63" }}>This month</div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <div className="gcard" style={{ padding: 20 }}>
