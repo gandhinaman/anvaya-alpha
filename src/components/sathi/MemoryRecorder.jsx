@@ -266,6 +266,12 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
       const result = await res.json();
       setSavedTitle(result.title || "Your Memory");
       setPhase("success");
+
+      // Mark caregiver question as used if one was active
+      if (caregiverQuestion) {
+        await supabase.from("caregiver_questions").update({ used: true }).eq("id", caregiverQuestion.id);
+        setCaregiverQuestion(null);
+      }
     } catch (err) {
       console.error("Processing error:", err);
       setPhase("error");
