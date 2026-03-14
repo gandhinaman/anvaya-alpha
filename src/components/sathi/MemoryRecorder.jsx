@@ -377,8 +377,8 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
 
             <p style={{ color: "rgba(255,248,240,.6)", fontSize: 17, lineHeight: 1.7, marginBottom: 24 }}>
               {lang === "hi"
-                ? "इस सवाल का जवाब दें, या कुछ भी बोलें। एवा सुन रही है।"
-                : "Answer this prompt, or share anything on your mind. Ava is listening."}
+                ? "इस सवाल का जवाब दें, या कुछ भी बोलें। एला सुन रही है।"
+                : "Answer this prompt, or share anything on your mind. Ela is listening."}
             </p>
 
             {/* Two recording buttons */}
@@ -581,8 +581,8 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
           </div>
           <p style={{ color: "rgba(249,249,247,.5)", fontSize: 15, lineHeight: 1.6 }}>
             {lang === "hi"
-              ? "एवा आपकी कहानी को समझ रही है"
-              : "Ava is understanding your story"}
+              ? "एला आपकी कहानी को समझ रही है"
+              : "Ela is understanding your story"}
           </p>
         </div>
       )}
