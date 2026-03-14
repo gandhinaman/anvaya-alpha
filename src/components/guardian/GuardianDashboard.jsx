@@ -2346,21 +2346,21 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
         {nav === "alerts" && (
           <div className="s2">
             <div style={{ marginBottom: 20 }}>
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: "#1a1a1a" }}>Alerts & Events</h2>
-              <p style={{ fontSize: 12, color: "#6b6b6b", marginTop: 3 }}>Grouped by priority — only actionable items shown</p>
+               <h2 style={{ fontSize: 16, fontWeight: 700, color: "#1a1a1a" }}>Activity Log</h2>
+              <p style={{ fontSize: 12, color: "#6b6b6b", marginTop: 3 }}>Grouped by type — only notable items shown</p>
             </div>
             {allAlerts.length === 0 ? (
               <div className="gcard" style={{ padding: 32, textAlign: "center" }}>
                 <Bell size={28} color="#9CA3AF" style={{ margin: "0 auto 10px" }} />
                 <p style={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a" }}>All clear</p>
-                <p style={{ fontSize: 12, color: "#6b6b6b", marginTop: 4 }}>No alerts or concerns right now</p>
+                <p style={{ fontSize: 12, color: "#6b6b6b", marginTop: 4 }}>No notable observations right now</p>
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
                 {[
-                  { key: "urgent", title: "🚨 Urgent", color: "#DC2626", bg: "rgba(220,38,38,0.04)", border: "rgba(220,38,38,0.12)" },
-                  { key: "health", title: "💛 Health Concerns", color: "#D97706", bg: "rgba(217,119,6,0.04)", border: "rgba(217,119,6,0.12)" },
-                  { key: "medication", title: "💊 Medications", color: "#8D6E63", bg: "rgba(141,110,99,0.04)", border: "rgba(141,110,99,0.12)" },
+                  { key: "urgent", title: "🚨 Urgent", color: "#5B7FA5", bg: "rgba(91,127,165,0.04)", border: "rgba(91,127,165,0.12)" },
+                  { key: "anomaly", title: "📊 Activity Anomalies", color: "#6B8A9E", bg: "rgba(107,138,158,0.04)", border: "rgba(107,138,158,0.12)" },
+                  { key: "medication", title: "💊 Medication Log", color: "#8D6E63", bg: "rgba(141,110,99,0.04)", border: "rgba(141,110,99,0.12)" },
                   { key: "activity", title: "🎤 Recent Activity", color: "#5D4037", bg: "rgba(93,64,55,0.04)", border: "rgba(93,64,55,0.12)" },
                 ].map(group => {
                   const groupAlerts = allAlerts.filter(a => a.category === group.key);
