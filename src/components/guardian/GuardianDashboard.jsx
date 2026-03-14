@@ -2279,7 +2279,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
 
                 <div className="gcard" style={{ padding: 20 }}>
                   <div style={{ marginBottom: 14 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Memory Highlights</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>{parentProfile?.full_name?.split(" ")[0] || "Amma"}'s Stories</div>
                     <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>{realMemories.length} memories shared</div>
                   </div>
                   {realMemories.length === 0 ? (
