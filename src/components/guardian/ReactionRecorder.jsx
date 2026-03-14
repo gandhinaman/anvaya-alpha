@@ -126,6 +126,7 @@ export default function ReactionRecorder({ open, onClose, memoryId, memoryTitle,
   const audioCtxRef = useRef(null);
   const videoPreviewRef = useRef(null);
   const playbackRef = useRef(null);
+  const recordingFormatRef = useRef({ extension: "webm", contentType: "audio/webm" });
   const [playing, setPlaying] = useState(false);
 
   // Reset state when opening
@@ -163,11 +164,18 @@ export default function ReactionRecorder({ open, onClose, memoryId, memoryTitle,
   }, []);
 
   const beginRecording = useCallback(async () => {
+    let stream = null;
     try {
+      if (typeof MediaRecorder === "undefined") {
+        alert("Recording is not supported on this browser/device.");
+        setPhase("idle");
+        return;
+      }
+
       const constraints = mode === "video"
         ? { video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } }, audio: true }
         : { audio: true };
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
 
       // Video preview
@@ -176,42 +184,46 @@ export default function ReactionRecorder({ open, onClose, memoryId, memoryTitle,
         videoPreviewRef.current.play().catch(() => {});
       }
 
-      // Audio analyser for waveform
+      // Audio analyser for waveform (optional)
       const AC = window.AudioContext || window.webkitAudioContext;
-      const audioCtx = new AC();
-      audioCtxRef.current = audioCtx;
-      const source = audioCtx.createMediaStreamSource(stream);
-      const analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 256;
-      source.connect(analyser);
-      analyserRef.current = analyser;
+      if (AC) {
+        const audioCtx = new AC();
+        audioCtxRef.current = audioCtx;
+        const source = audioCtx.createMediaStreamSource(stream);
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
+        analyserRef.current = analyser;
+      }
 
-      // Pick supported mimeType
-      const mimeType = mode === "video"
-        ? (MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus") ? "video/webm;codecs=vp9,opus" : "video/webm")
-        : (MediaRecorder.isTypeSupported("audio/webm;codecs=opus") ? "audio/webm;codecs=opus" : "audio/webm");
+      const { recorder, format } = buildMediaRecorder(stream, mode);
+      recordingFormatRef.current = format;
 
-      const recorder = new MediaRecorder(stream, { mimeType });
       chunksRef.current = [];
-      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+      recorder.ondataavailable = (e) => {
+        if (e.data?.size > 0) chunksRef.current.push(e.data);
+      };
       recorder.onstop = () => {
-        const blobType = mode === "video" ? "video/webm" : "audio/webm";
-        const b = new Blob(chunksRef.current, { type: blobType });
+        const b = new Blob(chunksRef.current, { type: recordingFormatRef.current.contentType });
         setBlob(b);
         const url = URL.createObjectURL(b);
         setPreviewUrl(url);
         setPhase("review");
-        // Cleanup stream
-        stream.getTracks().forEach(t => t.stop());
-        if (audioCtxRef.current) { audioCtxRef.current.close(); audioCtxRef.current = null; }
+
+        stream.getTracks().forEach((t) => t.stop());
+        if (audioCtxRef.current) {
+          audioCtxRef.current.close();
+          audioCtxRef.current = null;
+        }
         analyserRef.current = null;
       };
 
       recorderRef.current = recorder;
-      recorder.start();
+      recorder.start(250);
       setPhase("recording");
     } catch (err) {
       console.error("Recording start error:", err);
+      if (stream) stream.getTracks().forEach((t) => t.stop());
       alert("Could not access camera/microphone. Please check permissions.");
       setPhase("idle");
     }
