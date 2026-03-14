@@ -581,8 +581,8 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
           </div>
           <p style={{ color: "rgba(249,249,247,.5)", fontSize: 15, lineHeight: 1.6 }}>
             {lang === "hi"
-              ? "एवा आपकी कहानी को समझ रही है"
-              : "Ava is understanding your story"}
+              ? "एला आपकी कहानी को समझ रही है"
+              : "Ela is understanding your story"}
           </p>
         </div>
       )}

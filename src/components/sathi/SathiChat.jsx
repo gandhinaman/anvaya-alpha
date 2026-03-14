@@ -709,8 +709,8 @@ export default function SathiChat({ open, onClose, lang = "en", userId, initialM
               }}
             >
               {lang === "hi"
-                ? "एवा से कुछ भी पूछें…"
-                : "Ask Ava anything…"}
+                ? "एला से कुछ भी पूछें…"
+                : "Ask Ela anything…"}
             </p>
 
             <div
