@@ -2080,9 +2080,9 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                   <div className="gcard" style={{ padding: isMobile ? 16 : 20 }}>
                     {/* Priority review banner */}
                     {visualEvents[0]?.value?.priority_review && (
-                      <div style={{
+                       <div style={{
                         padding: "10px 14px", borderRadius: 12, marginBottom: 14,
-                        background: "rgba(229,57,53,0.06)", border: "1px solid rgba(229,57,53,0.15)",
+                        background: "rgba(107,138,158,0.06)", border: "1px solid rgba(107,138,158,0.15)",
                         display: "flex", alignItems: "center", gap: 8
                       }}>
                        <AlertTriangle size={15} color="#6B8A9E" />
