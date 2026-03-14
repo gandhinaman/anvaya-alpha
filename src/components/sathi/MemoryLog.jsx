@@ -48,8 +48,9 @@ function CommentInput({ memoryId, userId, lang }) {
       rec.onstop = async () => {
         stream.getTracks().forEach(t => t.stop());
         const blob = new Blob(chunks, { type: "audio/webm" });
-        const path = `comment_audio_${Date.now()}.webm`;
-        const { data } = await supabase.storage.from("memories").upload(path, blob);
+        const path = `${userId}/comment_audio_${Date.now()}.webm`;
+        const { data, error: uploadError } = await supabase.storage.from("memories").upload(path, blob);
+        if (uploadError) { console.error("Upload error:", uploadError); setRecording(false); return; }
         if (data) {
           const { data: urlData } = supabase.storage.from("memories").getPublicUrl(data.path);
           await send(urlData.publicUrl, "audio");
