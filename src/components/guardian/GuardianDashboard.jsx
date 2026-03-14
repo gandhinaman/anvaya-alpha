@@ -1277,359 +1277,380 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
         {/* ══ HEALTH VIEW ══ */}
         {nav === "health" && !dataLoading && (
           <div className="s2">
-            {/* Stats row */}
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: isMobile ? "1fr 1fr" : inPanel ? "1fr 1fr" : "repeat(4,1fr)",
-              gap: 12, marginBottom: 14
-            }}>
-              {stats.map((st, i) => {
-                const isOpen = expandedStat === `d-${i}`;
-                return (
-                <div key={i} className="gcard" style={{ padding: 16, animation: `fadeUp .5s ease ${.1 + i * .07}s both`, cursor: "pointer", transition: "all .3s", border: isOpen ? `1.5px solid ${st.color}40` : undefined }}
-                  onClick={() => setExpandedStat(isOpen ? null : `d-${i}`)}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
-                    <div style={{
-                      width: 36, height: 36, borderRadius: 10,
-                      background: `${st.color}12`,
-                      display: "flex", alignItems: "center", justifyContent: "center"
-                    }}>
-                      <st.icon size={16} color={st.color} />
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                      <span style={{
-                        fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 100,
-                        background: `${st.color}10`, color: st.color
-                      }}>{st.trend}</span>
-                      <ChevronDown size={14} color="#6b6b6b" style={{ transition: "transform .3s", transform: isOpen ? "rotate(180deg)" : "rotate(0)" }} />
-                    </div>
-                  </div>
-                  <div style={{ fontSize: 20, fontWeight: 700, color: "#1a1a1a" }}>{st.value}</div>
-                  <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>{st.label}</div>
-                </div>
-                );
-              })}
+            {/* Section header */}
+            <div style={{ marginBottom: 18 }}>
+              <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 22, fontWeight: 700, color: "#3E2723", margin: 0 }}>Health Overview</h2>
+              <p style={{ fontSize: 12, color: "#8D6E63", marginTop: 4 }}>Voice metrics, visual biometrics, trends & medication</p>
             </div>
-            {/* Expanded metric explanation — horizontal below grid */}
-            {stats.map((st, i) => expandedStat === `d-${i}` && (
-              <div key={`exp-d-${i}`} className="gcard" style={{
-                marginTop: 12, marginBottom: 16, padding: "18px 22px",
-                background: `${st.color}06`, border: `1px solid ${st.color}15`,
-                animation: "fadeUp .25s ease both"
+
+            {/* ── 1. Voice Metrics ── */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(198,139,89,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Mic size={14} color="#C68B59" />
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#3E2723" }}>Voice Metrics</span>
+              </div>
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: isMobile ? "1fr 1fr" : inPanel ? "1fr 1fr" : "repeat(4,1fr)",
+                gap: 12
               }}>
-                <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-                  <div style={{ flex: 1, minWidth: 160 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 6 }}>What it measures</div>
-                    <p style={{ fontSize: 11.5, color: "#555", lineHeight: 1.5, margin: 0 }}>{st.what}</p>
-                  </div>
-                  <div style={{ flex: 1, minWidth: 160 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 6 }}>How it's measured</div>
-                    <p style={{ fontSize: 11.5, color: "#555", lineHeight: 1.5, margin: 0 }}>{st.how}</p>
-                  </div>
-                  <div style={{ flex: 1, minWidth: 200 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>What the score means</div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                      {[
-                        { dot: "#4CAF50", text: st.meaning.high },
-                        { dot: "#FF9800", text: st.meaning.mid },
-                        { dot: "#E53935", text: st.meaning.low },
-                      ].map((row, ri) => (
-                        <div key={ri} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                          <div style={{ width: 6, height: 6, borderRadius: "50%", background: row.dot, marginTop: 5, flexShrink: 0 }} />
-                          <span style={{ fontSize: 11, color: "#666", lineHeight: 1.5 }}>{row.text}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            {/* Cognitive + Weekly Trends */}
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: isMobile ? "1fr" : inPanel ? "1fr" : "1fr 2fr",
-              gap: 14, marginBottom: 14
-            }}>
-              <div className="gcard s3" style={{ padding: 20 }}>
-                <div style={{ marginBottom: 14 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Memory Highlights</div>
-                  <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>{realMemories.length} memories shared</div>
-                </div>
-                {realMemories.length === 0 ? (
-                  <p style={{ fontSize: 12, color: "#9CA3AF", fontStyle: "italic" }}>No memories recorded yet</p>
-                ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                    {/* Emotional breakdown */}
-                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                      {Object.entries(realMemories.reduce((acc, m) => {
-                        const tone = m.emotional_tone || "unknown";
-                        acc[tone] = (acc[tone] || 0) + 1;
-                        return acc;
-                      }, {})).sort((a, b) => b[1] - a[1]).map(([tone, count]) => (
-                        <span key={tone} style={{
-                          fontSize: 10, fontWeight: 600, padding: "3px 10px", borderRadius: 100,
-                          background: tone === "joyful" ? "rgba(76,175,80,0.1)" : tone === "nostalgic" ? "rgba(198,139,89,0.1)" : tone === "peaceful" ? "rgba(141,110,99,0.1)" : "rgba(93,64,55,0.08)",
-                          color: tone === "joyful" ? "#4CAF50" : tone === "nostalgic" ? "#C68B59" : tone === "peaceful" ? "#8D6E63" : "#5D4037"
-                        }}>
-                          {tone} · {count}
-                        </span>
-                      ))}
-                    </div>
-                    {/* Latest memory */}
-                    <div style={{
-                      padding: "10px 12px", background: "rgba(198,139,89,0.06)",
-                      borderRadius: 12, border: "1px solid rgba(198,139,89,0.12)"
-                    }}>
-                      <div style={{ fontSize: 11, fontWeight: 600, color: "#3E2723", marginBottom: 3 }}>
-                        Latest: "{realMemories[0]?.title || "Untitled"}"
-                      </div>
-                      <p style={{ fontSize: 10.5, color: "#6b6b6b", lineHeight: 1.5, margin: 0 }}>
-                        {realMemories[0]?.ai_summary?.slice(0, 100) || realMemories[0]?.transcript?.slice(0, 100) || ""}
-                        {(realMemories[0]?.ai_summary?.length > 100 || realMemories[0]?.transcript?.length > 100) ? "…" : ""}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="gcard s4" style={{ padding: 20 }}>
-                <div style={{ marginBottom: 14 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Weekly Wellness Trends</div>
-                  <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Emotional state & vocal energy over the past week</div>
-                </div>
-                <WeeklyTrendChart healthEvents={healthEvents} />
-              </div>
-            </div>
-
-            {/* Acoustic + Medication */}
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: isMobile ? "1fr" : inPanel ? "1fr" : "2fr 1fr",
-              gap: 14, marginBottom: 14
-            }}>
-              <div className="gcard s5" style={{ padding: 20 }}>
-                <div style={{ marginBottom: 14 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Acoustic Insights</div>
-                  <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>24-hour vocal and acoustic analysis</div>
-                </div>
-                <AcousticHeatmap healthEvents={healthEvents} />
-                <div style={{
-                  marginTop: 14, padding: "10px 12px",
-                  background: "rgba(141,110,99,0.06)", borderRadius: 12, border: "1px solid rgba(141,110,99,0.1)"
-                }}>
-                  <p style={{ fontSize: 10.5, color: "#6b6b6b", lineHeight: 1.55, margin: 0 }}>
-                    This heatmap shows when your parent is most vocally active throughout the week. Brighter cells indicate higher vocal energy scores at that hour. Patterns can reveal daily routines, social activity windows, and times of low engagement.
-                  </p>
-                </div>
-              </div>
-
-              <div className="gcard s6" style={{ padding: 20 }}>
-                <div style={{ marginBottom: 14 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Medication Tracker</div>
-                  <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Today's medications</div>
-                </div>
-                {medications.length === 0 ? (
-                  <p style={{ fontSize: 12, color: "#9CA3AF", fontStyle: "italic" }}>No medications configured</p>
-                ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                    {medications.map(med => (
-                      <div key={med.id} style={{
-                        display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
-                        background: med.taken_today ? "rgba(198,139,89,0.06)" : "rgba(255,248,240,0.6)",
-                        borderRadius: 12, border: `1px solid ${med.taken_today ? "rgba(198,139,89,0.15)" : "rgba(93,64,55,0.08)"}`,
-                        cursor: "pointer", transition: "all .2s"
-                      }} onClick={() => toggleMedication(med.id, !med.taken_today)}>
-                        <div style={{
-                          width: 22, height: 22, borderRadius: 6, flexShrink: 0,
-                          border: med.taken_today ? "none" : "2px solid rgba(93,64,55,0.25)",
-                          background: med.taken_today ? "#C68B59" : "transparent",
-                          display: "flex", alignItems: "center", justifyContent: "center"
-                        }}>
-                          {med.taken_today && <Check size={13} color="#fff" />}
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{
-                            fontSize: 12, fontWeight: 600, color: med.taken_today ? "#C68B59" : "#1a1a1a",
-                            textDecoration: med.taken_today ? "line-through" : "none"
-                          }}>{med.name}</div>
-                          <div style={{ fontSize: 10, color: "#9CA3AF" }}>{med.dose || ""}{med.scheduled_time ? ` · ${med.scheduled_time}` : ""}</div>
-                        </div>
-                        {med.taken_today && med.last_taken && (
-                          <span style={{ fontSize: 9, color: "#C68B59", fontWeight: 500 }}>
-                            {new Date(med.last_taken).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* ── Visual Health Deep Dive ── */}
-            {healthEvents.some(e => e.event_type === "visual_analysis") && (
-              <div style={{ marginBottom: 22 }}>
-                <button onClick={() => setShowDeepDive(d => !d)} style={{
-                  display: "flex", alignItems: "center", gap: 10, width: "100%",
-                  padding: "14px 20px", borderRadius: 18,
-                  background: showDeepDive ? "rgba(93,64,55,0.06)" : "rgba(255,255,255,0.8)",
-                  backdropFilter: "blur(12px)",
-                  border: `1px solid ${showDeepDive ? "rgba(93,64,55,0.15)" : "rgba(255,255,255,0.6)"}`,
-                  boxShadow: "0 4px 16px rgba(62,39,35,0.04)",
-                  cursor: "pointer", transition: "all .3s",
-                  textAlign: "left"
-                }}>
-                  <div style={{
-                    width: 36, height: 36, borderRadius: 10,
-                    background: "linear-gradient(135deg, #5D4037, #8D6E63)",
-                    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
-                  }}>
-                    <Scan size={16} color="#FFF8F0" />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "#3E2723" }}>Visual Biometric Analysis</div>
-                    <div style={{ fontSize: 11, color: "#8D6E63" }}>Sparklines & detailed markers from video recordings</div>
-                  </div>
-                  <ChevronDown size={16} color="#8D6E63" style={{ transition: "transform .3s", transform: showDeepDive ? "rotate(180deg)" : "rotate(0)" }} />
-                </button>
-
-                {showDeepDive && (() => {
-                  const visualEvents = healthEvents.filter(e => e.event_type === "visual_analysis").slice(0, 7);
-                  if (visualEvents.length === 0) return null;
-
-                  const markers = [
-                    { key: "micro_expressions", label: "Micro-Expressions", desc: "Flat affect vs. Animated", icon: "😊", color: "#C68B59" },
-                    { key: "motor_control", label: "Motor Control", desc: "Tremors & head tilting", icon: "✋", color: "#8D6E63" },
-                    { key: "vocal_visual_sync", label: "Vocal-Visual Sync", desc: "Speech & facial timing", icon: "🔄", color: "#5D4037" },
-                    { key: "facial_symmetry", label: "Facial Symmetry", desc: "Neurological indicator", icon: "🪞", color: "#4CAF50" },
-                    { key: "skin_pallor", label: "Skin Tone", desc: "Circulation & wellness", icon: "🌡️", color: "#FF9800" },
-                    { key: "eye_engagement", label: "Eye Engagement", desc: "Cognitive presence", icon: "👁️", color: "#2196F3" },
-                  ];
-
-                  const Sparkline = ({ data, color }) => {
-                    const valid = data.filter(v => v != null);
-                    if (valid.length < 2) return <span style={{ fontSize: 10, color: "#9CA3AF", fontStyle: "italic" }}>Insufficient data</span>;
-                    const W = 80, H = 24, pad = 2;
-                    const min = Math.max(0, Math.min(...valid) - 10);
-                    const max = Math.min(100, Math.max(...valid) + 10);
-                    const range = max - min || 1;
-                    const points = valid.map((v, i) => ({
-                      x: pad + i * ((W - pad * 2) / (valid.length - 1)),
-                      y: H - pad - ((v - min) / range) * (H - pad * 2)
-                    }));
-                    const path = "M" + points.map(p => `${p.x},${p.y}`).join(" L");
-                    return (
-                      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ overflow: "visible" }}>
-                        <path d={path} fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
-                        {points.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r={1.5} fill={color} />)}
-                      </svg>
-                    );
-                  };
-
+                {stats.map((st, i) => {
+                  const isOpen = expandedStat === `d-${i}`;
                   return (
-                    <div style={{
-                      marginTop: 12, padding: isMobile ? "16px" : "20px 24px",
-                      background: "rgba(255,255,255,0.7)", backdropFilter: "blur(12px)",
-                      borderRadius: 20, border: "1px solid rgba(93,64,55,0.08)",
-                      animation: "fadeUp .3s ease both"
-                    }}>
-                      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : inPanel ? "1fr" : "1fr 1fr", gap: 14 }}>
-                        {markers.map(marker => {
-                          const scores = visualEvents.map(e => e.value?.[marker.key]?.score).reverse();
-                          const latest = visualEvents[0]?.value?.[marker.key];
-                          return (
-                            <div key={marker.key} style={{
-                              padding: "14px 16px", borderRadius: 16,
-                              background: "rgba(255,248,240,0.6)",
-                              border: "1px solid rgba(93,64,55,0.06)"
-                            }}>
-                              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                  <span style={{ fontSize: 16 }}>{marker.icon}</span>
-                                  <div>
-                                    <div style={{ fontSize: 12, fontWeight: 600, color: "#3E2723" }}>{marker.label}</div>
-                                    <div style={{ fontSize: 10, color: "#9CA3AF" }}>{marker.desc}</div>
-                                  </div>
+                  <div key={i} className="gcard" style={{ padding: 16, cursor: "pointer", transition: "all .3s", border: isOpen ? `1.5px solid ${st.color}40` : undefined }}
+                    onClick={() => setExpandedStat(isOpen ? null : `d-${i}`)}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                      <div style={{
+                        width: 36, height: 36, borderRadius: 10,
+                        background: `${st.color}12`,
+                        display: "flex", alignItems: "center", justifyContent: "center"
+                      }}>
+                        <st.icon size={16} color={st.color} />
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                        <span style={{
+                          fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 100,
+                          background: `${st.color}10`, color: st.color
+                        }}>{st.trend}</span>
+                        <ChevronDown size={14} color="#6b6b6b" style={{ transition: "transform .3s", transform: isOpen ? "rotate(180deg)" : "rotate(0)" }} />
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: "#1a1a1a" }}>{st.value}</div>
+                    <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>{st.label}</div>
+                  </div>
+                  );
+                })}
+              </div>
+              {/* Expanded metric explanation */}
+              {stats.map((st, i) => expandedStat === `d-${i}` && (
+                <div key={`exp-d-${i}`} className="gcard" style={{
+                  marginTop: 12, padding: "18px 22px",
+                  background: `${st.color}06`, border: `1px solid ${st.color}15`,
+                  animation: "fadeUp .25s ease both"
+                }}>
+                  <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+                    <div style={{ flex: 1, minWidth: 160 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 6 }}>What it measures</div>
+                      <p style={{ fontSize: 11.5, color: "#555", lineHeight: 1.5, margin: 0 }}>{st.what}</p>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 160 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 6 }}>How it's measured</div>
+                      <p style={{ fontSize: 11.5, color: "#555", lineHeight: 1.5, margin: 0 }}>{st.how}</p>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 200 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>What the score means</div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                        {[
+                          { dot: "#4CAF50", text: st.meaning.high },
+                          { dot: "#FF9800", text: st.meaning.mid },
+                          { dot: "#E53935", text: st.meaning.low },
+                        ].map((row, ri) => (
+                          <div key={ri} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                            <div style={{ width: 6, height: 6, borderRadius: "50%", background: row.dot, marginTop: 5, flexShrink: 0 }} />
+                            <span style={{ fontSize: 11, color: "#666", lineHeight: 1.5 }}>{row.text}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* ── 2. Visual Biometrics ── */}
+            {healthEvents.some(e => e.event_type === "visual_analysis") && (() => {
+              const visualEvents = healthEvents.filter(e => e.event_type === "visual_analysis").slice(0, 7);
+              if (visualEvents.length === 0) return null;
+
+              const markers = [
+                { key: "micro_expressions", label: "Micro-Expressions", desc: "Flat affect vs. Animated", icon: "😊", color: "#C68B59" },
+                { key: "motor_control", label: "Motor Control", desc: "Tremors & head tilting", icon: "✋", color: "#8D6E63" },
+                { key: "vocal_visual_sync", label: "Vocal-Visual Sync", desc: "Speech & facial timing", icon: "🔄", color: "#5D4037" },
+                { key: "facial_symmetry", label: "Facial Symmetry", desc: "Neurological indicator", icon: "🪞", color: "#4CAF50" },
+                { key: "skin_pallor", label: "Skin Tone", desc: "Circulation & wellness", icon: "🌡️", color: "#FF9800" },
+                { key: "eye_engagement", label: "Eye Engagement", desc: "Cognitive presence", icon: "👁️", color: "#2196F3" },
+              ];
+
+              const Sparkline = ({ data, color }) => {
+                const valid = data.filter(v => v != null);
+                if (valid.length < 2) return <span style={{ fontSize: 10, color: "#9CA3AF", fontStyle: "italic" }}>Insufficient data</span>;
+                const W = 80, H = 24, pad = 2;
+                const min = Math.max(0, Math.min(...valid) - 10);
+                const max = Math.min(100, Math.max(...valid) + 10);
+                const range = max - min || 1;
+                const points = valid.map((v, i) => ({
+                  x: pad + i * ((W - pad * 2) / (valid.length - 1)),
+                  y: H - pad - ((v - min) / range) * (H - pad * 2)
+                }));
+                const path = "M" + points.map(p => `${p.x},${p.y}`).join(" L");
+                return (
+                  <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ overflow: "visible" }}>
+                    <path d={path} fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+                    {points.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r={1.5} fill={color} />)}
+                  </svg>
+                );
+              };
+
+              return (
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(93,64,55,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <Scan size={14} color="#5D4037" />
+                    </div>
+                    <div>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: "#3E2723" }}>Visual Biometrics</span>
+                      <span style={{ fontSize: 11, color: "#8D6E63", marginLeft: 8 }}>{visualEvents.length} recording{visualEvents.length !== 1 ? "s" : ""}</span>
+                    </div>
+                  </div>
+
+                  <div className="gcard" style={{ padding: isMobile ? 16 : 20 }}>
+                    {/* Priority review banner */}
+                    {visualEvents[0]?.value?.priority_review && (
+                      <div style={{
+                        padding: "10px 14px", borderRadius: 12, marginBottom: 14,
+                        background: "rgba(229,57,53,0.06)", border: "1px solid rgba(229,57,53,0.15)",
+                        display: "flex", alignItems: "center", gap: 8
+                      }}>
+                        <AlertTriangle size={15} color="#E53935" />
+                        <span style={{ fontSize: 12, fontWeight: 600, color: "#E53935" }}>Priority review flagged — check visual markers below</span>
+                      </div>
+                    )}
+
+                    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : inPanel ? "1fr" : "1fr 1fr 1fr", gap: 12 }}>
+                      {markers.map(marker => {
+                        const scores = visualEvents.map(e => e.value?.[marker.key]?.score).reverse();
+                        const latest = visualEvents[0]?.value?.[marker.key];
+                        return (
+                          <div key={marker.key} style={{
+                            padding: "14px 16px", borderRadius: 14,
+                            background: "rgba(255,248,240,0.5)",
+                            border: "1px solid rgba(93,64,55,0.06)"
+                          }}>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                <span style={{ fontSize: 16 }}>{marker.icon}</span>
+                                <div>
+                                  <div style={{ fontSize: 12, fontWeight: 600, color: "#3E2723" }}>{marker.label}</div>
+                                  <div style={{ fontSize: 10, color: "#9CA3AF" }}>{marker.desc}</div>
                                 </div>
-                                {latest && (
-                                  <span style={{
-                                    fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 100,
-                                    background: latest.score >= 70 ? "rgba(76,175,80,0.1)" : latest.score >= 40 ? "rgba(255,152,0,0.1)" : "rgba(229,57,53,0.1)",
-                                    color: latest.score >= 70 ? "#4CAF50" : latest.score >= 40 ? "#FF9800" : "#E53935"
-                                  }}>{latest.label}</span>
-                                )}
                               </div>
-                              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                                <Sparkline data={scores} color={marker.color} />
-                                {latest?.score != null && (
-                                  <span style={{ fontSize: 18, fontWeight: 700, color: "#3E2723" }}>{latest.score}%</span>
-                                )}
-                              </div>
-                              {latest?.detail && (
-                                <p style={{ fontSize: 10, color: "#6b6b6b", marginTop: 6, lineHeight: 1.4, margin: "6px 0 0 0" }}>{latest.detail}</p>
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                              <Sparkline data={scores} color={marker.color} />
+                              {latest?.score != null && (
+                                <span style={{ fontSize: 18, fontWeight: 700, color: "#3E2723" }}>{latest.score}%</span>
                               )}
                             </div>
-                          );
-                        })}
-                      </div>
+                            {latest && (
+                              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 6 }}>
+                                <span style={{
+                                  fontSize: 10, fontWeight: 600, padding: "2px 10px", borderRadius: 100,
+                                  background: latest.score >= 70 ? "rgba(76,175,80,0.1)" : latest.score >= 40 ? "rgba(255,152,0,0.1)" : "rgba(229,57,53,0.1)",
+                                  color: latest.score >= 70 ? "#4CAF50" : latest.score >= 40 ? "#FF9800" : "#E53935"
+                                }}>{latest.label}</span>
+                              </div>
+                            )}
+                            {latest?.detail && (
+                              <p style={{ fontSize: 10, color: "#6b6b6b", marginTop: 6, lineHeight: 1.4, margin: "6px 0 0 0" }}>{latest.detail}</p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
 
-                      {/* Compare with previous */}
-                      {visualEvents.length >= 2 && (
-                        <div style={{ marginTop: 14, textAlign: "center" }}>
-                          <button onClick={() => setCompareIdx(compareIdx != null ? null : 1)} style={{
-                            padding: "8px 20px", borderRadius: 100, border: "1px solid rgba(93,64,55,0.15)",
-                            background: compareIdx != null ? "rgba(93,64,55,0.06)" : "transparent",
-                            color: "#5D4037", fontSize: 12, fontWeight: 600, cursor: "pointer",
-                            display: "inline-flex", alignItems: "center", gap: 6
+                    {/* Compare with previous */}
+                    {visualEvents.length >= 2 && (
+                      <div style={{ marginTop: 14, textAlign: "center" }}>
+                        <button onClick={() => setCompareIdx(compareIdx != null ? null : 1)} style={{
+                          padding: "8px 20px", borderRadius: 100, border: "1px solid rgba(93,64,55,0.15)",
+                          background: compareIdx != null ? "rgba(93,64,55,0.06)" : "transparent",
+                          color: "#5D4037", fontSize: 12, fontWeight: 600, cursor: "pointer",
+                          display: "inline-flex", alignItems: "center", gap: 6
+                        }}>
+                          <Eye size={14} /> {compareIdx != null ? "Hide Comparison" : "Compare with Previous"}
+                        </button>
+                        {compareIdx != null && visualEvents[compareIdx] && (
+                          <div style={{
+                            marginTop: 12, padding: "14px 18px", borderRadius: 16,
+                            background: "rgba(198,139,89,0.04)", border: "1px solid rgba(198,139,89,0.1)",
+                            textAlign: "left"
                           }}>
-                            <Eye size={14} /> {compareIdx != null ? "Hide Comparison" : "Compare with Previous"}
-                          </button>
-                          {compareIdx != null && visualEvents[compareIdx] && (
-                            <div style={{
-                              marginTop: 12, padding: "14px 18px", borderRadius: 16,
-                              background: "rgba(198,139,89,0.04)", border: "1px solid rgba(198,139,89,0.1)",
-                              textAlign: "left"
-                            }}>
-                              <div style={{ fontSize: 11, fontWeight: 600, color: "#8D6E63", marginBottom: 8 }}>
-                                Previous recording · {new Date(visualEvents[compareIdx].recorded_at).toLocaleDateString()}
-                              </div>
-                              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-                                {[
-                                  { label: "Symmetry", key: "facial_symmetry" },
-                                  { label: "Skin Tone", key: "skin_pallor" },
-                                  { label: "Eye Engagement", key: "eye_engagement" },
-                                ].map(m => {
-                                  const curr = visualEvents[0]?.value?.[m.key]?.score;
-                                  const prev = visualEvents[compareIdx]?.value?.[m.key]?.score;
-                                  const diff = curr != null && prev != null ? curr - prev : null;
-                                  return (
-                                    <div key={m.key} style={{ textAlign: "center" }}>
-                                      <div style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 4 }}>{m.label}</div>
-                                      <div style={{ fontSize: 14, fontWeight: 700, color: "#3E2723" }}>
-                                        {curr != null ? `${curr}%` : "—"}
-                                      </div>
-                                      {diff != null && (
-                                        <div style={{
-                                          fontSize: 10, fontWeight: 600, marginTop: 2,
-                                          color: diff > 0 ? "#4CAF50" : diff < 0 ? "#E53935" : "#9CA3AF"
-                                        }}>
-                                          {diff > 0 ? `+${diff}` : diff < 0 ? `${diff}` : "—"}
-                                        </div>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                              </div>
+                            <div style={{ fontSize: 11, fontWeight: 600, color: "#8D6E63", marginBottom: 8 }}>
+                              Previous recording · {new Date(visualEvents[compareIdx].recorded_at).toLocaleDateString()}
                             </div>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                              {[
+                                { label: "Symmetry", key: "facial_symmetry" },
+                                { label: "Skin Tone", key: "skin_pallor" },
+                                { label: "Eye Engagement", key: "eye_engagement" },
+                              ].map(m => {
+                                const curr = visualEvents[0]?.value?.[m.key]?.score;
+                                const prev = visualEvents[compareIdx]?.value?.[m.key]?.score;
+                                const diff = curr != null && prev != null ? curr - prev : null;
+                                return (
+                                  <div key={m.key} style={{ textAlign: "center" }}>
+                                    <div style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 4 }}>{m.label}</div>
+                                    <div style={{ fontSize: 14, fontWeight: 700, color: "#3E2723" }}>
+                                      {curr != null ? `${curr}%` : "—"}
+                                    </div>
+                                    {diff != null && (
+                                      <div style={{
+                                        fontSize: 10, fontWeight: 600, marginTop: 2,
+                                        color: diff > 0 ? "#4CAF50" : diff < 0 ? "#E53935" : "#9CA3AF"
+                                      }}>
+                                        {diff > 0 ? `+${diff}` : diff < 0 ? `${diff}` : "—"}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* ── 3. Trends & Patterns ── */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(93,64,55,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <TrendingUp size={14} color="#5D4037" />
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#3E2723" }}>Trends & Patterns</span>
+              </div>
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: isMobile ? "1fr" : inPanel ? "1fr" : "1fr 1fr",
+                gap: 14
+              }}>
+                <div className="gcard" style={{ padding: 20 }}>
+                  <div style={{ marginBottom: 14 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Weekly Wellness</div>
+                    <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Emotional state & vocal energy over 7 days</div>
+                  </div>
+                  <WeeklyTrendChart healthEvents={healthEvents} />
+                </div>
+
+                <div className="gcard" style={{ padding: 20 }}>
+                  <div style={{ marginBottom: 14 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Acoustic Insights</div>
+                    <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>24-hour vocal activity heatmap</div>
+                  </div>
+                  <AcousticHeatmap healthEvents={healthEvents} />
+                  <div style={{
+                    marginTop: 12, padding: "8px 10px",
+                    background: "rgba(141,110,99,0.04)", borderRadius: 10
+                  }}>
+                    <p style={{ fontSize: 10, color: "#8D6E63", lineHeight: 1.5, margin: 0 }}>
+                      Brighter cells = higher vocal energy. Patterns reveal daily routines and social activity windows.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ── 4. Daily Tracking ── */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(198,139,89,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Pill size={14} color="#C68B59" />
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#3E2723" }}>Daily Tracking</span>
+              </div>
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: isMobile ? "1fr" : inPanel ? "1fr" : "1fr 1fr",
+                gap: 14
+              }}>
+                <div className="gcard" style={{ padding: 20 }}>
+                  <div style={{ marginBottom: 14 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Medication Tracker</div>
+                    <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Today's medications</div>
+                  </div>
+                  {medications.length === 0 ? (
+                    <p style={{ fontSize: 12, color: "#9CA3AF", fontStyle: "italic" }}>No medications configured</p>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {medications.map(med => (
+                        <div key={med.id} style={{
+                          display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
+                          background: med.taken_today ? "rgba(198,139,89,0.06)" : "rgba(255,248,240,0.6)",
+                          borderRadius: 12, border: `1px solid ${med.taken_today ? "rgba(198,139,89,0.15)" : "rgba(93,64,55,0.08)"}`,
+                          cursor: "pointer", transition: "all .2s"
+                        }} onClick={() => toggleMedication(med.id, !med.taken_today)}>
+                          <div style={{
+                            width: 22, height: 22, borderRadius: 6, flexShrink: 0,
+                            border: med.taken_today ? "none" : "2px solid rgba(93,64,55,0.25)",
+                            background: med.taken_today ? "#C68B59" : "transparent",
+                            display: "flex", alignItems: "center", justifyContent: "center"
+                          }}>
+                            {med.taken_today && <Check size={13} color="#fff" />}
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{
+                              fontSize: 12, fontWeight: 600, color: med.taken_today ? "#C68B59" : "#1a1a1a",
+                              textDecoration: med.taken_today ? "line-through" : "none"
+                            }}>{med.name}</div>
+                            <div style={{ fontSize: 10, color: "#9CA3AF" }}>{med.dose || ""}{med.scheduled_time ? ` · ${med.scheduled_time}` : ""}</div>
+                          </div>
+                          {med.taken_today && med.last_taken && (
+                            <span style={{ fontSize: 9, color: "#C68B59", fontWeight: 500 }}>
+                              {new Date(med.last_taken).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                            </span>
                           )}
                         </div>
-                      )}
+                      ))}
                     </div>
-                  );
-                })()}
+                  )}
+                </div>
+
+                <div className="gcard" style={{ padding: 20 }}>
+                  <div style={{ marginBottom: 14 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Memory Highlights</div>
+                    <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>{realMemories.length} memories shared</div>
+                  </div>
+                  {realMemories.length === 0 ? (
+                    <p style={{ fontSize: 12, color: "#9CA3AF", fontStyle: "italic" }}>No memories recorded yet</p>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                        {Object.entries(realMemories.reduce((acc, m) => {
+                          const tone = m.emotional_tone || "unknown";
+                          acc[tone] = (acc[tone] || 0) + 1;
+                          return acc;
+                        }, {})).sort((a, b) => b[1] - a[1]).map(([tone, count]) => (
+                          <span key={tone} style={{
+                            fontSize: 10, fontWeight: 600, padding: "3px 10px", borderRadius: 100,
+                            background: tone === "joyful" ? "rgba(76,175,80,0.1)" : tone === "nostalgic" ? "rgba(198,139,89,0.1)" : tone === "peaceful" ? "rgba(141,110,99,0.1)" : "rgba(93,64,55,0.08)",
+                            color: tone === "joyful" ? "#4CAF50" : tone === "nostalgic" ? "#C68B59" : tone === "peaceful" ? "#8D6E63" : "#5D4037"
+                          }}>
+                            {tone} · {count}
+                          </span>
+                        ))}
+                      </div>
+                      <div style={{
+                        padding: "10px 12px", background: "rgba(198,139,89,0.06)",
+                        borderRadius: 12, border: "1px solid rgba(198,139,89,0.12)"
+                      }}>
+                        <div style={{ fontSize: 11, fontWeight: 600, color: "#3E2723", marginBottom: 3 }}>
+                          Latest: "{realMemories[0]?.title || "Untitled"}"
+                        </div>
+                        <p style={{ fontSize: 10.5, color: "#6b6b6b", lineHeight: 1.5, margin: 0 }}>
+                          {realMemories[0]?.ai_summary?.slice(0, 100) || realMemories[0]?.transcript?.slice(0, 100) || ""}
+                          {(realMemories[0]?.ai_summary?.length > 100 || realMemories[0]?.transcript?.length > 100) ? "…" : ""}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
+            </div>
 
           </div>
         )}
