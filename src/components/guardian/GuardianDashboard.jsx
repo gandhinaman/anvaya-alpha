@@ -635,6 +635,42 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
   const [memoryFilter, setMemoryFilter] = useState("all");
   const [deletingMemId, setDeletingMemId] = useState(null);
 
+  // Caregiver questions state
+  const [questions, setQuestions] = useState([]);
+  const [newQuestion, setNewQuestion] = useState("");
+  const [questionSending, setQuestionSending] = useState(false);
+
+  // Fetch caregiver questions
+  useEffect(() => {
+    if (!profileId || !parentProfile?.id) return;
+    supabase.from("caregiver_questions")
+      .select("*")
+      .eq("caregiver_id", profileId)
+      .eq("parent_id", parentProfile.id)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => { if (data) setQuestions(data); });
+  }, [profileId, parentProfile?.id]);
+
+  const addQuestion = async () => {
+    if (!newQuestion.trim() || !profileId || !parentProfile?.id) return;
+    setQuestionSending(true);
+    try {
+      const { data, error } = await supabase.from("caregiver_questions").insert({
+        caregiver_id: profileId,
+        parent_id: parentProfile.id,
+        question: newQuestion.trim(),
+      }).select().single();
+      if (data) setQuestions(prev => [data, ...prev]);
+      setNewQuestion("");
+    } catch (err) { console.error("Add question error:", err); }
+    finally { setQuestionSending(false); }
+  };
+
+  const removeQuestion = async (qId) => {
+    await supabase.from("caregiver_questions").delete().eq("id", qId);
+    setQuestions(prev => prev.filter(q => q.id !== qId));
+  };
+
   // Guardian profile state
   const [guardianProfile, setGuardianProfile] = useState({ full_name: "", phone: "", location: "" });
   const [guardianProfileLoading, setGuardianProfileLoading] = useState(false);
