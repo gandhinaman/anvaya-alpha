@@ -3103,7 +3103,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                 </div>
                 <div>
                   <div style={{ fontSize: 15, fontWeight: 700, color: "#3E2723" }}>Connection Pulse</div>
-                  <div style={{ fontSize: 11, color: "#8D6E63" }}>Staying connected with {parentName}</div>
+                  <div style={{ fontSize: 11, color: "#8D6E63" }}>Staying connected with {parentProfile?.full_name || "Amma"}</div>
                 </div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
