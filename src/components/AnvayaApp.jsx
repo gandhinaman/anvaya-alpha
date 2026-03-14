@@ -1139,6 +1139,35 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
         </div>
       )}
 
+      {/* ─── RECORDING STREAK ─── */}
+      {streakDays > 0 && voicePhase === "idle" && (
+        <div style={{margin:"0 16px 4px",padding:"14px 18px",
+          background:"rgba(255,248,240,.08)",border:"1.5px solid rgba(255,248,240,.12)",
+          borderRadius:20,animation:"fadeUp .6s ease .08s both",
+          display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <span style={{fontSize:28}}>🔥</span>
+            <div>
+              <div style={{color:"#FFF8F0",fontSize:22,fontWeight:800,lineHeight:1}}>
+                {streakDays}
+                <span style={{fontSize:13,fontWeight:500,color:"rgba(255,248,240,.55)",marginLeft:5}}>
+                  {streakDays===1?(lang==="en"?"day streak":"दिन का स्ट्रीक"):(lang==="en"?"day streak":"दिन का स्ट्रीक")}
+                </span>
+              </div>
+              <div style={{fontSize:11,color:"rgba(255,248,240,.4)",marginTop:2}}>
+                {streakRecordedToday
+                  ?(lang==="en"?"Recorded today ✓":"आज रिकॉर्ड किया ✓")
+                  :(lang==="en"?"Record today to keep it going!":"आज रिकॉर्ड करें!")}
+              </div>
+            </div>
+          </div>
+          <div style={{textAlign:"right"}}>
+            <div style={{fontSize:10,color:"rgba(255,248,240,.35)"}}>{lang==="en"?"Best":"सबसे अच्छा"}</div>
+            <div style={{fontSize:16,fontWeight:700,color:"#C68B59"}}>{longestStreak}</div>
+          </div>
+        </div>
+      )}
+
       <div style={{padding:"16px 16px",display:"flex",flexDirection:"column",gap:14,flex:1,justifyContent:"flex-end"}}>
         {[
           {icon:<Mic size={24} color="#FFF8F0"/>,label:lang==="en"?"Record a Memory":"यादें रिकॉर्ड करें",sub:lang==="en"?"Your voice, preserved forever":"आपकी आवाज़, सदा के लिए",acc:"#C68B59",fn:()=>setMemoryOpen(true)},
