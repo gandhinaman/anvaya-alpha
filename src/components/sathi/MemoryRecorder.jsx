@@ -377,6 +377,14 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
               marginBottom: 12,
               position: "relative",
             }}>
+              {caregiverQuestion && (
+                <div style={{
+                  fontSize: 10, fontWeight: 700, color: "#C68B59", textTransform: "uppercase",
+                  letterSpacing: "0.15em", marginBottom: 8, display: "flex", alignItems: "center", gap: 5
+                }}>
+                  💛 Question from {linkedName || "family"}
+                </div>
+              )}
               <p style={{
                 color: "#FFF8F0",
                 fontSize: 20,
