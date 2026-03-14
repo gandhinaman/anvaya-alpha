@@ -729,10 +729,6 @@ export default function SathiChat({ open, onClose, lang = "en", userId, initialM
                 )}
               </div>
 
-              {/* Inline medication action buttons */}
-              {isMedMsg && (
-                <MedActionButtons userId={userId} lang={lang} />
-              )}
 
               {/* Read aloud button for assistant messages with content */}
               {msg.role === "assistant" && msg.content && !streaming && (

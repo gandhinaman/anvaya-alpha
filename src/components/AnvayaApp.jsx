@@ -1724,7 +1724,7 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
     {label:"Activity Level",value:derivedStats.activityLevel.value, icon:Zap,         color:"#d97706", trend:derivedStats.activityLevel.trend},
   ];
 
-  // Derive alerts from recent health events (exclude medication events)
+  // Derive alerts from recent health events
   const alerts = healthEvents.filter(e => e.event_type !== "medication_taken").slice(0,3).map(e => ({
     text: `${e.event_type.replace(/_/g," ")} recorded`,
     type: "info"
