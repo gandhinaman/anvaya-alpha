@@ -2577,7 +2577,7 @@ export default function App() {
                   <div style={{fontSize:10,color:"rgba(249,249,247,.28)",letterSpacing:"0.15em",fontWeight:600}}>AVA — MOBILE PREVIEW</div>
                   <SathiScreen inPanel/>
                   <div style={{padding:"6px 14px",borderRadius:100,background:"rgba(6,78,59,.2)",border:"1px solid rgba(6,78,59,.3)"}}>
-                    <span style={{fontSize:11,color:"#34D399"}}>If you're in trouble, type or say "help" to Ava</span>
+                    <span style={{fontSize:11,color:"#34D399"}}>If you're in trouble, type or say "help" to Ela</span>
                   </div>
                 </div>
               </div>
