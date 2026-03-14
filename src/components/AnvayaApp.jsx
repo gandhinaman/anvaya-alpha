@@ -1192,7 +1192,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
         )}
         {voicePhase==="idle"&&(
           <p style={{color:"rgba(255,248,240,.6)",fontSize:16,lineHeight:1.5,fontWeight:500}}>
-            {lang==="en"?"Tap the orb to talk to Ava":"एवा से बात करने के लिए ऑर्ब टैप करें"}
+            {lang==="en"?"Tap the orb to talk to Ela":"एला से बात करने के लिए ऑर्ब टैप करें"}
           </p>
         )}
       </div>
