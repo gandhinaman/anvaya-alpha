@@ -245,14 +245,25 @@ export default function ReactionRecorder({ open, onClose, memoryId, memoryTitle,
   }, [previewUrl, startCountdown]);
 
   const sendReaction = useCallback(async () => {
-    if (!blob || !memoryId || !profileId) return;
+    if (!blob || !memoryId) return;
     setPhase("sending");
 
     try {
-      const ext = "webm";
+      let actorId = profileId;
+      if (!actorId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        actorId = user?.id || null;
+      }
+
+      if (!actorId) {
+        alert("Please sign in again to send your reaction.");
+        setPhase("review");
+        return;
+      }
+
+      const { extension, contentType } = recordingFormatRef.current;
       const prefix = mode === "video" ? "reaction_video" : "reaction_audio";
-      const path = `${profileId}/${prefix}_${Date.now()}.${ext}`;
-      const contentType = mode === "video" ? "video/webm" : "audio/webm";
+      const path = `${actorId}/${prefix}_${Date.now()}.${extension}`;
 
       const { data, error: uploadError } = await supabase.storage
         .from("memories")
@@ -266,11 +277,11 @@ export default function ReactionRecorder({ open, onClose, memoryId, memoryTitle,
       }
 
       const { data: urlData } = supabase.storage.from("memories").getPublicUrl(data.path);
-      const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", profileId).maybeSingle();
+      const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", actorId).maybeSingle();
 
       const { error: insertError } = await supabase.from("memory_comments").insert({
         memory_id: memoryId,
-        user_id: profileId,
+        user_id: actorId,
         comment: mode === "video"
           ? `🎥 Video reaction to "${memoryTitle || "your story"}"`
           : `🎤 Voice reaction to "${memoryTitle || "your story"}"`,

@@ -326,15 +326,27 @@ function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null
   const [videoRecording, setVideoRecording] = useState(false);
   const recorderRef = useRef(null);
 
-  const sendComment = async (mediaUrl = null, mediaType = null) => {
+  const resolveActorId = async () => {
+    if (profileId) return profileId;
+    const { data: { user } } = await supabase.auth.getUser();
+    return user?.id || null;
+  };
+
+  const sendComment = async (mediaUrl = null, mediaType = null, actorIdOverride = null) => {
     if (!commentText.trim() && !mediaUrl) return;
-    if (!memoryId || !profileId) return;
+    if (!memoryId) return;
     setSending(true);
     try {
-      const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", profileId).maybeSingle();
+      const actorId = actorIdOverride || await resolveActorId();
+      if (!actorId) {
+        alert("Please sign in again to send your reaction.");
+        return;
+      }
+
+      const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", actorId).maybeSingle();
       const { error } = await supabase.from("memory_comments").insert({
         memory_id: memoryId,
-        user_id: profileId,
+        user_id: actorId,
         comment: commentText.trim() || (mediaType === "audio" ? "🎤 Voice reply" : "🎥 Video reply"),
         media_url: mediaUrl,
         media_type: mediaType,
@@ -346,32 +358,67 @@ function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null
         return;
       }
       setCommentText("");
-    } catch (err) { console.error("Comment error:", err); alert("Could not send comment."); }
-    finally { setSending(false); }
+    } catch (err) {
+      console.error("Comment error:", err);
+      alert("Could not send comment.");
+    } finally {
+      setSending(false);
+    }
   };
 
   const startAudioReply = async () => {
+    let stream = null;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
+      const actorId = await resolveActorId();
+      if (!actorId) {
+        alert("Please sign in again to record a reaction.");
+        return;
+      }
+
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const { recorder, format } = buildMediaRecorder(stream, "audio");
       const chunks = [];
-      recorder.ondataavailable = e => chunks.push(e.data);
-      recorder.onstop = async () => {
-        stream.getTracks().forEach(t => t.stop());
-        const blob = new Blob(chunks, { type: "audio/webm" });
-        const path = `${profileId}/comment_audio_${Date.now()}.webm`;
-        const { data, error: uploadError } = await supabase.storage.from("memories").upload(path, blob);
-        if (uploadError) { console.error("Upload error:", uploadError); setRecording(false); return; }
-        if (data) {
-          const { data: urlData } = supabase.storage.from("memories").getPublicUrl(data.path);
-          await sendComment(urlData.publicUrl, "audio");
-        }
-        setRecording(false);
+
+      recorder.ondataavailable = (e) => {
+        if (e.data?.size > 0) chunks.push(e.data);
       };
+
+      recorder.onstop = async () => {
+        try {
+          stream.getTracks().forEach((t) => t.stop());
+          const blob = new Blob(chunks, { type: format.contentType });
+          const path = `${actorId}/comment_audio_${Date.now()}.${format.extension}`;
+          const { data, error: uploadError } = await supabase.storage
+            .from("memories")
+            .upload(path, blob, { contentType: format.contentType });
+
+          if (uploadError) {
+            console.error("Audio upload error:", uploadError);
+            alert("Could not upload audio reaction. Please try again.");
+            return;
+          }
+
+          if (data) {
+            const { data: urlData } = supabase.storage.from("memories").getPublicUrl(data.path);
+            await sendComment(urlData.publicUrl, "audio", actorId);
+          }
+        } catch (err) {
+          console.error("Audio reaction error:", err);
+          alert("Could not process audio reaction. Please try again.");
+        } finally {
+          setRecording(false);
+        }
+      };
+
       recorderRef.current = recorder;
-      recorder.start();
+      recorder.start(250);
       setRecording(true);
-    } catch (err) { console.error("Audio record error:", err); }
+    } catch (err) {
+      console.error("Audio record error:", err);
+      if (stream) stream.getTracks().forEach((t) => t.stop());
+      alert("Could not start audio recording. Please allow microphone access.");
+      setRecording(false);
+    }
   };
 
   const stopAudioReply = () => {
@@ -381,27 +428,58 @@ function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null
   };
 
   const startVideoReply = async () => {
+    let stream = null;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      const recorder = new MediaRecorder(stream);
+      const actorId = await resolveActorId();
+      if (!actorId) {
+        alert("Please sign in again to record a reaction.");
+        return;
+      }
+
+      stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      const { recorder, format } = buildMediaRecorder(stream, "video");
       const chunks = [];
-      recorder.ondataavailable = e => chunks.push(e.data);
-      recorder.onstop = async () => {
-        stream.getTracks().forEach(t => t.stop());
-        const blob = new Blob(chunks, { type: "video/webm" });
-        const path = `${profileId}/comment_video_${Date.now()}.webm`;
-        const { data, error: uploadError } = await supabase.storage.from("memories").upload(path, blob);
-        if (uploadError) { console.error("Upload error:", uploadError); setVideoRecording(false); return; }
-        if (data) {
-          const { data: urlData } = supabase.storage.from("memories").getPublicUrl(data.path);
-          await sendComment(urlData.publicUrl, "video");
-        }
-        setVideoRecording(false);
+
+      recorder.ondataavailable = (e) => {
+        if (e.data?.size > 0) chunks.push(e.data);
       };
+
+      recorder.onstop = async () => {
+        try {
+          stream.getTracks().forEach((t) => t.stop());
+          const blob = new Blob(chunks, { type: format.contentType });
+          const path = `${actorId}/comment_video_${Date.now()}.${format.extension}`;
+          const { data, error: uploadError } = await supabase.storage
+            .from("memories")
+            .upload(path, blob, { contentType: format.contentType });
+
+          if (uploadError) {
+            console.error("Video upload error:", uploadError);
+            alert("Could not upload video reaction. Please try again.");
+            return;
+          }
+
+          if (data) {
+            const { data: urlData } = supabase.storage.from("memories").getPublicUrl(data.path);
+            await sendComment(urlData.publicUrl, "video", actorId);
+          }
+        } catch (err) {
+          console.error("Video reaction error:", err);
+          alert("Could not process video reaction. Please try again.");
+        } finally {
+          setVideoRecording(false);
+        }
+      };
+
       recorderRef.current = recorder;
-      recorder.start();
+      recorder.start(250);
       setVideoRecording(true);
-    } catch (err) { console.error("Video record error:", err); }
+    } catch (err) {
+      console.error("Video record error:", err);
+      if (stream) stream.getTracks().forEach((t) => t.stop());
+      alert("Could not start video recording. Please allow camera and microphone access.");
+      setVideoRecording(false);
+    }
   };
 
   const stopVideoReply = () => {
