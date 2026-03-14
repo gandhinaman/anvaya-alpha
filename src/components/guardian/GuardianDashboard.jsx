@@ -759,6 +759,16 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
       }
     });
 
+    // Visual analysis priority reviews
+    healthEvents.filter(e => e.event_type === "visual_analysis" && e.value?.priority_review).forEach(e => {
+      const concerns = [];
+      if (e.value?.facial_symmetry?.label?.includes("Significant")) concerns.push("facial asymmetry detected");
+      if (e.value?.motor_control?.label?.includes("Significant")) concerns.push("motor control concerns");
+      if (e.value?.skin_pallor?.label === "Pale") concerns.push("unusual pallor");
+      const detail = concerns.length > 0 ? concerns.join(", ") : "visual markers flagged";
+      items.push({ text: `👁️ Priority Visual Review — ${detail}`, type: "warning", category: "urgent", time: fmtAgo(e.recorded_at), priority: 0 });
+    });
+
     // Missed medications (not taken today)
     medications.filter(m => !m.taken_today && m.scheduled_time).forEach(m => {
       items.push({ text: `⏰ ${m.name} not yet taken (scheduled ${m.scheduled_time})`, type: "warning", category: "medication", time: "", priority: 1 });
