@@ -153,7 +153,7 @@ function CognitiveRing({ value = 0, label = "" }) {
          <text x={cx} y={cy - 6} textAnchor="middle" fontSize={30} fontWeight={700} fill="#3E2723" fontFamily="DM Sans">{value}</text>
          <text x={cx} y={cy + 12} textAnchor="middle" fontSize={11} fill="#C68B59" fontFamily="DM Sans" fontWeight={500}>{label || "—"}</text>
        </svg>
-       <span style={{ fontSize: 12, color: "#6b6b6b", fontWeight: 500 }}>Cognitive Vitality</span>
+       <span style={{ fontSize: 12, color: "#6b6b6b", fontWeight: 500 }}>Communication Clarity</span>
     </div>
   );
 }
@@ -299,11 +299,11 @@ function WeeklyTrendChart({ healthEvents = [] }) {
       <div style={{ display: "flex", gap: 14, marginTop: 8 }}>
          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
            <div style={{ width: 16, height: 2, borderRadius: 2, background: "#5D4037" }} />
-           <span style={{ fontSize: 11, color: "#6b6b6b" }}>Emotional State</span>
-         </div>
-         <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-           <div style={{ width: 16, height: 2, borderRadius: 2, background: "#C68B59" }} />
-          <span style={{ fontSize: 11, color: "#6b6b6b" }}>Vocal Energy</span>
+            <span style={{ fontSize: 11, color: "#6b6b6b" }}>Observed Sentiment</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            <div style={{ width: 16, height: 2, borderRadius: 2, background: "#C68B59" }} />
+           <span style={{ fontSize: 11, color: "#6b6b6b" }}>Acoustic Energy</span>
         </div>
       </div>
     </div>
@@ -312,7 +312,7 @@ function WeeklyTrendChart({ healthEvents = [] }) {
 
 // ─── MEMORY CARD ──────────────────────────────────────────────────────────────
 function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null, emotionalTone = null, promptQuestion = null, onDelete = null, deleting = false, comments = [], memoryId = null, profileId = null, visualAnalysis = null, reactions = [], onToggleHeart = null }) {
-  const toneColors = { joyful: "#C68B59", nostalgic: "#8D6E63", peaceful: "#5D4037", concerned: "#DC2626" };
+  const toneColors = { joyful: "#C68B59", nostalgic: "#8D6E63", peaceful: "#5D4037", concerned: "#6B8A9E" };
   const tone = emotionalTone || "positive";
   const toneColor = toneColors[tone.toLowerCase()] || "#C68B59";
   const isVideo = audioUrl?.includes("/video_");
@@ -448,7 +448,7 @@ function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null
           </div>
           {visualAnalysis.environment_notes && <p style={{ fontSize: 11, color: "#6b6b6b", margin: "4px 0", lineHeight: 1.4 }}>🏠 {visualAnalysis.environment_notes}</p>}
           {visualAnalysis.posture_mobility && <p style={{ fontSize: 11, color: "#6b6b6b", margin: "4px 0", lineHeight: 1.4 }}>🧍 {visualAnalysis.posture_mobility}</p>}
-          {visualAnalysis.concerns && <p style={{ fontSize: 11, color: "#DC2626", margin: "4px 0", lineHeight: 1.4, fontWeight: 600 }}>⚠️ {visualAnalysis.concerns}</p>}
+          {visualAnalysis.concerns && <p style={{ fontSize: 11, color: "#5B7FA5", margin: "4px 0", lineHeight: 1.4, fontWeight: 600 }}>📋 {visualAnalysis.concerns}</p>}
         </div>
       )}
 
@@ -872,25 +872,29 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
   ];
 
   const stats = [
-     { label: "Vocal Energy", value: derivedStats.vocalEnergy.value, icon: Mic, color: "#5D4037", trend: derivedStats.vocalEnergy.trend,
-       what: "Strength, pitch variation, and resonance of your parent's voice.",
-       how: "Analyzed directly from the audio waveform of recorded memories — not just words.",
-       meaning: { high: "75%+ = strong projection, healthy speech", mid: "40–75% = normal variation", low: "Below 40% = possible fatigue or respiratory changes" }
+     { label: "Acoustic Volume / Pitch", value: derivedStats.vocalEnergy.value, icon: Mic, color: "#5D4037", trend: derivedStats.vocalEnergy.trend,
+       what: "Observed volume, pitch variation, and resonance patterns in speech.",
+       how: "Analyzed directly from the audio waveform of recorded interactions.",
+       meaning: { high: "75%+ = strong projection, typical speech pattern", mid: "40–75% = normal variation in volume/pitch", low: "Below 40% = reduced volume or pitch range observed" },
+       infoNote: "This tracks the physical characteristics of speech — volume, pitch, and resonance patterns."
      },
-     { label: "Cognitive Vitality", value: derivedStats.cognitiveClarity.value, icon: TrendingUp, color: "#8D6E63", trend: derivedStats.cognitiveClarity.trend,
-       what: "Word retrieval speed, sentence coherence, and recall accuracy.",
+     { label: "Communication Clarity", value: derivedStats.cognitiveClarity.value, icon: TrendingUp, color: "#8D6E63", trend: derivedStats.cognitiveClarity.trend,
+       what: "Word retrieval pace, sentence flow, and vocabulary usage patterns.",
        how: "Derived from transcript analysis — vocabulary richness, logical flow, and self-corrections.",
-       meaning: { high: "80%+ = sharp, fluent recall", mid: "50–80% = normal age-related variation", low: "Below 50% = may warrant a check-in" }
+       meaning: { high: "80%+ = fluent, varied vocabulary", mid: "50–80% = typical variation", low: "Below 50% = reduced fluency observed" },
+       infoNote: "This monitors vocabulary use and response patterns during interactions."
      },
-     { label: "Emotional Wellbeing", value: derivedStats.emotionalTone.value, icon: Heart, color: "#C68B59", trend: derivedStats.emotionalTone.trend,
-       what: "Emotional quality detected from voice — joy, calm, sadness, or distress.",
-       how: "Measured from audio tone, breathing patterns, and vocal trembling.",
-       meaning: { high: "Joyful / Peaceful = positive wellbeing", mid: "Calm / Nostalgic = stable", low: "Concerned / Distressed = may need support" }
+     { label: "Observed Sentiment", value: derivedStats.emotionalTone.value, icon: Heart, color: "#C68B59", trend: derivedStats.emotionalTone.trend,
+       what: "Tone of voice and word choice patterns observed during interactions.",
+       how: "Assessed from audio tone patterns, breathing rhythm, and vocal characteristics.",
+       meaning: { high: "Joyful / Peaceful = positive tone observed", mid: "Calm / Nostalgic = steady tone", low: "Concerned / Subdued = lower tone observed" },
+       infoNote: "This monitors tone of voice and word choice during recorded interactions."
      },
-     { label: "Activity Level", value: derivedStats.activityLevel.value, icon: Zap, color: "#A1887F", trend: derivedStats.activityLevel.trend,
-       what: "Overall engagement through speech speed and interaction frequency.",
-       how: "Measured from audio speech rate, rhythm, and enthusiasm in delivery.",
-       meaning: { high: "Active = engaged and talkative", mid: "Moderate = normal", low: "Low = possible isolation or fatigue" }
+     { label: "Interaction Engagement", value: derivedStats.activityLevel.value, icon: Zap, color: "#A1887F", trend: derivedStats.activityLevel.trend,
+       what: "Speech pace, interaction duration, and engagement patterns.",
+       how: "Assessed from speech rate, rhythm, and interaction duration patterns.",
+       meaning: { high: "Active = frequent, engaged interaction", mid: "Moderate = typical pattern", low: "Low = reduced interaction frequency observed" },
+       infoNote: "This monitors the rhythm and pace of speech and interaction frequency."
      },
   ];
 
@@ -916,29 +920,29 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
       items.push({ text: "🚨 Emergency alert triggered", type: "warning", category: "urgent", time: fmtAgo(e.recorded_at), priority: 0 });
     });
 
-    // Low scores (problematic — below thresholds)
+    // Significant deviations from typical patterns
     healthEvents.forEach(e => {
       const score = e.value?.score;
       if (score == null) return;
       if (e.event_type === "vocal_energy" && score < 40) {
-        items.push({ text: `🎙️ Low vocal energy (${score}%) — may indicate fatigue`, type: "warning", category: "health", time: fmtAgo(e.recorded_at), priority: 1 });
+        items.push({ text: `🎙️ Reduced acoustic volume observed (${score}%)`, type: "warning", category: "anomaly", time: fmtAgo(e.recorded_at), priority: 1 });
       } else if ((e.event_type === "cognitive_vitality" || e.event_type === "cognitive_clarity") && score < 50) {
-        items.push({ text: `🧠 Cognitive score dropped to ${score}%`, type: "warning", category: "health", time: fmtAgo(e.recorded_at), priority: 1 });
+        items.push({ text: `🧠 Communication clarity below typical range (${score}%)`, type: "warning", category: "anomaly", time: fmtAgo(e.recorded_at), priority: 1 });
       } else if (e.event_type === "emotional_state" && (e.value?.label === "Distressed" || score < 30)) {
-        items.push({ text: `💔 Emotional distress detected${e.value?.label ? ` — ${e.value.label}` : ""}`, type: "warning", category: "health", time: fmtAgo(e.recorded_at), priority: 1 });
+        items.push({ text: `💙 Subdued sentiment observed${e.value?.label ? ` — ${e.value.label}` : ""}`, type: "warning", category: "anomaly", time: fmtAgo(e.recorded_at), priority: 1 });
       } else if (e.event_type === "activity_level" && score < 30) {
-        items.push({ text: `⚡ Very low activity (${score}%) — possible isolation`, type: "warning", category: "health", time: fmtAgo(e.recorded_at), priority: 1 });
+        items.push({ text: `⚡ Reduced interaction engagement observed (${score}%)`, type: "warning", category: "anomaly", time: fmtAgo(e.recorded_at), priority: 1 });
       }
     });
 
-    // Visual analysis priority reviews
+    // Visual analysis — significant deviations
     healthEvents.filter(e => e.event_type === "visual_analysis" && e.value?.priority_review).forEach(e => {
       const concerns = [];
-      if (e.value?.facial_symmetry?.label?.includes("Significant")) concerns.push("facial asymmetry detected");
-      if (e.value?.motor_control?.label?.includes("Significant")) concerns.push("motor control concerns");
-      if (e.value?.skin_pallor?.label === "Pale") concerns.push("unusual pallor");
-      const detail = concerns.length > 0 ? concerns.join(", ") : "visual markers flagged";
-      items.push({ text: `👁️ Priority Visual Review — ${detail}`, type: "warning", category: "urgent", time: fmtAgo(e.recorded_at), priority: 0 });
+      if (e.value?.facial_symmetry?.label?.includes("Significant")) concerns.push("significant deviation in bilateral movement");
+      if (e.value?.motor_control?.label?.includes("Significant")) concerns.push("deviation in movement stability");
+      if (e.value?.skin_pallor?.label === "Pale") concerns.push("change in color reflectance");
+      const detail = concerns.length > 0 ? concerns.join(", ") : "visual pattern deviation noted";
+      items.push({ text: `👁️ Visual Pattern Review — ${detail}`, type: "warning", category: "urgent", time: fmtAgo(e.recorded_at), priority: 0 });
     });
 
     // Missed medications (not taken today)
@@ -1937,8 +1941,8 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
           <div className="s2">
             {/* Section header */}
             <div style={{ marginBottom: 18 }}>
-              <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 22, fontWeight: 700, color: "#3E2723", margin: 0 }}>Health Overview</h2>
-              <p style={{ fontSize: 12, color: "#8D6E63", marginTop: 4 }}>Voice metrics, visual biometrics, trends & medication</p>
+            <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 22, fontWeight: 700, color: "#3E2723", margin: 0 }}>Daily Observations</h2>
+              <p style={{ fontSize: 12, color: "#8D6E63", marginTop: 4 }}>Behavioral indicators, visual patterns, trends & medication logs</p>
             </div>
 
             {/* ── 1. Voice Metrics ── */}
@@ -1947,7 +1951,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                 <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(198,139,89,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <Mic size={14} color="#C68B59" />
                 </div>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#3E2723" }}>Voice Metrics</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#3E2723" }}>Daily Indicators</span>
               </div>
               <div style={{
                 display: "grid",
@@ -1959,13 +1963,23 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                   return (
                   <div key={i} className="gcard" style={{ padding: 16, cursor: "pointer", transition: "all .3s", border: isOpen ? `1.5px solid ${st.color}40` : undefined }}
                     onClick={() => setExpandedStat(isOpen ? null : `d-${i}`)}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
-                      <div style={{
-                        width: 36, height: 36, borderRadius: 10,
-                        background: `${st.color}12`,
-                        display: "flex", alignItems: "center", justifyContent: "center"
-                      }}>
-                        <st.icon size={16} color={st.color} />
+                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div style={{
+                          width: 36, height: 36, borderRadius: 10,
+                          background: `${st.color}12`,
+                          display: "flex", alignItems: "center", justifyContent: "center"
+                        }}>
+                          <st.icon size={16} color={st.color} />
+                        </div>
+                        {st.infoNote && (
+                          <div title={st.infoNote} style={{
+                            width: 18, height: 18, borderRadius: "50%", cursor: "help",
+                            background: "rgba(93,64,55,0.06)", display: "flex", alignItems: "center", justifyContent: "center"
+                          }}>
+                            <HelpCircle size={11} color="#9CA3AF" />
+                          </div>
+                        )}
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                         <span style={{
@@ -1997,13 +2011,13 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                       <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 6 }}>How it's measured</div>
                       <p style={{ fontSize: 11.5, color: "#555", lineHeight: 1.5, margin: 0 }}>{st.how}</p>
                     </div>
-                    <div style={{ flex: 1, minWidth: 200 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>What the score means</div>
+                     <div style={{ flex: 1, minWidth: 200 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>What the range indicates</div>
                       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                         {[
-                          { dot: "#4CAF50", text: st.meaning.high },
-                          { dot: "#FF9800", text: st.meaning.mid },
-                          { dot: "#E53935", text: st.meaning.low },
+                          { dot: "#5D8A6B", text: st.meaning.high },
+                          { dot: "#6B8A9E", text: st.meaning.mid },
+                          { dot: "#8D8D8D", text: st.meaning.low },
                         ].map((row, ri) => (
                           <div key={ri} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
                             <div style={{ width: 6, height: 6, borderRadius: "50%", background: row.dot, marginTop: 5, flexShrink: 0 }} />
@@ -2023,12 +2037,12 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               if (visualEvents.length === 0) return null;
 
               const markers = [
-                { key: "micro_expressions", label: "Micro-Expressions", desc: "Flat affect vs. Animated", icon: "😊", color: "#C68B59" },
-                { key: "motor_control", label: "Motor Control", desc: "Tremors & head tilting", icon: "✋", color: "#8D6E63" },
-                { key: "vocal_visual_sync", label: "Vocal-Visual Sync", desc: "Speech & facial timing", icon: "🔄", color: "#5D4037" },
-                { key: "facial_symmetry", label: "Facial Symmetry", desc: "Neurological indicator", icon: "🪞", color: "#4CAF50" },
-                { key: "skin_pallor", label: "Skin Tone", desc: "Circulation & wellness", icon: "🌡️", color: "#FF9800" },
-                { key: "eye_engagement", label: "Eye Engagement", desc: "Cognitive presence", icon: "👁️", color: "#2196F3" },
+                { key: "micro_expressions", label: "Expressive Range", desc: "Observed frequency of expression changes", icon: "😊", color: "#C68B59", infoNote: "Tracks how often facial expressions change during interactions." },
+                { key: "motor_control", label: "Movement Stability", desc: "Observed steadiness in video frame", icon: "✋", color: "#8D6E63", infoNote: "Monitors steadiness and smoothness of movement observed in video." },
+                { key: "vocal_visual_sync", label: "Vocal-Visual Sync", desc: "Speech & facial timing patterns", icon: "🔄", color: "#5D4037", infoNote: "Tracks synchronization between speech audio and facial movements." },
+                { key: "facial_symmetry", label: "Bilateral Movement", desc: "Evenness of movement on both sides", icon: "🪞", color: "#5D8A6B", infoNote: "Analysis of facial muscle patterns compared to typical baseline." },
+                { key: "skin_pallor", label: "Color Reflectance", desc: "Surface color consistency", icon: "🌡️", color: "#6B8A9E", infoNote: "Analysis of light reflection and surface color consistency in video." },
+                { key: "eye_engagement", label: "Gaze Patterns", desc: "Visual attention tracking", icon: "👁️", color: "#5B7FA5", infoNote: "Tracks gaze direction and visual attention patterns." },
               ];
 
               const Sparkline = ({ data, color }) => {
@@ -2058,7 +2072,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                       <Scan size={14} color="#5D4037" />
                     </div>
                     <div>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: "#3E2723" }}>Visual Biometrics</span>
+                     <span style={{ fontSize: 13, fontWeight: 700, color: "#3E2723" }}>Visual Observations</span>
                       <span style={{ fontSize: 11, color: "#8D6E63", marginLeft: 8 }}>{visualEvents.length} recording{visualEvents.length !== 1 ? "s" : ""}</span>
                     </div>
                   </div>
@@ -2066,13 +2080,13 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                   <div className="gcard" style={{ padding: isMobile ? 16 : 20 }}>
                     {/* Priority review banner */}
                     {visualEvents[0]?.value?.priority_review && (
-                      <div style={{
+                       <div style={{
                         padding: "10px 14px", borderRadius: 12, marginBottom: 14,
-                        background: "rgba(229,57,53,0.06)", border: "1px solid rgba(229,57,53,0.15)",
+                        background: "rgba(107,138,158,0.06)", border: "1px solid rgba(107,138,158,0.15)",
                         display: "flex", alignItems: "center", gap: 8
                       }}>
-                        <AlertTriangle size={15} color="#E53935" />
-                        <span style={{ fontSize: 12, fontWeight: 600, color: "#E53935" }}>Priority review flagged — check visual markers below</span>
+                       <AlertTriangle size={15} color="#6B8A9E" />
+                        <span style={{ fontSize: 12, fontWeight: 600, color: "#5B7FA5" }}>Significant pattern deviation noted — review observations below</span>
                       </div>
                     )}
 
@@ -2093,6 +2107,14 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                                   <div style={{ fontSize: 12, fontWeight: 600, color: "#3E2723" }}>{marker.label}</div>
                                   <div style={{ fontSize: 10, color: "#9CA3AF" }}>{marker.desc}</div>
                                 </div>
+                                {marker.infoNote && (
+                                  <div title={marker.infoNote} style={{
+                                    width: 16, height: 16, borderRadius: "50%", cursor: "help",
+                                    background: "rgba(93,64,55,0.06)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+                                  }}>
+                                    <HelpCircle size={9} color="#9CA3AF" />
+                                  </div>
+                                )}
                               </div>
                             </div>
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -2103,10 +2125,10 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                             </div>
                             {latest && (
                               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 6 }}>
-                                <span style={{
+                                 <span style={{
                                   fontSize: 10, fontWeight: 600, padding: "2px 10px", borderRadius: 100,
-                                  background: latest.score >= 70 ? "rgba(76,175,80,0.1)" : latest.score >= 40 ? "rgba(255,152,0,0.1)" : "rgba(229,57,53,0.1)",
-                                  color: latest.score >= 70 ? "#4CAF50" : latest.score >= 40 ? "#FF9800" : "#E53935"
+                                  background: latest.score >= 70 ? "rgba(93,138,107,0.1)" : latest.score >= 40 ? "rgba(107,138,158,0.1)" : "rgba(141,141,141,0.1)",
+                                  color: latest.score >= 70 ? "#5D8A6B" : latest.score >= 40 ? "#6B8A9E" : "#8D8D8D"
                                 }}>{latest.label}</span>
                               </div>
                             )}
@@ -2140,9 +2162,9 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                             </div>
                             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
                               {[
-                                { label: "Symmetry", key: "facial_symmetry" },
-                                { label: "Skin Tone", key: "skin_pallor" },
-                                { label: "Eye Engagement", key: "eye_engagement" },
+                                { label: "Bilateral Movement", key: "facial_symmetry" },
+                                { label: "Color Reflectance", key: "skin_pallor" },
+                                { label: "Gaze Patterns", key: "eye_engagement" },
                               ].map(m => {
                                 const curr = visualEvents[0]?.value?.[m.key]?.score;
                                 const prev = visualEvents[compareIdx]?.value?.[m.key]?.score;
@@ -2154,9 +2176,9 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                                       {curr != null ? `${curr}%` : "—"}
                                     </div>
                                     {diff != null && (
-                                      <div style={{
+                                       <div style={{
                                         fontSize: 10, fontWeight: 600, marginTop: 2,
-                                        color: diff > 0 ? "#4CAF50" : diff < 0 ? "#E53935" : "#9CA3AF"
+                                        color: diff > 0 ? "#5D8A6B" : diff < 0 ? "#6B8A9E" : "#9CA3AF"
                                       }}>
                                         {diff > 0 ? `+${diff}` : diff < 0 ? `${diff}` : "—"}
                                       </div>
@@ -2286,16 +2308,16 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               }}>
                 <div className="gcard" style={{ padding: 20 }}>
                   <div style={{ marginBottom: 14 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Weekly Wellness</div>
-                    <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Emotional state & vocal energy over 7 days</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Weekly Patterns</div>
+                    <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Observed sentiment & acoustic energy over 7 days</div>
                   </div>
                   <WeeklyTrendChart healthEvents={healthEvents} />
                 </div>
 
                 <div className="gcard" style={{ padding: 20 }}>
                   <div style={{ marginBottom: 14 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Acoustic Insights</div>
-                    <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>24-hour vocal activity heatmap</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Acoustic Patterns</div>
+                    <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>24-hour acoustic activity heatmap</div>
                   </div>
                   <AcousticHeatmap healthEvents={healthEvents} />
                   <div style={{
@@ -2303,11 +2325,18 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                     background: "rgba(141,110,99,0.04)", borderRadius: 10
                   }}>
                     <p style={{ fontSize: 10, color: "#8D6E63", lineHeight: 1.5, margin: 0 }}>
-                      Brighter cells = higher vocal energy. Patterns reveal daily routines and social activity windows.
+                      Brighter cells = higher acoustic energy. Patterns reveal daily routines and interaction windows.
                     </p>
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Health tab disclaimer */}
+            <div style={{ padding: "10px 14px", borderRadius: 12, background: "rgba(93,64,55,0.03)", border: "1px solid rgba(93,64,55,0.06)" }}>
+              <p style={{ fontSize: 10, color: "#9CA3AF", margin: 0, lineHeight: 1.5, textAlign: "center" }}>
+                ℹ️ Anvaya provides behavioral observations based on AI analysis of voice and video. These are not medical diagnoses. Please consult a professional for health concerns.
+              </p>
             </div>
 
           </div>
@@ -2317,21 +2346,21 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
         {nav === "alerts" && (
           <div className="s2">
             <div style={{ marginBottom: 20 }}>
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: "#1a1a1a" }}>Alerts & Events</h2>
-              <p style={{ fontSize: 12, color: "#6b6b6b", marginTop: 3 }}>Grouped by priority — only actionable items shown</p>
+               <h2 style={{ fontSize: 16, fontWeight: 700, color: "#1a1a1a" }}>Activity Log</h2>
+              <p style={{ fontSize: 12, color: "#6b6b6b", marginTop: 3 }}>Grouped by type — only notable items shown</p>
             </div>
             {allAlerts.length === 0 ? (
               <div className="gcard" style={{ padding: 32, textAlign: "center" }}>
                 <Bell size={28} color="#9CA3AF" style={{ margin: "0 auto 10px" }} />
                 <p style={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a" }}>All clear</p>
-                <p style={{ fontSize: 12, color: "#6b6b6b", marginTop: 4 }}>No alerts or concerns right now</p>
+                <p style={{ fontSize: 12, color: "#6b6b6b", marginTop: 4 }}>No notable observations right now</p>
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
                 {[
-                  { key: "urgent", title: "🚨 Urgent", color: "#DC2626", bg: "rgba(220,38,38,0.04)", border: "rgba(220,38,38,0.12)" },
-                  { key: "health", title: "💛 Health Concerns", color: "#D97706", bg: "rgba(217,119,6,0.04)", border: "rgba(217,119,6,0.12)" },
-                  { key: "medication", title: "💊 Medications", color: "#8D6E63", bg: "rgba(141,110,99,0.04)", border: "rgba(141,110,99,0.12)" },
+                  { key: "urgent", title: "🚨 Urgent", color: "#5B7FA5", bg: "rgba(91,127,165,0.04)", border: "rgba(91,127,165,0.12)" },
+                  { key: "anomaly", title: "📊 Activity Anomalies", color: "#6B8A9E", bg: "rgba(107,138,158,0.04)", border: "rgba(107,138,158,0.12)" },
+                  { key: "medication", title: "💊 Medication Log", color: "#8D6E63", bg: "rgba(141,110,99,0.04)", border: "rgba(141,110,99,0.12)" },
                   { key: "activity", title: "🎤 Recent Activity", color: "#5D4037", bg: "rgba(93,64,55,0.04)", border: "rgba(93,64,55,0.12)" },
                 ].map(group => {
                   const groupAlerts = allAlerts.filter(a => a.category === group.key);
@@ -2441,7 +2470,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                   </p>
                 </div>
 
-                {/* Health metrics blurb */}
+                {/* Observation summary */}
                 <p style={{
                   fontSize: 14, color: "#4a3f3a", lineHeight: 1.7,
                   fontFamily: "'DM Sans', sans-serif", margin: 0,
@@ -2452,47 +2481,47 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                     const name = parentProfile?.full_name?.split(" ")[0] || "Amma";
                     const parts = [];
 
-                    // Vocal energy
+                    // Acoustic volume
                     const vocalVal = parseInt(derivedStats.vocalEnergy.value);
                     if (!isNaN(vocalVal)) {
-                      if (vocalVal >= 70) parts.push(`${name}'s voice sounds strong and clear (${vocalVal}%).`);
-                      else if (vocalVal >= 40) parts.push(`Vocal energy is moderate at ${vocalVal}% — within normal range.`);
-                      else parts.push(`Vocal energy is low at ${vocalVal}% — could indicate fatigue or low mood.`);
+                      if (vocalVal >= 70) parts.push(`The system observed strong acoustic volume and pitch variation (${vocalVal}%) from ${name}.`);
+                      else if (vocalVal >= 40) parts.push(`Acoustic volume observed at ${vocalVal}% — within typical range.`);
+                      else parts.push(`Reduced acoustic volume noted at ${vocalVal}%.`);
                     }
 
-                    // Cognitive
+                    // Communication clarity
                     const cogVal = parseInt(derivedStats.cognitiveClarity.value);
                     if (!isNaN(cogVal)) {
-                      if (cogVal >= 70) parts.push(`Cognitive clarity looks sharp at ${cogVal}%.`);
-                      else if (cogVal >= 45) parts.push(`Cognitive scores show normal variation (${cogVal}%).`);
-                      else parts.push(`Cognitive score dipped to ${cogVal}% — worth a check-in.`);
+                      if (cogVal >= 70) parts.push(`Communication clarity observed at ${cogVal}% — fluent and varied.`);
+                      else if (cogVal >= 45) parts.push(`Communication patterns show typical variation (${cogVal}%).`);
+                      else parts.push(`Communication clarity observed at ${cogVal}% — below typical range.`);
                     }
 
-                    // Emotional
+                    // Observed sentiment
                     const emoTrend = derivedStats.emotionalTone.trend;
                     const emoVal = parseInt(derivedStats.emotionalTone.value);
                     if (emoTrend) {
-                      if (/joy|happy/i.test(emoTrend)) parts.push(`Emotionally, ${name} seems upbeat and cheerful. 😊`);
-                      else if (/peace|calm/i.test(emoTrend)) parts.push(`Emotionally, ${name} seems peaceful and relaxed. 🕊️`);
-                      else if (/nostalg/i.test(emoTrend)) parts.push(`${name} has been feeling nostalgic today. 🌅`);
-                      else if (/distress|concern/i.test(emoTrend)) parts.push(`${name} may need some support — mood seems low. 💙`);
-                      else parts.push(`Emotional state: ${emoTrend}.`);
+                      if (/joy|happy/i.test(emoTrend)) parts.push(`Observed sentiment: upbeat and cheerful tone. 😊`);
+                      else if (/peace|calm/i.test(emoTrend)) parts.push(`Observed sentiment: calm and relaxed tone. 🕊️`);
+                      else if (/nostalg/i.test(emoTrend)) parts.push(`Observed sentiment: reflective and nostalgic tone. 🌅`);
+                      else if (/distress|concern/i.test(emoTrend)) parts.push(`Observed sentiment: subdued tone noted. 💙`);
+                      else parts.push(`Observed sentiment: ${emoTrend}.`);
                     } else if (!isNaN(emoVal)) {
-                      if (emoVal >= 60) parts.push(`Emotional wellbeing looks positive (${emoVal}%).`);
-                      else if (emoVal >= 35) parts.push(`Emotional state is stable (${emoVal}%).`);
-                      else parts.push(`Emotional score is low (${emoVal}%) — consider reaching out.`);
+                      if (emoVal >= 60) parts.push(`Observed sentiment appears positive (${emoVal}%).`);
+                      else if (emoVal >= 35) parts.push(`Observed sentiment appears steady (${emoVal}%).`);
+                      else parts.push(`Observed sentiment is subdued (${emoVal}%).`);
                     }
 
-                    // Medication
+                    // Medication adherence
                     const medsTaken = medications.filter(m => m.taken_today).length;
                     const medsTotal = medications.length;
                     if (medsTotal > 0) {
-                      if (medsTaken === medsTotal) parts.push(`All ${medsTotal} medications taken today. ✅`);
-                      else if (medsTaken > 0) parts.push(`${medsTaken} of ${medsTotal} medications confirmed so far. 💊`);
-                      else parts.push(`No medications marked yet today — a gentle reminder might help. 💊`);
+                      if (medsTaken === medsTotal) parts.push(`Medication adherence: all ${medsTotal} logged by user. ✅`);
+                      else if (medsTaken > 0) parts.push(`Medication adherence: ${medsTaken} of ${medsTotal} logged so far. 💊`);
+                      else parts.push(`Medication adherence: none logged yet today. 💊`);
                     }
 
-                    if (parts.length === 0) return `Health metrics will appear here once ${name} starts recording memories and logging medications.`;
+                    if (parts.length === 0) return `Behavioral observations will appear here once ${name} starts recording interactions.`;
                     return parts.join(" ");
                   })()}
                 </p>
@@ -2515,84 +2544,81 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                     <ShieldCheck size={20} color="#FFF8F0" />
                   </div>
                   <div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: "#3E2723" }}>Health Highlights</div>
-                    <div style={{ fontSize: 11, color: "#8D6E63" }}>At a glance — no numbers needed</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: "#3E2723" }}>Daily Indicators</div>
+                    <div style={{ fontSize: 11, color: "#8D6E63" }}>Trends at a glance</div>
                   </div>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {[
                     {
-                      label: "Vocal Strength",
+                      label: "Acoustic Volume",
                       status: (() => {
                         const v = derivedStats.vocalEnergy.value;
                         const num = parseInt(v);
                         if (isNaN(num)) return { text: v || "No data yet", color: "#8D6E63", bg: "rgba(141,110,99,0.08)" };
-                        if (num >= 70) return { text: "Strong & Clear", color: "#4CAF50", bg: "rgba(76,175,80,0.08)" };
-                        if (num >= 40) return { text: "Moderate", color: "#FF9800", bg: "rgba(255,152,0,0.08)" };
-                        return { text: "Needs Attention", color: "#E53935", bg: "rgba(229,57,53,0.08)" };
+                        if (num >= 70) return { text: "Typical", color: "#5D8A6B", bg: "rgba(93,138,107,0.08)" };
+                        if (num >= 40) return { text: "Moderate", color: "#6B8A9E", bg: "rgba(107,138,158,0.08)" };
+                        return { text: "Below typical", color: "#8D8D8D", bg: "rgba(141,141,141,0.08)" };
                       })(),
                       icon: "🎙️"
                     },
                     {
-                      label: "Medication Today",
+                      label: "Medication Adherence",
                       status: (() => {
                         const taken = medications.filter(m => m.taken_today).length;
                         const total = medications.length;
                         if (total === 0) return { text: "None configured", color: "#8D6E63", bg: "rgba(141,110,99,0.08)" };
-                        if (taken === total) return { text: "All taken ✓", color: "#4CAF50", bg: "rgba(76,175,80,0.08)" };
-                        if (taken > 0) return { text: `${taken}/${total} taken`, color: "#FF9800", bg: "rgba(255,152,0,0.08)" };
-                        return { text: "Not yet taken", color: "#E53935", bg: "rgba(229,57,53,0.08)" };
+                        if (taken === total) return { text: "All logged ✓", color: "#5D8A6B", bg: "rgba(93,138,107,0.08)" };
+                        if (taken > 0) return { text: `${taken}/${total} logged`, color: "#6B8A9E", bg: "rgba(107,138,158,0.08)" };
+                        return { text: "Not yet logged", color: "#8D8D8D", bg: "rgba(141,141,141,0.08)" };
                       })(),
                       icon: "💊"
                     },
                     {
-                      label: "Emotional State",
+                      label: "Observed Sentiment",
                       status: (() => {
                         const trend = derivedStats.emotionalTone.trend;
                         const v = derivedStats.emotionalTone.value;
                         const num = parseInt(v);
                         if (isNaN(num) && !trend) return { text: "No data yet", color: "#8D6E63", bg: "rgba(141,110,99,0.08)" };
-                        if (num >= 60 || /joy|happy|peace|calm/i.test(trend)) return { text: trend || "Positive", color: "#4CAF50", bg: "rgba(76,175,80,0.08)" };
-                        if (num >= 35 || /nostalg|neutral/i.test(trend)) return { text: trend || "Stable", color: "#FF9800", bg: "rgba(255,152,0,0.08)" };
-                        return { text: trend || "May need support", color: "#E53935", bg: "rgba(229,57,53,0.08)" };
+                        if (num >= 60 || /joy|happy|peace|calm/i.test(trend)) return { text: trend || "Positive tone", color: "#5D8A6B", bg: "rgba(93,138,107,0.08)" };
+                        if (num >= 35 || /nostalg|neutral/i.test(trend)) return { text: trend || "Steady", color: "#6B8A9E", bg: "rgba(107,138,158,0.08)" };
+                        return { text: trend || "Subdued tone", color: "#8D8D8D", bg: "rgba(141,141,141,0.08)" };
                       })(),
                       icon: "💛"
                     },
                     {
-                      label: "Cognitive Clarity",
+                      label: "Communication Clarity",
                       status: (() => {
                         const v = derivedStats.cognitiveClarity.value;
                         const num = parseInt(v);
                         if (isNaN(num)) return { text: v || "No data yet", color: "#8D6E63", bg: "rgba(141,110,99,0.08)" };
-                        if (num >= 70) return { text: "Sharp", color: "#4CAF50", bg: "rgba(76,175,80,0.08)" };
-                        if (num >= 45) return { text: "Normal variation", color: "#FF9800", bg: "rgba(255,152,0,0.08)" };
-                        return { text: "Worth checking in", color: "#E53935", bg: "rgba(229,57,53,0.08)" };
+                        if (num >= 70) return { text: "Typical", color: "#5D8A6B", bg: "rgba(93,138,107,0.08)" };
+                        if (num >= 45) return { text: "Normal variation", color: "#6B8A9E", bg: "rgba(107,138,158,0.08)" };
+                        return { text: "Below typical", color: "#8D8D8D", bg: "rgba(141,141,141,0.08)" };
                       })(),
                       icon: "🧠"
                     },
-                    // Visual Health / Physical Appearance summary
                     {
-                      label: "Physical Appearance",
+                      label: "Visual Patterns",
                       status: (() => {
                         const name = parentProfile?.full_name?.split(" ")[0] || "Amma";
                         const visualEvents = healthEvents.filter(e => e.event_type === "visual_analysis");
                         if (visualEvents.length === 0) return { text: "No video data", color: "#8D6E63", bg: "rgba(141,110,99,0.08)" };
                         const latest = visualEvents[0]?.value;
                         if (!latest) return { text: "No video data", color: "#8D6E63", bg: "rgba(141,110,99,0.08)" };
-                        if (latest.priority_review) return { text: "Review needed", color: "#E53935", bg: "rgba(229,57,53,0.08)" };
-                        // Check key markers
+                        if (latest.priority_review) return { text: "Deviation noted", color: "#6B8A9E", bg: "rgba(107,138,158,0.08)" };
                         const symScore = latest.facial_symmetry?.score;
                         const skinScore = latest.skin_pallor?.score;
                         const eyeScore = latest.eye_engagement?.score;
                         const avgScore = [symScore, skinScore, eyeScore].filter(s => s != null);
                         const avg = avgScore.length > 0 ? avgScore.reduce((a, b) => a + b, 0) / avgScore.length : null;
-                        if (avg != null && avg >= 75) return { text: `${name} looks bright & alert`, color: "#4CAF50", bg: "rgba(76,175,80,0.08)" };
-                        if (avg != null && avg >= 50) return { text: "Normal appearance", color: "#FF9800", bg: "rgba(255,152,0,0.08)" };
-                        if (avg != null) return { text: "Worth a closer look", color: "#E53935", bg: "rgba(229,57,53,0.08)" };
-                        // Fallback to expression
-                        if (latest.facial_expression === "happy" || latest.facial_expression === "calm") return { text: `${name} looks well`, color: "#4CAF50", bg: "rgba(76,175,80,0.08)" };
-                        if (latest.facial_expression === "distressed" || latest.facial_expression === "pain") return { text: "May need attention", color: "#E53935", bg: "rgba(229,57,53,0.08)" };
-                        return { text: "Normal", color: "#8D6E63", bg: "rgba(141,110,99,0.08)" };
+                        if (avg != null && avg >= 75) return { text: "Typical patterns", color: "#5D8A6B", bg: "rgba(93,138,107,0.08)" };
+                        if (avg != null && avg >= 50) return { text: "Within range", color: "#6B8A9E", bg: "rgba(107,138,158,0.08)" };
+                        if (avg != null) return { text: "Variation noted", color: "#8D8D8D", bg: "rgba(141,141,141,0.08)" };
+                        if (latest.facial_expression === "happy" || latest.facial_expression === "calm") return { text: "Typical", color: "#5D8A6B", bg: "rgba(93,138,107,0.08)" };
+                        if (latest.facial_expression === "distressed" || latest.facial_expression === "pain") return { text: "Variation noted", color: "#8D8D8D", bg: "rgba(141,141,141,0.08)" };
+                        return { text: "Typical", color: "#8D6E63", bg: "rgba(141,110,99,0.08)" };
                       })(),
                       icon: "👁️"
                     },
@@ -2629,29 +2655,34 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                   const name = parentProfile?.full_name?.split(" ")[0] || "Amma";
                   const skinLabel = latest.skin_pallor?.label;
                   const eyeLabel = latest.eye_engagement?.label;
-                  // Show observation note if something is off
                   if (skinLabel === "Pale" || skinLabel === "Slightly pale") {
                     return (
-                      <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 14, background: "rgba(255,152,0,0.06)", border: "1px solid rgba(255,152,0,0.12)" }}>
+                      <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 14, background: "rgba(107,138,158,0.06)", border: "1px solid rgba(107,138,158,0.12)" }}>
                         <p style={{ fontSize: 12, color: "#6b6b6b", margin: 0, lineHeight: 1.5 }}>
-                          <span style={{ fontSize: 10, fontWeight: 600, color: "#FF9800", padding: "2px 8px", borderRadius: 100, background: "rgba(255,152,0,0.1)", marginRight: 6 }}>Observation</span>
-                          {name} appears slightly pale today compared to recent recordings. This may be normal variation.
+                          <span style={{ fontSize: 10, fontWeight: 600, color: "#6B8A9E", padding: "2px 8px", borderRadius: 100, background: "rgba(107,138,158,0.1)", marginRight: 6 }}>Observation</span>
+                          Color reflectance for {name} shows variation compared to recent recordings. This may be due to lighting or other factors.
                         </p>
                       </div>
                     );
                   }
                   if (eyeLabel === "Low engagement" || eyeLabel === "Unfocused") {
                     return (
-                      <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 14, background: "rgba(255,152,0,0.06)", border: "1px solid rgba(255,152,0,0.12)" }}>
+                      <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 14, background: "rgba(107,138,158,0.06)", border: "1px solid rgba(107,138,158,0.12)" }}>
                         <p style={{ fontSize: 12, color: "#6b6b6b", margin: 0, lineHeight: 1.5 }}>
-                          <span style={{ fontSize: 10, fontWeight: 600, color: "#FF9800", padding: "2px 8px", borderRadius: 100, background: "rgba(255,152,0,0.1)", marginRight: 6 }}>Observation</span>
-                          {name}'s eye engagement seems lower today — could be tiredness or lighting. Worth checking in.
+                          <span style={{ fontSize: 10, fontWeight: 600, color: "#6B8A9E", padding: "2px 8px", borderRadius: 100, background: "rgba(107,138,158,0.1)", marginRight: 6 }}>Observation</span>
+                          {name}'s gaze patterns show reduced engagement compared to recent interactions — could be due to tiredness, lighting, or other factors.
                         </p>
                       </div>
                     );
                   }
                   return null;
                 })()}
+                {/* Disclaimer */}
+                <div style={{ marginTop: 16, padding: "10px 14px", borderRadius: 12, background: "rgba(93,64,55,0.03)", border: "1px solid rgba(93,64,55,0.06)" }}>
+                  <p style={{ fontSize: 10, color: "#9CA3AF", margin: 0, lineHeight: 1.5, textAlign: "center" }}>
+                    ℹ️ Anvaya provides behavioral observations based on AI analysis of voice and video. These are not medical diagnoses. Please consult a professional for health concerns.
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -3117,24 +3148,24 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
                   <div style={{
                     width: 38, height: 38, borderRadius: 12,
-                    background: "rgba(229,57,53,0.08)",
+                    background: "rgba(107,138,158,0.1)",
                     display: "flex", alignItems: "center", justifyContent: "center"
                   }}>
-                    <AlertTriangle size={18} color="#E53935" />
+                    <AlertTriangle size={18} color="#6B8A9E" />
                   </div>
                   <div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: "#3E2723" }}>Needs Attention</div>
-                    <div style={{ fontSize: 11, color: "#8D6E63" }}>Alerts that may need your response</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: "#3E2723" }}>Activity Anomalies</div>
+                    <div style={{ fontSize: 11, color: "#8D6E63" }}>Deviations from typical patterns</div>
                   </div>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {allAlerts.filter(a => a.type === "warning").slice(0, 4).map((a, i) => (
                     <div key={i} style={{
                       display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 14px",
-                      background: "rgba(229,57,53,0.03)", borderRadius: 14,
-                      border: "1px solid rgba(229,57,53,0.08)"
+                      background: "rgba(107,138,158,0.03)", borderRadius: 14,
+                      border: "1px solid rgba(107,138,158,0.1)"
                     }}>
-                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#E53935", marginTop: 6, flexShrink: 0 }} />
+                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#6B8A9E", marginTop: 6, flexShrink: 0 }} />
                       <div>
                         <p style={{ fontSize: 12.5, color: "#3E2723", lineHeight: 1.5, margin: 0, fontWeight: 500 }}>{a.text}</p>
                         {a.time && <span style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2, display: "block" }}>{a.time}</span>}
