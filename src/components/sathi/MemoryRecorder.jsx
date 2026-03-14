@@ -11,6 +11,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
   const [savedTitle, setSavedTitle] = useState("");
   const [promptIndex, setPromptIndex] = useState(() => getNextPromptIndex());
   const [isSpeakingPrompt, setIsSpeakingPrompt] = useState(false);
+  const [caregiverQuestion, setCaregiverQuestion] = useState(null);
   const mediaRecorder = useRef(null);
   const chunks = useRef([]);
   const timerRef = useRef(null);
@@ -18,10 +19,32 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
   const promptAudioRef = useRef(null);
   const videoPreviewRef = useRef(null);
 
+  // Fetch unused caregiver questions to use as prompts
+  useEffect(() => {
+    if (!userId || !open) return;
+    supabase.from("caregiver_questions")
+      .select("*")
+      .eq("parent_id", userId)
+      .eq("used", false)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setCaregiverQuestion(data[0]);
+        } else {
+          setCaregiverQuestion(null);
+        }
+      });
+  }, [userId, open]);
+
   const currentPrompt = useMemo(() => {
+    // Prioritize caregiver questions over random prompts
+    if (caregiverQuestion) {
+      return caregiverQuestion.question;
+    }
     const pair = MEMORY_PROMPTS[promptIndex % MEMORY_PROMPTS.length];
     return lang === "hi" ? pair.hi : pair.en;
-  }, [lang, promptIndex]);
+  }, [lang, promptIndex, caregiverQuestion]);
 
   const speakWithBrowserFallback = useCallback((text) => {
     window.speechSynthesis.cancel();
@@ -88,6 +111,13 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
   }, [open]);
 
   const shufflePrompt = () => {
+    // If currently showing a caregiver question, skip to regular prompts
+    if (caregiverQuestion) {
+      setCaregiverQuestion(null);
+      const pair = MEMORY_PROMPTS[promptIndex % MEMORY_PROMPTS.length];
+      speakPrompt(lang === "hi" ? pair.hi : pair.en);
+      return;
+    }
     const newIndex = getNextPromptIndex(promptIndex);
     setPromptIndex(newIndex);
     const pair = MEMORY_PROMPTS[newIndex];
@@ -243,6 +273,12 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
       const result = await res.json();
       setSavedTitle(result.title || "Your Memory");
       setPhase("success");
+
+      // Mark caregiver question as used if one was active
+      if (caregiverQuestion) {
+        await supabase.from("caregiver_questions").update({ used: true }).eq("id", caregiverQuestion.id);
+        setCaregiverQuestion(null);
+      }
     } catch (err) {
       console.error("Processing error:", err);
       setPhase("error");
@@ -341,6 +377,14 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
               marginBottom: 12,
               position: "relative",
             }}>
+              {caregiverQuestion && (
+                <div style={{
+                  fontSize: 10, fontWeight: 700, color: "#C68B59", textTransform: "uppercase",
+                  letterSpacing: "0.15em", marginBottom: 8, display: "flex", alignItems: "center", gap: 5
+                }}>
+                  💛 Question from {linkedName || "family"}
+                </div>
+              )}
               <p style={{
                 color: "#FFF8F0",
                 fontSize: 20,

@@ -4,7 +4,8 @@ import {
   Home, Bell, Settings, ChevronRight, ChevronDown, Play, Pause,
   User, LogOut, Headphones, Brain, Check, Menu, X,
   TrendingUp, Zap, PhoneOff, AlertTriangle, ShieldCheck,
-  Loader2, Link2, Copy, Search, Trash2, Eye, Scan, Hand, ArrowUpRight
+  Loader2, Link2, Copy, Search, Trash2, Eye, Scan, Hand, ArrowUpRight,
+  Video, Send, HelpCircle, Plus
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useParentData } from "@/hooks/useParentData";
@@ -319,6 +320,7 @@ function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null
   const [commentText, setCommentText] = useState("");
   const [sending, setSending] = useState(false);
   const [recording, setRecording] = useState(false);
+  const [videoRecording, setVideoRecording] = useState(false);
   const recorderRef = useRef(null);
 
   const sendComment = async (mediaUrl = null, mediaType = null) => {
@@ -369,6 +371,35 @@ function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null
   };
 
   const stopAudioReply = () => {
+    if (recorderRef.current && recorderRef.current.state === "recording") {
+      recorderRef.current.stop();
+    }
+  };
+
+  const startVideoReply = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      const recorder = new MediaRecorder(stream);
+      const chunks = [];
+      recorder.ondataavailable = e => chunks.push(e.data);
+      recorder.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        const blob = new Blob(chunks, { type: "video/webm" });
+        const path = `comment_video_${Date.now()}.webm`;
+        const { data } = await supabase.storage.from("memories").upload(path, blob);
+        if (data) {
+          const { data: urlData } = supabase.storage.from("memories").getPublicUrl(data.path);
+          await sendComment(urlData.publicUrl, "video");
+        }
+        setVideoRecording(false);
+      };
+      recorderRef.current = recorder;
+      recorder.start();
+      setVideoRecording(true);
+    } catch (err) { console.error("Video record error:", err); }
+  };
+
+  const stopVideoReply = () => {
     if (recorderRef.current && recorderRef.current.state === "recording") {
       recorderRef.current.stop();
     }
@@ -519,6 +550,22 @@ function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null
                 <Mic size={14} color="#5D4037" />
               </button>
             )}
+            {videoRecording ? (
+              <button onClick={stopVideoReply} style={{
+                width: 32, height: 32, borderRadius: "50%", border: "none", cursor: "pointer",
+                background: "#DC2626", display: "flex", alignItems: "center", justifyContent: "center",
+                animation: "callPulse 1.5s ease infinite",
+              }}>
+                <Pause size={14} color="#FFF8F0" />
+              </button>
+            ) : (
+              <button onClick={startVideoReply} style={{
+                width: 32, height: 32, borderRadius: "50%", border: "none", cursor: "pointer",
+                background: "rgba(93,64,55,0.1)", display: "flex", alignItems: "center", justifyContent: "center",
+              }} title="Record video reply">
+                <Video size={14} color="#5D4037" />
+              </button>
+            )}
             <button onClick={() => sendComment()} disabled={sending || !commentText.trim()} style={{
               padding: "8px 14px", borderRadius: 10, border: "none", cursor: "pointer",
               background: "#5D4037", color: "#FFF8F0", fontSize: 11, fontWeight: 600,
@@ -633,6 +680,42 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
   const [memorySearch, setMemorySearch] = useState("");
   const [memoryFilter, setMemoryFilter] = useState("all");
   const [deletingMemId, setDeletingMemId] = useState(null);
+
+  // Caregiver questions state
+  const [questions, setQuestions] = useState([]);
+  const [newQuestion, setNewQuestion] = useState("");
+  const [questionSending, setQuestionSending] = useState(false);
+
+  // Fetch caregiver questions
+  useEffect(() => {
+    if (!profileId || !parentProfile?.id) return;
+    supabase.from("caregiver_questions")
+      .select("*")
+      .eq("caregiver_id", profileId)
+      .eq("parent_id", parentProfile.id)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => { if (data) setQuestions(data); });
+  }, [profileId, parentProfile?.id]);
+
+  const addQuestion = async () => {
+    if (!newQuestion.trim() || !profileId || !parentProfile?.id) return;
+    setQuestionSending(true);
+    try {
+      const { data, error } = await supabase.from("caregiver_questions").insert({
+        caregiver_id: profileId,
+        parent_id: parentProfile.id,
+        question: newQuestion.trim(),
+      }).select().single();
+      if (data) setQuestions(prev => [data, ...prev]);
+      setNewQuestion("");
+    } catch (err) { console.error("Add question error:", err); }
+    finally { setQuestionSending(false); }
+  };
+
+  const removeQuestion = async (qId) => {
+    await supabase.from("caregiver_questions").delete().eq("id", qId);
+    setQuestions(prev => prev.filter(q => q.id !== qId));
+  };
 
   // Guardian profile state
   const [guardianProfile, setGuardianProfile] = useState({ full_name: "", phone: "", location: "" });
@@ -1997,6 +2080,98 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               </div>
             </div>
 
+            {/* ── Questions for Parent ── */}
+            {parentProfile && (
+              <div style={{
+                background: "rgba(255,255,255,0.8)", backdropFilter: "blur(16px)",
+                borderRadius: 24, padding: isMobile ? "20px" : "24px 28px",
+                border: "1px solid rgba(198,139,89,0.12)",
+                boxShadow: "0 6px 28px rgba(62,39,35,0.05)",
+                marginBottom: 22, animation: "fadeUp .5s ease .25s both"
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+                  <div style={{
+                    width: 38, height: 38, borderRadius: 12,
+                    background: "linear-gradient(135deg, #C68B59, #8D6E63)",
+                    display: "flex", alignItems: "center", justifyContent: "center"
+                  }}>
+                    <HelpCircle size={18} color="#FFF8F0" />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: "#3E2723" }}>Questions for {parentProfile?.full_name?.split(" ")[0] || "Amma"}</div>
+                    <div style={{ fontSize: 11, color: "#8D6E63" }}>These will be asked during their next memory session</div>
+                  </div>
+                </div>
+
+                {/* Add new question */}
+                <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+                  <input
+                    value={newQuestion}
+                    onChange={e => setNewQuestion(e.target.value)}
+                    placeholder="Ask something you'd love to know…"
+                    onKeyDown={e => e.key === "Enter" && addQuestion()}
+                    style={{
+                      flex: 1, padding: "11px 16px", borderRadius: 14,
+                      border: "1px solid rgba(93,64,55,0.12)", outline: "none",
+                      fontSize: 13, color: "#3E2723", background: "#fff",
+                      fontFamily: "'DM Sans', sans-serif"
+                    }}
+                  />
+                  <button onClick={addQuestion} disabled={questionSending || !newQuestion.trim()} style={{
+                    width: 44, height: 44, borderRadius: 14, border: "none", cursor: "pointer",
+                    background: !newQuestion.trim() ? "rgba(93,64,55,0.08)" : "linear-gradient(135deg, #C68B59, #8D6E63)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    flexShrink: 0, opacity: questionSending ? 0.5 : 1,
+                    boxShadow: newQuestion.trim() ? "0 2px 8px rgba(198,139,89,0.3)" : "none",
+                    transition: "all .2s"
+                  }}>
+                    {questionSending ? <Loader2 size={16} color="#FFF8F0" style={{ animation: "spin 1s linear infinite" }} /> : <Plus size={17} color={newQuestion.trim() ? "#FFF8F0" : "#9CA3AF"} />}
+                  </button>
+                </div>
+
+                {/* Queued questions */}
+                {questions.length === 0 ? (
+                  <div style={{ padding: "16px 0", textAlign: "center" }}>
+                    <p style={{ fontSize: 12, color: "#9CA3AF", fontStyle: "italic" }}>
+                      No questions queued yet. Add one above and it will be asked next time {parentProfile?.full_name?.split(" ")[0] || "Amma"} records a memory.
+                    </p>
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {questions.map((q, qi) => (
+                      <div key={q.id} style={{
+                        display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 14px",
+                        background: q.used ? "rgba(76,175,80,0.04)" : "rgba(198,139,89,0.04)",
+                        borderRadius: 14,
+                        border: `1px solid ${q.used ? "rgba(76,175,80,0.12)" : "rgba(198,139,89,0.1)"}`,
+                      }}>
+                        <div style={{
+                          width: 22, height: 22, borderRadius: 6, flexShrink: 0, marginTop: 1,
+                          background: q.used ? "rgba(76,175,80,0.1)" : "rgba(198,139,89,0.1)",
+                          display: "flex", alignItems: "center", justifyContent: "center"
+                        }}>
+                          {q.used ? <Check size={12} color="#4CAF50" /> : <HelpCircle size={12} color="#C68B59" />}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <p style={{ fontSize: 13, color: "#3E2723", margin: 0, lineHeight: 1.4, fontWeight: 500 }}>"{q.question}"</p>
+                          <span style={{ fontSize: 10, color: q.used ? "#4CAF50" : "#9CA3AF", marginTop: 3, display: "block" }}>
+                            {q.used ? "✓ Asked" : "In queue"}
+                          </span>
+                        </div>
+                        {!q.used && (
+                          <button onClick={() => removeQuestion(q.id)} style={{
+                            background: "transparent", border: "none", cursor: "pointer", padding: 4,
+                            color: "#9CA3AF", opacity: 0.6
+                          }} title="Remove question">
+                            <X size={14} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* ── Recent Memories Feed ── */}
             <div className="s4" style={{ marginBottom: 22 }}>
@@ -2248,6 +2423,45 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                               title="Send voice note"
                             >
                               <Mic size={17} color="#FFF8F0" />
+                            </button>
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                                  const recorder = new MediaRecorder(stream);
+                                  const chunks = [];
+                                  recorder.ondataavailable = e => chunks.push(e.data);
+                                  recorder.onstop = async () => {
+                                    stream.getTracks().forEach(t => t.stop());
+                                    const blob = new Blob(chunks, { type: "video/webm" });
+                                    const path = `comment_video_${Date.now()}.webm`;
+                                    const { data } = await supabase.storage.from("memories").upload(path, blob);
+                                    if (data) {
+                                      const { data: urlData } = supabase.storage.from("memories").getPublicUrl(data.path);
+                                      const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", profileId).maybeSingle();
+                                      await supabase.from("memory_comments").insert({
+                                        memory_id: m.memoryId,
+                                        user_id: profileId,
+                                        comment: "🎥 Video reply",
+                                        media_url: urlData.publicUrl,
+                                        media_type: "video",
+                                        author_name: prof?.full_name || "Caregiver",
+                                      });
+                                    }
+                                  };
+                                  recorder.start();
+                                  setTimeout(() => recorder.stop(), 15000); // max 15s
+                                } catch (err) { console.error("Video note error:", err); }
+                              }}
+                              style={{
+                                width: 44, height: 44, borderRadius: 14, border: "none", cursor: "pointer",
+                                background: "linear-gradient(135deg, #5D4037, #8D6E63)",
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                flexShrink: 0, boxShadow: "0 2px 8px rgba(93,64,55,0.3)"
+                              }}
+                              title="Send video reply"
+                            >
+                              <Video size={17} color="#FFF8F0" />
                             </button>
                           </div>
                         </div>

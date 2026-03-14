@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      caregiver_questions: {
+        Row: {
+          caregiver_id: string
+          created_at: string
+          id: string
+          parent_id: string
+          question: string
+          used: boolean
+        }
+        Insert: {
+          caregiver_id: string
+          created_at?: string
+          id?: string
+          parent_id: string
+          question: string
+          used?: boolean
+        }
+        Update: {
+          caregiver_id?: string
+          created_at?: string
+          id?: string
+          parent_id?: string
+          question?: string
+          used?: boolean
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           created_at: string | null
