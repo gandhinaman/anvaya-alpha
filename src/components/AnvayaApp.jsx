@@ -2533,7 +2533,7 @@ export default function App() {
   },[isMobile]);
 
   const tabs=[
-    {id:"sathi",   label:"Ava"},
+    {id:"sathi",   label:"Ela"},
     {id:"guardian",label:"Caregiver"},
     ...(!isMobile?[{id:"both",label:"Both"}]:[]),
   ];
