@@ -10,18 +10,18 @@ interface SafetyConsentModalProps {
 const pillars = [
   {
     icon: Shield,
-    title: "Not a Medical Device",
-    body: "Anvaya is a companionship and wellness observation tool. It is not a regulated medical device and does not provide medical advice, diagnoses, or treatment.",
+    title: "Memory Preservation Tool",
+    body: "Anvaya is a memory preservation and social connection platform. It is not a regulated medical device and does not provide medical advice, diagnoses, or treatment.",
   },
   {
     icon: Brain,
     title: "Pattern-Based Insights",
-    body: "Health insights are generated through automated AI analysis of audio and video patterns. These are behavioral observations, not clinical measurements.",
+    body: "Behavioral insights are generated through automated AI analysis of audio and video patterns. These observations track emotional trends and interaction engagement, not clinical measurements.",
   },
   {
     icon: Phone,
     title: "Emergency Protocol",
-    body: "In any medical emergency, please contact local emergency services immediately. In India, dial 112 (National Emergency) or 108 (Ambulance).",
+    body: "In any emergency, please contact local emergency services immediately. In India, dial 112 (National Emergency) or 108 (Ambulance).",
   },
 ];
 

@@ -61,20 +61,13 @@ Deno.serve(async (req) => {
           .select("name, dose, scheduled_time, taken_today")
           .eq("user_id", userId);
 
-        if (profile || (meds && meds.length > 0)) {
+        if (profile || false) {
           let context = "\n\nUSER CONTEXT (use naturally, don't recite):";
           if (profile?.full_name) context += `\n- Name: ${profile.full_name}`;
           if (profile?.age) context += `\n- Age: ${profile.age}`;
           if (profile?.location) context += `\n- Location: ${profile.location}`;
           if (profile?.health_issues?.length) context += `\n- Health conditions: ${profile.health_issues.join(", ")}`;
           if (profile?.interests?.length) context += `\n- Interests: ${profile.interests.join(", ")}`;
-          if (meds && meds.length > 0) {
-            context += `\n- Medications:`;
-            meds.forEach(m => {
-              const taken = m.taken_today ? " (taken today ✓)" : " (NOT yet taken today)";
-              context += `\n  · ${m.name}${m.dose ? ` ${m.dose}` : ""}${m.scheduled_time ? ` at ${m.scheduled_time}` : ""}${taken}`;
-            });
-          }
           systemPrompt += context;
         }
       } catch (ctxErr) {
