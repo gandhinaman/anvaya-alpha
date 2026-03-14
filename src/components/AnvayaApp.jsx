@@ -1368,59 +1368,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
               </div>
             </div>
 
-            {/* Medications */}
-            <div>
-              <label style={{fontSize:13,color:"rgba(255,248,240,.5)",fontWeight:600,marginBottom:6,display:"block"}}>
-                💊 {lang==="en"?"Medications":"दवाइयाँ"}
-              </label>
-              {profileMeds.length > 0 && (
-                <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:10}}>
-                  {profileMeds.map(med=>(
-                    <div key={med.id} style={{display:"flex",alignItems:"center",gap:10,padding:"12px 14px",
-                      background:"rgba(255,248,240,.06)",borderRadius:14,border:"1px solid rgba(255,248,240,.1)"}}>
-                      <Pill size={18} color="#C68B59"/>
-                      <div style={{flex:1}}>
-                        <div style={{color:"#FFF8F0",fontSize:15,fontWeight:600}}>{med.name}</div>
-                        <div style={{color:"rgba(255,248,240,.45)",fontSize:12}}>
-                          {med.dose||""}{med.scheduled_time?` · ${med.scheduled_time}`:""}
-                        </div>
-                      </div>
-                      <button onClick={()=>removeMedication(med.id)} style={{background:"none",border:"none",cursor:"pointer",color:"rgba(255,248,240,.4)",fontSize:20}}>×</button>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <div style={{display:"flex",flexDirection:"column",gap:8,padding:"14px",background:"rgba(255,248,240,.04)",borderRadius:16,border:"1px dashed rgba(255,248,240,.12)"}}>
-                <input value={newMedName} onChange={e=>setNewMedName(e.target.value)}
-                  placeholder={lang==="en"?"Medicine name":"दवा का नाम"}
-                  style={{padding:"12px 14px",borderRadius:12,border:"1px solid rgba(255,248,240,.12)",
-                    background:"rgba(255,248,240,.06)",color:"#FFF8F0",fontSize:16,outline:"none"}}/>
-                <div style={{display:"flex",gap:8}}>
-                  <input value={newMedDose} onChange={e=>setNewMedDose(e.target.value)}
-                    placeholder={lang==="en"?"Dose (e.g. 500mg)":"खुराक"}
-                    style={{flex:1,padding:"12px 14px",borderRadius:12,border:"1px solid rgba(255,248,240,.12)",
-                      background:"rgba(255,248,240,.06)",color:"#FFF8F0",fontSize:15,outline:"none"}}/>
-                  <input type="time" value={newMedTime} onChange={e=>setNewMedTime(e.target.value)}
-                    style={{padding:"12px 14px",borderRadius:12,border:"1px solid rgba(255,248,240,.12)",
-                      background:"rgba(255,248,240,.06)",color:"#FFF8F0",fontSize:15,outline:"none"}}/>
-                </div>
-                <div style={{display:"flex",gap:8}}>
-                  {["daily","weekly","monthly"].map(f=>(
-                    <button key={f} type="button" onClick={()=>setNewMedFreq(f)} style={{
-                      flex:1,padding:"10px",borderRadius:12,border:`1.5px solid ${newMedFreq===f?"#C68B59":"rgba(255,248,240,.12)"}`,
-                      background:newMedFreq===f?"rgba(198,139,89,.15)":"rgba(255,248,240,.04)",
-                      color:newMedFreq===f?"#C68B59":"rgba(255,248,240,.5)",fontSize:13,fontWeight:600,cursor:"pointer",
-                      textTransform:"capitalize",transition:"all .2s"
-                    }}>{f}</button>
-                  ))}
-                </div>
-                <button onClick={addMedication} style={{padding:"14px",borderRadius:14,border:"none",
-                  background:"linear-gradient(135deg,#C68B59,#8D6E63)",color:"#FFF8F0",fontSize:16,fontWeight:700,cursor:"pointer",
-                  opacity:newMedName.trim()?1:0.4}}>
-                  {lang==="en"?"+ Add Medication":"+ दवा जोड़ें"}
-                </button>
-              </div>
-            </div>
+            {/* Medications section removed — legacy-first pivot */}
 
             {/* Interests */}
             <div>
