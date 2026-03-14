@@ -59,7 +59,14 @@ Respond in this exact JSON format only, no other text:
     "apparent_energy": "one of: low, moderate, high",
     "environment_notes": "Brief note about likely home environment",
     "posture_mobility": "Brief note inferred from context",
-    "concerns": null
+    "concerns": null,
+    "facial_symmetry": { "score": 0-100, "label": "one of: Symmetric, Mild asymmetry, Significant asymmetry", "detail": "Brief observation" },
+    "skin_pallor": { "score": 0-100, "label": "one of: Healthy glow, Slightly pale, Pale, Flushed", "detail": "Brief observation" },
+    "eye_engagement": { "score": 0-100, "label": "one of: High engagement, Moderate, Low engagement, Unfocused", "detail": "Brief observation" },
+    "micro_expressions": { "score": 0-100, "label": "one of: Animated, Natural, Flat affect, Mask-like", "detail": "Brief observation" },
+    "motor_control": { "score": 0-100, "label": "one of: Steady, Mild tremor, Noticeable tremor, Significant concern", "detail": "Brief observation" },
+    "vocal_visual_sync": { "score": 0-100, "label": "one of: Well synced, Slight delay, Noticeable mismatch", "detail": "Brief observation" },
+    "priority_review": false
   }
 }`;
 

@@ -79,7 +79,7 @@ const SUMMARY_PROMPT_TEXT_ONLY = `Analyze this personal memory recording from tr
 
 Do NOT use generic titles like "Share a memory" or "Untitled".`;
 
-const VIDEO_VISUAL_PROMPT = `You are also analyzing a VIDEO recording of an elderly person. In addition to the audio/transcript analysis above, also provide a visual analysis section.
+const VIDEO_VISUAL_PROMPT = `You are also analyzing a VIDEO recording of an elderly person. In addition to the audio/transcript analysis above, also provide a comprehensive visual analysis section.
 
 Carefully examine the video frame(s) for:
 - Facial expression: Is the person calm, happy, distressed, neutral, or in pain?
@@ -87,6 +87,12 @@ Carefully examine the video frame(s) for:
 - Environment: Note the background — is it tidy, well-lit, cluttered? Any safety concerns?
 - Posture/mobility: Any visible posture issues, mobility aids, or movement concerns?
 - Concerns: Any visual red flags (bruises, unkempt appearance, unsafe environment)?
+- Facial symmetry: Is the face symmetrical? Any drooping on one side (stroke/Bell's palsy indicator)?
+- Skin pallor: Does the skin look healthy, pale, flushed, or jaundiced?
+- Eye engagement: Are the eyes alert, tracking, making contact? Or glazed, unfocused?
+- Micro-expressions: Is the face animated with natural expressions, or flat/mask-like?
+- Motor control: Any visible hand tremors, involuntary head movements, or tilting?
+- Vocal-visual sync: Do facial movements match speech timing naturally?
 
 Add this to your JSON response:
 "visual_analysis": {
@@ -94,8 +100,17 @@ Add this to your JSON response:
   "apparent_energy": "one of: low, moderate, high",
   "environment_notes": "Brief note on background, lighting, tidiness",
   "posture_mobility": "Brief note on visible posture or movement",
-  "concerns": "Any visual red flags, or null if none"
-}`;
+  "concerns": "Any visual red flags, or null if none",
+  "facial_symmetry": { "score": 0-100, "label": "one of: Symmetric, Mild asymmetry, Significant asymmetry", "detail": "Brief observation" },
+  "skin_pallor": { "score": 0-100, "label": "one of: Healthy glow, Slightly pale, Pale, Flushed", "detail": "Brief observation" },
+  "eye_engagement": { "score": 0-100, "label": "one of: High engagement, Moderate, Low engagement, Unfocused", "detail": "Brief observation" },
+  "micro_expressions": { "score": 0-100, "label": "one of: Animated, Natural, Flat affect, Mask-like", "detail": "Brief observation" },
+  "motor_control": { "score": 0-100, "label": "one of: Steady, Mild tremor, Noticeable tremor, Significant concern", "detail": "Brief observation" },
+  "vocal_visual_sync": { "score": 0-100, "label": "one of: Well synced, Slight delay, Noticeable mismatch", "detail": "Brief observation" },
+  "priority_review": false
+}
+
+IMPORTANT: Set "priority_review" to true ONLY if you detect significant facial drooping, labored breathing, or severe motor control issues. This triggers a caregiver alert.`;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
