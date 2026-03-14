@@ -3005,7 +3005,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                                       memory_id: m.memoryId,
                                       user_id: profileId,
                                       comment: text,
-                                      author_name: prof?.full_name || "Caregiver",
+                                    author_name: prof?.full_name || "Care Partner",
                                     });
                                   } catch (err) { console.error("Quick reply error:", err); }
                                 }
