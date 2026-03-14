@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { X, Mic, Video, Play, Pause, RotateCcw, Send, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { buildMediaRecorder } from "@/lib/mediaRecorder";
 
 // ─── WAVEFORM VISUALIZER ──────────────────────────────────────────────────────
 function LiveWaveform({ analyserRef }) {
@@ -125,6 +126,7 @@ export default function ReactionRecorder({ open, onClose, memoryId, memoryTitle,
   const audioCtxRef = useRef(null);
   const videoPreviewRef = useRef(null);
   const playbackRef = useRef(null);
+  const recordingFormatRef = useRef({ extension: "webm", contentType: "audio/webm" });
   const [playing, setPlaying] = useState(false);
 
   // Reset state when opening
@@ -162,11 +164,18 @@ export default function ReactionRecorder({ open, onClose, memoryId, memoryTitle,
   }, []);
 
   const beginRecording = useCallback(async () => {
+    let stream = null;
     try {
+      if (typeof MediaRecorder === "undefined") {
+        alert("Recording is not supported on this browser/device.");
+        setPhase("idle");
+        return;
+      }
+
       const constraints = mode === "video"
         ? { video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } }, audio: true }
         : { audio: true };
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
 
       // Video preview
@@ -175,42 +184,46 @@ export default function ReactionRecorder({ open, onClose, memoryId, memoryTitle,
         videoPreviewRef.current.play().catch(() => {});
       }
 
-      // Audio analyser for waveform
+      // Audio analyser for waveform (optional)
       const AC = window.AudioContext || window.webkitAudioContext;
-      const audioCtx = new AC();
-      audioCtxRef.current = audioCtx;
-      const source = audioCtx.createMediaStreamSource(stream);
-      const analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 256;
-      source.connect(analyser);
-      analyserRef.current = analyser;
+      if (AC) {
+        const audioCtx = new AC();
+        audioCtxRef.current = audioCtx;
+        const source = audioCtx.createMediaStreamSource(stream);
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
+        analyserRef.current = analyser;
+      }
 
-      // Pick supported mimeType
-      const mimeType = mode === "video"
-        ? (MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus") ? "video/webm;codecs=vp9,opus" : "video/webm")
-        : (MediaRecorder.isTypeSupported("audio/webm;codecs=opus") ? "audio/webm;codecs=opus" : "audio/webm");
+      const { recorder, format } = buildMediaRecorder(stream, mode);
+      recordingFormatRef.current = format;
 
-      const recorder = new MediaRecorder(stream, { mimeType });
       chunksRef.current = [];
-      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+      recorder.ondataavailable = (e) => {
+        if (e.data?.size > 0) chunksRef.current.push(e.data);
+      };
       recorder.onstop = () => {
-        const blobType = mode === "video" ? "video/webm" : "audio/webm";
-        const b = new Blob(chunksRef.current, { type: blobType });
+        const b = new Blob(chunksRef.current, { type: recordingFormatRef.current.contentType });
         setBlob(b);
         const url = URL.createObjectURL(b);
         setPreviewUrl(url);
         setPhase("review");
-        // Cleanup stream
-        stream.getTracks().forEach(t => t.stop());
-        if (audioCtxRef.current) { audioCtxRef.current.close(); audioCtxRef.current = null; }
+
+        stream.getTracks().forEach((t) => t.stop());
+        if (audioCtxRef.current) {
+          audioCtxRef.current.close();
+          audioCtxRef.current = null;
+        }
         analyserRef.current = null;
       };
 
       recorderRef.current = recorder;
-      recorder.start();
+      recorder.start(250);
       setPhase("recording");
     } catch (err) {
       console.error("Recording start error:", err);
+      if (stream) stream.getTracks().forEach((t) => t.stop());
       alert("Could not access camera/microphone. Please check permissions.");
       setPhase("idle");
     }
@@ -232,14 +245,25 @@ export default function ReactionRecorder({ open, onClose, memoryId, memoryTitle,
   }, [previewUrl, startCountdown]);
 
   const sendReaction = useCallback(async () => {
-    if (!blob || !memoryId || !profileId) return;
+    if (!blob || !memoryId) return;
     setPhase("sending");
 
     try {
-      const ext = "webm";
+      let actorId = profileId;
+      if (!actorId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        actorId = user?.id || null;
+      }
+
+      if (!actorId) {
+        alert("Please sign in again to send your reaction.");
+        setPhase("review");
+        return;
+      }
+
+      const { extension, contentType } = recordingFormatRef.current;
       const prefix = mode === "video" ? "reaction_video" : "reaction_audio";
-      const path = `${profileId}/${prefix}_${Date.now()}.${ext}`;
-      const contentType = mode === "video" ? "video/webm" : "audio/webm";
+      const path = `${actorId}/${prefix}_${Date.now()}.${extension}`;
 
       const { data, error: uploadError } = await supabase.storage
         .from("memories")
@@ -253,11 +277,11 @@ export default function ReactionRecorder({ open, onClose, memoryId, memoryTitle,
       }
 
       const { data: urlData } = supabase.storage.from("memories").getPublicUrl(data.path);
-      const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", profileId).maybeSingle();
+      const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", actorId).maybeSingle();
 
       const { error: insertError } = await supabase.from("memory_comments").insert({
         memory_id: memoryId,
-        user_id: profileId,
+        user_id: actorId,
         comment: mode === "video"
           ? `🎥 Video reaction to "${memoryTitle || "your story"}"`
           : `🎤 Voice reaction to "${memoryTitle || "your story"}"`,
