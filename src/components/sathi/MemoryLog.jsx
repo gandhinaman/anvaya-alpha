@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { X, BookOpen, MessageCircle, ChevronDown, ChevronUp, Play, Pause, Trash2, Search, Mic, Send, Heart } from "lucide-react";
+import { X, BookOpen, MessageCircle, ChevronDown, ChevronUp, Play, Pause, Trash2, Search, Mic, Send, Heart, Gift } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const TONE_EMOJI = { joyful: "😊", nostalgic: "🌅", peaceful: "🕊️", concerned: "😟" };
@@ -443,8 +443,23 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
                             {lang === "en" ? "Comments from family" : "परिवार की टिप्पणियाँ"}
                           </div>
                           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                            {memComments.map((c) => (
-                              <div key={c.id} style={{ background: "rgba(198,139,89,.1)", border: "1px solid rgba(198,139,89,.15)", borderRadius: 12, padding: "10px 13px" }}>
+                            {memComments.map((c) => {
+                              const isReaction = c.comment?.includes("reaction to") || c.comment?.includes("Video reaction") || c.comment?.includes("Voice reaction");
+                              return (
+                              <div key={c.id} style={{
+                                background: isReaction ? "rgba(198,139,89,.15)" : "rgba(198,139,89,.1)",
+                                border: isReaction ? "1.5px solid rgba(198,139,89,.3)" : "1px solid rgba(198,139,89,.15)",
+                                borderRadius: 12, padding: "10px 13px",
+                                position: "relative",
+                              }}>
+                                {isReaction && (
+                                  <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 6 }}>
+                                    <Gift size={13} color="#C68B59" />
+                                    <span style={{ fontSize: 10, fontWeight: 700, color: "#C68B59", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                                      Reply to your story
+                                    </span>
+                                  </div>
+                                )}
                                 {c.author_name && (
                                   <div style={{ fontSize: 10, fontWeight: 700, color: "#D4A574", marginBottom: 4 }}>{c.author_name}</div>
                                 )}
@@ -456,7 +471,7 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
                                       border: "1px solid rgba(255,248,240,.1)", color: "rgba(255,248,240,.6)", fontSize: 12, cursor: "pointer",
                                     }}>
                                       {playingId === `cmt-${c.id}` ? <Pause size={12} /> : <Play size={12} />}
-                                      {lang === "en" ? "Voice reply" : "ऑडियो जवाब"}
+                                      {isReaction ? (lang === "en" ? "Play reaction" : "प्रतिक्रिया सुनें") : (lang === "en" ? "Voice reply" : "ऑडियो जवाब")}
                                     </button>
                                   </div>
                                 )}
@@ -465,10 +480,12 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
                                     <video src={c.media_url} controls playsInline style={{ width: "100%", display: "block" }} />
                                   </div>
                                 )}
-                                <p style={{ color: "rgba(255,248,240,.75)", fontSize: 13, lineHeight: 1.5, margin: 0 }}>{c.comment}</p>
+                                {!isReaction && <p style={{ color: "rgba(255,248,240,.75)", fontSize: 13, lineHeight: 1.5, margin: 0 }}>{c.comment}</p>}
+                                {isReaction && <p style={{ color: "rgba(255,248,240,.6)", fontSize: 11, lineHeight: 1.4, margin: 0, fontStyle: "italic" }}>{c.comment}</p>}
                                 <div style={{ fontSize: 10, color: "rgba(255,248,240,.3)", marginTop: 5 }}>{formatDate(c.created_at)}</div>
                               </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
                       )}

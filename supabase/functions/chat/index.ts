@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
         const supabase = createClient(supabaseUrl, supabaseKey);
 
         const { data: profile } = await supabase.from("profiles")
-          .select("full_name, age, health_issues, interests, location, language")
+          .select("full_name, age, health_issues, interests, location, language, linked_user_id")
           .eq("id", userId).maybeSingle();
 
 
@@ -65,6 +65,48 @@ Deno.serve(async (req) => {
           if (profile?.location) context += `\n- Location: ${profile.location}`;
           if (profile?.health_issues?.length) context += `\n- Health conditions: ${profile.health_issues.join(", ")}`;
           if (profile?.interests?.length) context += `\n- Interests: ${profile.interests.join(", ")}`;
+
+          // Fetch recent reactions/comments on this user's memories from their caregiver
+          if (profile?.linked_user_id) {
+            try {
+              // Get caregiver name
+              const { data: caregiverProfile } = await supabase.from("profiles")
+                .select("full_name")
+                .eq("id", profile.linked_user_id).maybeSingle();
+              const caregiverName = caregiverProfile?.full_name || "your family";
+
+              // Get recent reaction comments (last 24 hours)
+              const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+              const { data: recentComments } = await supabase.from("memory_comments")
+                .select("comment, memory_id")
+                .eq("user_id", profile.linked_user_id)
+                .gte("created_at", oneDayAgo)
+                .order("created_at", { ascending: false })
+                .limit(3);
+
+              if (recentComments?.length) {
+                // Get memory titles for context
+                const memIds = [...new Set(recentComments.map(c => c.memory_id))];
+                const { data: mems } = await supabase.from("memories")
+                  .select("id, title")
+                  .in("id", memIds);
+                const memMap = Object.fromEntries((mems || []).map(m => [m.id, m.title]));
+
+                const reactionSummaries = recentComments
+                  .filter(c => c.comment?.includes("reaction to") || c.comment?.includes("Voice reaction") || c.comment?.includes("Video reaction"))
+                  .map(c => memMap[c.memory_id] || "a story");
+
+                if (reactionSummaries.length > 0) {
+                  context += `\n\nIMPORTANT - PROACTIVE NOTIFICATION: ${caregiverName} recently sent reactions to the user's stories about: ${[...new Set(reactionSummaries)].join(", ")}. When appropriate early in conversation, warmly tell the user: "${caregiverName} heard your story and sent a message back! Would you like to hear what they said?" Be enthusiastic but brief.`;
+                } else if (recentComments.length > 0) {
+                  context += `\n\nIMPORTANT - PROACTIVE NOTIFICATION: ${caregiverName} recently left comments on the user's memories. Warmly mention this early in conversation.`;
+                }
+              }
+            } catch (reactionErr) {
+              console.error("Failed to load reaction context:", reactionErr);
+            }
+          }
+
           systemPrompt += context;
         }
       } catch (ctxErr) {

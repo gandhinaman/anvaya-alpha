@@ -5,12 +5,14 @@ import {
   User, LogOut, Headphones, Brain, Check, Menu, X,
   TrendingUp, Zap, PhoneOff, AlertTriangle, ShieldCheck,
   Loader2, Link2, Copy, Search, Trash2, Eye, Scan, Hand, ArrowUpRight,
-  Video, Send, HelpCircle, Plus, FolderPlus, Bookmark, Layers, ChevronLeft, Info
+  Video, Send, HelpCircle, Plus, FolderPlus, Bookmark, Layers, ChevronLeft, Info,
+  Sparkles
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useParentData } from "@/hooks/useParentData";
 import { filterCities } from "@/lib/cities";
 import { formatPhoneInput, isValidPhone } from "@/lib/phoneFormat";
+import ReactionRecorder from "./ReactionRecorder";
 
 // ─── STYLES (shared with AnvayaApp) ────────────────────────────────────────────
 export const guardianStyles = `
@@ -311,7 +313,7 @@ function WeeklyTrendChart({ healthEvents = [] }) {
 }
 
 // ─── MEMORY CARD ──────────────────────────────────────────────────────────────
-function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null, emotionalTone = null, promptQuestion = null, onDelete = null, deleting = false, comments = [], memoryId = null, profileId = null, visualAnalysis = null, reactions = [], onToggleHeart = null }) {
+function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null, emotionalTone = null, promptQuestion = null, onDelete = null, deleting = false, comments = [], memoryId = null, profileId = null, visualAnalysis = null, reactions = [], onToggleHeart = null, onReact = null }) {
   const toneColors = { joyful: "#C68B59", nostalgic: "#8D6E63", peaceful: "#5D4037", concerned: "#6B8A9E" };
   const tone = emotionalTone || "positive";
   const toneColor = toneColors[tone.toLowerCase()] || "#C68B59";
@@ -497,6 +499,25 @@ function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null
           )}
         </div>
       </div>
+
+      {/* React to this Story button */}
+      {memoryId && onReact && (
+        <button onClick={() => onReact(memoryId, title)} style={{
+          width: "100%", marginTop: 12, padding: "11px 16px", borderRadius: 14,
+          background: "linear-gradient(135deg, rgba(198,139,89,0.08), rgba(93,64,55,0.04))",
+          border: "1.5px solid rgba(198,139,89,0.2)",
+          color: "#5D4037", fontSize: 12, fontWeight: 700, cursor: "pointer",
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+          transition: "all .2s",
+        }}
+        onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(198,139,89,0.15), rgba(93,64,55,0.08))"; e.currentTarget.style.borderColor = "rgba(198,139,89,0.35)"; }}
+        onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(198,139,89,0.08), rgba(93,64,55,0.04))"; e.currentTarget.style.borderColor = "rgba(198,139,89,0.2)"; }}
+        >
+          <Sparkles size={14} color="#C68B59" />
+          React to this Story
+          <span style={{ fontSize: 10, color: "#9CA3AF", fontWeight: 500 }}>🎤 🎥</span>
+        </button>
+      )}
 
       {/* Collapsible Comments Section */}
       {showComments && (
@@ -686,6 +707,17 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
   const [memorySearch, setMemorySearch] = useState("");
   const [memoryFilter, setMemoryFilter] = useState("all");
   const [deletingMemId, setDeletingMemId] = useState(null);
+
+  // Reaction recorder state
+  const [reactionOpen, setReactionOpen] = useState(false);
+  const [reactionMemoryId, setReactionMemoryId] = useState(null);
+  const [reactionMemoryTitle, setReactionMemoryTitle] = useState("");
+
+  const handleOpenReaction = (memId, memTitle) => {
+    setReactionMemoryId(memId);
+    setReactionMemoryTitle(memTitle || "A shared memory");
+    setReactionOpen(true);
+  };
 
   // Caregiver questions state
   const [questions, setQuestions] = useState([]);
@@ -1680,6 +1712,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                             onDelete={m.id ? () => deleteMemory(m.id) : null}
                             deleting={deletingMemId === m.id}
                             onToggleHeart={handleToggleHeart}
+                            onReact={handleOpenReaction}
                           />
                           {/* Remove from collection button */}
                           <div style={{ display: "flex", justifyContent: "flex-end", marginTop: -4, paddingRight: 8, marginBottom: 4 }}>
@@ -1884,6 +1917,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                             onDelete={m.id ? () => deleteMemory(m.id) : null}
                             deleting={deletingMemId === m.id}
                             onToggleHeart={handleToggleHeart}
+                            onReact={handleOpenReaction}
                           />
                           {/* Add to collection button */}
                           {m.id && collections.length > 0 && (
@@ -3425,6 +3459,16 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
           </div>
         </div>
       )}
+
+      {/* Reaction Recorder Modal */}
+      <ReactionRecorder
+        open={reactionOpen}
+        onClose={() => setReactionOpen(false)}
+        memoryId={reactionMemoryId}
+        memoryTitle={reactionMemoryTitle}
+        profileId={profileId}
+        parentName={parentProfile?.full_name?.split(" ")[0] || "Amma"}
+      />
     </div>
   );
 }
