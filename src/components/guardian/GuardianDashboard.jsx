@@ -2376,7 +2376,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                 {[
                   { key: "urgent", title: "🚨 Urgent", color: "#5B7FA5", bg: "rgba(91,127,165,0.04)", border: "rgba(91,127,165,0.12)" },
                   { key: "anomaly", title: "📊 Activity Anomalies", color: "#6B8A9E", bg: "rgba(107,138,158,0.04)", border: "rgba(107,138,158,0.12)" },
-                  { key: "medication", title: "💊 Medication Log", color: "#8D6E63", bg: "rgba(141,110,99,0.04)", border: "rgba(141,110,99,0.12)" },
+                  { key: "memory", title: "📖 Memory Activity", color: "#8D6E63", bg: "rgba(141,110,99,0.04)", border: "rgba(141,110,99,0.12)" },
                   { key: "activity", title: "🎤 Recent Activity", color: "#5D4037", bg: "rgba(93,64,55,0.04)", border: "rgba(93,64,55,0.12)" },
                 ].map(group => {
                   const groupAlerts = allAlerts.filter(a => a.category === group.key);
