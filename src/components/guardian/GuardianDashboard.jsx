@@ -1517,217 +1517,406 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
         {/* ══ HOME VIEW ══ */}
         {nav === "home" && !dataLoading && (
           <>
-            {/* Stats row */}
+            {/* ── Hero Summary Cards ── */}
             <div className="s2" style={{
               display: "grid",
-              gridTemplateColumns: isMobile ? "1fr 1fr" : inPanel ? "1fr 1fr" : "repeat(4,1fr)",
-              gap: 12, marginBottom: 14
+              gridTemplateColumns: isMobile ? "1fr" : inPanel ? "1fr" : "1fr 1fr",
+              gap: 18, marginBottom: 22
             }}>
-              {stats.map((st, i) => {
-                const isOpen = expandedStat === `m-${i}`;
-                return (
-                <div key={i} className="gcard" style={{ padding: 16, animation: `fadeUp .5s ease ${.1 + i * .07}s both`, cursor: "pointer", transition: "all .3s", border: isOpen ? `1.5px solid ${st.color}40` : undefined }}
-                  onClick={() => setExpandedStat(isOpen ? null : `m-${i}`)}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
-                    <div style={{
-                      width: 36, height: 36, borderRadius: 10,
-                      background: `${st.color}12`,
-                      display: "flex", alignItems: "center", justifyContent: "center"
-                    }}>
-                      <st.icon size={16} color={st.color} />
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                      <span style={{
-                        fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 100,
-                        background: `${st.color}10`, color: st.color
-                      }}>{st.trend}</span>
-                      <ChevronDown size={14} color="#6b6b6b" style={{ transition: "transform .3s", transform: isOpen ? "rotate(180deg)" : "rotate(0)" }} />
-                    </div>
-                  </div>
-                  <div style={{ fontSize: 20, fontWeight: 700, color: "#1a1a1a" }}>{st.value}</div>
-                  <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>{st.label}</div>
-                </div>
-                );
-              })}
-            </div>
-            {/* Expanded metric explanation — horizontal below grid */}
-            {stats.map((st, i) => expandedStat === `m-${i}` && (
-              <div key={`exp-m-${i}`} className="gcard s2" style={{
-                marginTop: 12, marginBottom: 16, padding: "18px 22px",
-                background: `${st.color}06`, border: `1px solid ${st.color}15`,
-                animation: "fadeUp .25s ease both"
+              {/* Daily Connection Card */}
+              <div style={{
+                background: "linear-gradient(135deg, #FFF8F0 0%, #F5EDE4 100%)",
+                borderRadius: 24, padding: isMobile ? "22px 20px" : "28px 28px",
+                border: "1px solid rgba(198,139,89,0.15)",
+                boxShadow: "0 4px 24px rgba(62,39,35,0.06)",
+                animation: "fadeUp .5s ease .1s both"
               }}>
-                <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-                  <div style={{ flex: 1, minWidth: 160 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 6 }}>What it measures</div>
-                    <p style={{ fontSize: 11.5, color: "#555", lineHeight: 1.5, margin: 0 }}>{st.what}</p>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+                  <div style={{
+                    width: 42, height: 42, borderRadius: 14,
+                    background: "linear-gradient(135deg, #C68B59, #8D6E63)",
+                    display: "flex", alignItems: "center", justifyContent: "center"
+                  }}>
+                    <MessageCircle size={20} color="#FFF8F0" />
                   </div>
-                  <div style={{ flex: 1, minWidth: 160 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 6 }}>How it's measured</div>
-                    <p style={{ fontSize: 11.5, color: "#555", lineHeight: 1.5, margin: 0 }}>{st.how}</p>
-                  </div>
-                  <div style={{ flex: 1, minWidth: 200 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>What the score means</div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                      {[
-                        { dot: "#4CAF50", text: st.meaning.high },
-                        { dot: "#FF9800", text: st.meaning.mid },
-                        { dot: "#E53935", text: st.meaning.low },
-                      ].map((row, ri) => (
-                        <div key={ri} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                          <div style={{ width: 6, height: 6, borderRadius: "50%", background: row.dot, marginTop: 5, flexShrink: 0 }} />
-                          <span style={{ fontSize: 11, color: "#666", lineHeight: 1.5 }}>{row.text}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            {/* Cognitive + Weekly Trends */}
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: isMobile ? "1fr" : inPanel ? "1fr" : "1fr 2fr",
-              gap: 14, marginBottom: 14
-            }}>
-              <div className="gcard s3" style={{ padding: 20 }}>
-                <div style={{ marginBottom: 14 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Memory Highlights</div>
-                  <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>{realMemories.length} memories shared</div>
-                </div>
-                {realMemories.length === 0 ? (
-                  <p style={{ fontSize: 12, color: "#9CA3AF", fontStyle: "italic" }}>No memories recorded yet</p>
-                ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                      {Object.entries(realMemories.reduce((acc, m) => {
-                        const tone = m.emotional_tone || "unknown";
-                        acc[tone] = (acc[tone] || 0) + 1;
-                        return acc;
-                      }, {})).sort((a, b) => b[1] - a[1]).map(([tone, count]) => (
-                        <span key={tone} style={{
-                          fontSize: 10, fontWeight: 600, padding: "3px 10px", borderRadius: 100,
-                          background: tone === "joyful" ? "rgba(76,175,80,0.1)" : tone === "nostalgic" ? "rgba(198,139,89,0.1)" : tone === "peaceful" ? "rgba(141,110,99,0.1)" : "rgba(93,64,55,0.08)",
-                          color: tone === "joyful" ? "#4CAF50" : tone === "nostalgic" ? "#C68B59" : tone === "peaceful" ? "#8D6E63" : "#5D4037"
-                        }}>
-                          {tone} · {count}
-                        </span>
-                      ))}
-                    </div>
-                    <div style={{
-                      padding: "10px 12px", background: "rgba(198,139,89,0.06)",
-                      borderRadius: 12, border: "1px solid rgba(198,139,89,0.12)"
-                    }}>
-                      <div style={{ fontSize: 11, fontWeight: 600, color: "#3E2723", marginBottom: 3 }}>
-                        Latest: "{realMemories[0]?.title || "Untitled"}"
-                      </div>
-                      <p style={{ fontSize: 10.5, color: "#6b6b6b", lineHeight: 1.5, margin: 0 }}>
-                        {realMemories[0]?.ai_summary?.slice(0, 100) || realMemories[0]?.transcript?.slice(0, 100) || ""}
-                        {(realMemories[0]?.ai_summary?.length > 100 || realMemories[0]?.transcript?.length > 100) ? "…" : ""}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="gcard s4" style={{ padding: 20 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Weekly Wellness Trends</div>
-                    <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Emotional state & vocal energy over the past week</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: "#3E2723" }}>Daily Connection</div>
+                    <div style={{ fontSize: 11, color: "#8D6E63" }}>How {parentProfile?.full_name || "Amma"}'s day is going</div>
                   </div>
-                  <button onClick={() => setNav("health")} style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, fontWeight: 600, color: "#5D4037", background: "transparent", border: "none", cursor: "pointer" }}>
-                    View all <ChevronRight size={12} />
-                  </button>
                 </div>
-                <WeeklyTrendChart healthEvents={healthEvents} />
-              </div>
-            </div>
-
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: isMobile ? "1fr" : inPanel ? "1fr" : "2fr 1fr",
-              gap: 14, marginBottom: 14
-            }}>
-              <div className="gcard s5" style={{ padding: 20 }}>
-                <div style={{ marginBottom: 14 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Acoustic Insights</div>
-                  <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>24-hour vocal and acoustic analysis</div>
-                </div>
-                <AcousticHeatmap healthEvents={healthEvents} />
-                <div style={{
-                  marginTop: 14, padding: "10px 12px",
-                  background: "rgba(141,110,99,0.06)", borderRadius: 12, border: "1px solid rgba(141,110,99,0.1)"
+                <p style={{
+                  fontSize: 14, color: "#3E2723", lineHeight: 1.7,
+                  fontFamily: "'DM Sans', sans-serif", margin: 0,
+                  letterSpacing: "0.01em"
                 }}>
-                  <p style={{ fontSize: 10.5, color: "#6b6b6b", lineHeight: 1.55, margin: 0 }}>
-                    This heatmap shows when your parent is most vocally active throughout the week. Brighter cells indicate higher vocal energy scores at that hour. Patterns can reveal daily routines, social activity windows, and times of low engagement.
-                  </p>
-                </div>
+                  {(() => {
+                    const name = parentProfile?.full_name?.split(" ")[0] || "Amma";
+                    const latestMem = realMemories[0];
+                    const medsTaken = medications.filter(m => m.taken_today).length;
+                    const medsTotal = medications.length;
+                    const emotionalVal = derivedStats.emotionalTone.trend || "calm";
+                    const memCount = realMemories.length;
+
+                    if (!latestMem && medsTotal === 0) {
+                      return `Once ${name} starts sharing stories and logging medications, you'll see a warm summary of their day here. 💛`;
+                    }
+
+                    let parts = [];
+                    // Emotional state
+                    const emoLower = emotionalVal.toLowerCase();
+                    if (emoLower.includes("joy") || emoLower.includes("happy")) {
+                      parts.push(`${name} sounds cheerful today! 😊`);
+                    } else if (emoLower.includes("peace") || emoLower.includes("calm")) {
+                      parts.push(`${name} seems peaceful and relaxed today. 🕊️`);
+                    } else if (emoLower.includes("nostalg")) {
+                      parts.push(`${name} is feeling nostalgic today, reminiscing about the past. 🌅`);
+                    } else if (emoLower.includes("concern") || emoLower.includes("distress")) {
+                      parts.push(`${name} seems a bit low today — might be a good time to call. 💙`);
+                    } else {
+                      parts.push(`${name} is doing okay today.`);
+                    }
+
+                    // Memory info
+                    if (latestMem) {
+                      const durMin = latestMem.duration_seconds ? Math.round(latestMem.duration_seconds / 60) : null;
+                      const durText = durMin ? `${durMin} minute${durMin > 1 ? "s" : ""}` : "a moment";
+                      const topicText = latestMem.title && latestMem.title !== "Untitled" ? `about "${latestMem.title}"` : "sharing stories";
+                      parts.push(`They spent ${durText} ${topicText}.`);
+                    }
+
+                    // Medication info
+                    if (medsTotal > 0) {
+                      if (medsTaken === medsTotal) {
+                        parts.push(`All ${medsTotal} medications taken today. ✅`);
+                      } else if (medsTaken > 0) {
+                        parts.push(`${medsTaken} of ${medsTotal} medications confirmed so far.`);
+                      } else {
+                        parts.push(`No medications marked yet today — a gentle check-in might help. 💊`);
+                      }
+                    }
+
+                    return parts.join(" ");
+                  })()}
+                </p>
               </div>
 
-              <div className="gcard s6" style={{ padding: 20, display: "flex", flexDirection: "column" }}>
-                <div style={{ marginBottom: 14, flexShrink: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Recent Alerts</div>
-                  <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Latest health & activity events</div>
+              {/* Health Highlights Card */}
+              <div style={{
+                background: "linear-gradient(135deg, #FAFAF5 0%, #F0EDE8 100%)",
+                borderRadius: 24, padding: isMobile ? "22px 20px" : "28px 28px",
+                border: "1px solid rgba(93,64,55,0.1)",
+                boxShadow: "0 4px 24px rgba(62,39,35,0.06)",
+                animation: "fadeUp .5s ease .18s both"
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
+                  <div style={{
+                    width: 42, height: 42, borderRadius: 14,
+                    background: "linear-gradient(135deg, #5D4037, #8D6E63)",
+                    display: "flex", alignItems: "center", justifyContent: "center"
+                  }}>
+                    <ShieldCheck size={20} color="#FFF8F0" />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: "#3E2723" }}>Health Highlights</div>
+                    <div style={{ fontSize: 11, color: "#8D6E63" }}>At a glance — no numbers needed</div>
+                  </div>
                 </div>
-                <div className="scr" style={{ display: "flex", flexDirection: "column", gap: 9, overflowY: "auto", flex: 1, maxHeight: 320, paddingRight: 6 }}>
-                  {alerts.map((a, i) => (
-                    <div key={i} className="gcard" style={{
-                      padding: "10px 12px",
-                      animation: `fadeUp .5s ease ${.8 + i * .1}s both`,
-                      background: "rgba(255,255,255,0.6)"
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {[
+                    {
+                      label: "Vocal Strength",
+                      status: (() => {
+                        const v = derivedStats.vocalEnergy.value;
+                        const num = parseInt(v);
+                        if (isNaN(num)) return { text: v || "No data yet", color: "#8D6E63", bg: "rgba(141,110,99,0.08)" };
+                        if (num >= 70) return { text: "Strong & Clear", color: "#4CAF50", bg: "rgba(76,175,80,0.08)" };
+                        if (num >= 40) return { text: "Moderate", color: "#FF9800", bg: "rgba(255,152,0,0.08)" };
+                        return { text: "Needs Attention", color: "#E53935", bg: "rgba(229,57,53,0.08)" };
+                      })(),
+                      icon: "🎙️"
+                    },
+                    {
+                      label: "Medication Today",
+                      status: (() => {
+                        const taken = medications.filter(m => m.taken_today).length;
+                        const total = medications.length;
+                        if (total === 0) return { text: "None configured", color: "#8D6E63", bg: "rgba(141,110,99,0.08)" };
+                        if (taken === total) return { text: "All taken ✓", color: "#4CAF50", bg: "rgba(76,175,80,0.08)" };
+                        if (taken > 0) return { text: `${taken}/${total} taken`, color: "#FF9800", bg: "rgba(255,152,0,0.08)" };
+                        return { text: "Not yet taken", color: "#E53935", bg: "rgba(229,57,53,0.08)" };
+                      })(),
+                      icon: "💊"
+                    },
+                    {
+                      label: "Emotional State",
+                      status: (() => {
+                        const trend = derivedStats.emotionalTone.trend;
+                        const v = derivedStats.emotionalTone.value;
+                        const num = parseInt(v);
+                        if (isNaN(num) && !trend) return { text: "No data yet", color: "#8D6E63", bg: "rgba(141,110,99,0.08)" };
+                        if (num >= 60 || /joy|happy|peace|calm/i.test(trend)) return { text: trend || "Positive", color: "#4CAF50", bg: "rgba(76,175,80,0.08)" };
+                        if (num >= 35 || /nostalg|neutral/i.test(trend)) return { text: trend || "Stable", color: "#FF9800", bg: "rgba(255,152,0,0.08)" };
+                        return { text: trend || "May need support", color: "#E53935", bg: "rgba(229,57,53,0.08)" };
+                      })(),
+                      icon: "💛"
+                    },
+                    {
+                      label: "Cognitive Clarity",
+                      status: (() => {
+                        const v = derivedStats.cognitiveClarity.value;
+                        const num = parseInt(v);
+                        if (isNaN(num)) return { text: v || "No data yet", color: "#8D6E63", bg: "rgba(141,110,99,0.08)" };
+                        if (num >= 70) return { text: "Sharp", color: "#4CAF50", bg: "rgba(76,175,80,0.08)" };
+                        if (num >= 45) return { text: "Normal variation", color: "#FF9800", bg: "rgba(255,152,0,0.08)" };
+                        return { text: "Worth checking in", color: "#E53935", bg: "rgba(229,57,53,0.08)" };
+                      })(),
+                      icon: "🧠"
+                    },
+                  ].map((item, idx) => (
+                    <div key={idx} style={{
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                      padding: "10px 14px", borderRadius: 14,
+                      background: item.status.bg,
+                      border: `1px solid ${item.status.color}18`
                     }}>
-                      <div style={{ display: "flex", alignItems: "flex-start", gap: 8, width: "100%" }}>
-                        <div style={{
-                          width: 7, height: 7, borderRadius: "50%", marginTop: 4, flexShrink: 0,
-                          background: a.type === "warning" ? "#DC2626" : a.type === "success" ? "#22C55E" : "#C68B59"
-                        }} />
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ fontSize: 11, color: "#3E2723", lineHeight: 1.5, fontWeight: 500 }}>{a.text}</p>
-                          {a.time && <span style={{ fontSize: 9, color: "#9CA3AF" }}>{a.time}</span>}
-                        </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <span style={{ fontSize: 18 }}>{item.icon}</span>
+                        <span style={{ fontSize: 13, fontWeight: 500, color: "#3E2723" }}>{item.label}</span>
                       </div>
+                      <span style={{
+                        fontSize: 12, fontWeight: 600, color: item.status.color,
+                        padding: "3px 12px", borderRadius: 100,
+                        background: `${item.status.color}10`
+                      }}>{item.status.text}</span>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
 
-            {/* Medication Tracker */}
-            <div className="gcard s6" style={{ padding: 20, marginBottom: 14 }}>
-              <div style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Medication Tracker</div>
-                <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Today's medications</div>
+            {/* ── Recent Memories Feed ── */}
+            <div className="s3" style={{ marginBottom: 22 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <div>
+                  <h3 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 20, fontWeight: 700, color: "#3E2723", margin: 0 }}>Recent Memories</h3>
+                  <p style={{ fontSize: 12, color: "#8D6E63", marginTop: 4 }}>Stories and moments shared by {parentProfile?.full_name?.split(" ")[0] || "Amma"}</p>
+                </div>
+                {realMemories.length > 3 && (
+                  <button onClick={() => setNav("memories")} style={{
+                    fontSize: 12, fontWeight: 600, color: "#5D4037", border: "none", background: "transparent",
+                    cursor: "pointer", display: "flex", alignItems: "center", gap: 4,
+                    padding: "6px 14px", borderRadius: 100, background: "rgba(93,64,55,0.06)"
+                  }}>
+                    View all <ChevronRight size={13} />
+                  </button>
+                )}
+              </div>
+
+              {realMemories.length === 0 ? (
+                <div style={{
+                  background: "linear-gradient(135deg, #FFF8F0, #F5EDE4)",
+                  borderRadius: 24, padding: "40px 28px", textAlign: "center",
+                  border: "1px solid rgba(198,139,89,0.12)"
+                }}>
+                  <Headphones size={36} color="#C68B59" style={{ margin: "0 auto 14px", opacity: 0.5 }} />
+                  <p style={{ fontSize: 15, color: "#5D4037", fontWeight: 600, marginBottom: 6 }}>No memories yet</p>
+                  <p style={{ fontSize: 13, color: "#8D6E63", lineHeight: 1.6 }}>
+                    When {parentProfile?.full_name?.split(" ")[0] || "Amma"} records a story or memory,<br />it will appear here for you to listen to and respond.
+                  </p>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                  {memories.slice(0, 3).map((m, i) => (
+                    <div key={m.id || i} style={{
+                      background: "rgba(255,255,255,0.8)",
+                      backdropFilter: "blur(16px)",
+                      borderRadius: 24, padding: isMobile ? "20px" : "24px 28px",
+                      border: "1px solid rgba(255,255,255,0.6)",
+                      boxShadow: "0 6px 28px rgba(62,39,35,0.05)",
+                      animation: `fadeUp .5s ease ${.2 + i * .1}s both`
+                    }}>
+                      {/* Memory header */}
+                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 12 }}>
+                        <div style={{ flex: 1 }}>
+                          {m.emotionalTone && (
+                            <span style={{
+                              fontSize: 10, fontWeight: 600, padding: "3px 10px", borderRadius: 100,
+                              background: m.emotionalTone.toLowerCase() === "joyful" ? "rgba(76,175,80,0.1)" : m.emotionalTone.toLowerCase() === "nostalgic" ? "rgba(198,139,89,0.1)" : m.emotionalTone.toLowerCase() === "peaceful" ? "rgba(141,110,99,0.1)" : "rgba(93,64,55,0.08)",
+                              color: m.emotionalTone.toLowerCase() === "joyful" ? "#4CAF50" : m.emotionalTone.toLowerCase() === "nostalgic" ? "#C68B59" : m.emotionalTone.toLowerCase() === "peaceful" ? "#8D6E63" : "#5D4037",
+                              display: "inline-block", marginBottom: 8
+                            }}>{m.emotionalTone}</span>
+                          )}
+                          <h4 style={{ fontSize: 17, fontWeight: 700, color: "#3E2723", margin: 0, lineHeight: 1.3 }}>{m.title}</h4>
+                          <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 6 }}>
+                            <span style={{ fontSize: 11, color: "#8D6E63" }}>{m.date}</span>
+                            <span style={{ fontSize: 11, color: "#9CA3AF" }}>·</span>
+                            <span style={{ fontSize: 11, color: "#8D6E63" }}>{m.duration}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Summary */}
+                      <p style={{ fontSize: 13.5, color: "#4a3f3a", lineHeight: 1.7, margin: "0 0 16px 0" }}>
+                        {m.summary ? (m.summary.length > 180 ? m.summary.slice(0, 180) + "…" : m.summary) : ""}
+                      </p>
+
+                      {/* Audio Player */}
+                      {m.audioUrl && (
+                        <div style={{ marginBottom: 16 }}>
+                          <AudioPlayer color="#5D4037" audioUrl={m.audioUrl} />
+                        </div>
+                      )}
+
+                      {/* Heart + existing comments */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
+                        <button onClick={() => handleToggleHeart(m.memoryId, (m.reactions || []).some(r => r.user_id === profileId))} style={{
+                          display: "flex", alignItems: "center", gap: 5, background: "transparent",
+                          border: "none", cursor: "pointer", padding: "4px 0", color: (m.reactions || []).some(r => r.user_id === profileId) ? "#E53935" : "#9CA3AF",
+                          fontSize: 12, fontWeight: 500
+                        }}>
+                          <Heart size={16} fill={(m.reactions || []).some(r => r.user_id === profileId) ? "#E53935" : "none"} />
+                          {(m.reactions || []).length > 0 && <span>{(m.reactions || []).length}</span>}
+                        </button>
+                        {(m.comments || []).length > 0 && (
+                          <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#8D6E63" }}>
+                            <MessageCircle size={14} /> {m.comments.length} {m.comments.length === 1 ? "reply" : "replies"}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Comment Back Area — the primary action */}
+                      {m.memoryId && (
+                        <div style={{
+                          background: "rgba(198,139,89,0.04)",
+                          borderRadius: 18, padding: "16px 18px",
+                          border: "1px solid rgba(198,139,89,0.12)"
+                        }}>
+                          <p style={{ fontSize: 11, color: "#8D6E63", marginBottom: 10, fontWeight: 500 }}>
+                            💬 Send a message back to {parentProfile?.full_name?.split(" ")[0] || "Amma"}
+                          </p>
+                          <div style={{ display: "flex", gap: 8 }}>
+                            <input
+                              placeholder={`Reply to "${m.title}"…`}
+                              style={{
+                                flex: 1, padding: "11px 16px", borderRadius: 14,
+                                border: "1px solid rgba(93,64,55,0.12)", outline: "none",
+                                fontSize: 13, color: "#3E2723", background: "#fff",
+                                fontFamily: "'DM Sans', sans-serif"
+                              }}
+                              onKeyDown={async (e) => {
+                                if (e.key === "Enter" && e.target.value.trim()) {
+                                  const text = e.target.value.trim();
+                                  e.target.value = "";
+                                  try {
+                                    const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", profileId).maybeSingle();
+                                    await supabase.from("memory_comments").insert({
+                                      memory_id: m.memoryId,
+                                      user_id: profileId,
+                                      comment: text,
+                                      author_name: prof?.full_name || "Caregiver",
+                                    });
+                                  } catch (err) { console.error("Quick reply error:", err); }
+                                }
+                              }}
+                            />
+                            <button
+                              onClick={async () => {
+                                // Quick voice note placeholder
+                                try {
+                                  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                                  const recorder = new MediaRecorder(stream);
+                                  const chunks = [];
+                                  recorder.ondataavailable = e => chunks.push(e.data);
+                                  recorder.onstop = async () => {
+                                    stream.getTracks().forEach(t => t.stop());
+                                    const blob = new Blob(chunks, { type: "audio/webm" });
+                                    const path = `comment_audio_${Date.now()}.webm`;
+                                    const { data } = await supabase.storage.from("memories").upload(path, blob);
+                                    if (data) {
+                                      const { data: urlData } = supabase.storage.from("memories").getPublicUrl(data.path);
+                                      const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", profileId).maybeSingle();
+                                      await supabase.from("memory_comments").insert({
+                                        memory_id: m.memoryId,
+                                        user_id: profileId,
+                                        comment: "🎤 Voice reply",
+                                        media_url: urlData.publicUrl,
+                                        media_type: "audio",
+                                        author_name: prof?.full_name || "Caregiver",
+                                      });
+                                    }
+                                  };
+                                  recorder.start();
+                                  setTimeout(() => recorder.stop(), 10000); // max 10s
+                                } catch (err) { console.error("Voice note error:", err); }
+                              }}
+                              style={{
+                                width: 44, height: 44, borderRadius: 14, border: "none", cursor: "pointer",
+                                background: "linear-gradient(135deg, #C68B59, #8D6E63)",
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                flexShrink: 0, boxShadow: "0 2px 8px rgba(198,139,89,0.3)"
+                              }}
+                              title="Send voice note"
+                            >
+                              <Mic size={17} color="#FFF8F0" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* ── Medication Tracker ── */}
+            <div className="s5" style={{
+              background: "rgba(255,255,255,0.8)", backdropFilter: "blur(16px)",
+              borderRadius: 24, padding: isMobile ? "20px" : "24px 28px",
+              border: "1px solid rgba(255,255,255,0.55)",
+              boxShadow: "0 6px 28px rgba(62,39,35,0.05)",
+              marginBottom: 22
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+                <div style={{
+                  width: 38, height: 38, borderRadius: 12,
+                  background: "linear-gradient(135deg, #8D6E63, #5D4037)",
+                  display: "flex", alignItems: "center", justifyContent: "center"
+                }}>
+                  <Pill size={18} color="#FFF8F0" />
+                </div>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: "#3E2723" }}>Medication Tracker</div>
+                  <div style={{ fontSize: 11, color: "#8D6E63" }}>Today's medications</div>
+                </div>
               </div>
               {medications.length === 0 ? (
-                <p style={{ fontSize: 12, color: "#9CA3AF", fontStyle: "italic" }}>No medications configured</p>
+                <p style={{ fontSize: 13, color: "#8D6E63", fontStyle: "italic" }}>No medications configured yet</p>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {medications.map(med => (
                     <div key={med.id} style={{
-                      display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
-                      background: med.taken_today ? "rgba(198,139,89,0.06)" : "rgba(255,248,240,0.6)",
-                      borderRadius: 12, border: `1px solid ${med.taken_today ? "rgba(198,139,89,0.15)" : "rgba(93,64,55,0.08)"}`,
+                      display: "flex", alignItems: "center", gap: 12, padding: "12px 16px",
+                      background: med.taken_today ? "rgba(76,175,80,0.05)" : "rgba(255,248,240,0.6)",
+                      borderRadius: 16, border: `1px solid ${med.taken_today ? "rgba(76,175,80,0.15)" : "rgba(93,64,55,0.08)"}`,
                       cursor: "pointer", transition: "all .2s"
                     }} onClick={() => toggleMedication(med.id, !med.taken_today)}>
                       <div style={{
-                        width: 22, height: 22, borderRadius: 6, flexShrink: 0,
-                        border: med.taken_today ? "none" : "2px solid rgba(93,64,55,0.25)",
-                        background: med.taken_today ? "#C68B59" : "transparent",
+                        width: 26, height: 26, borderRadius: 8, flexShrink: 0,
+                        border: med.taken_today ? "none" : "2px solid rgba(93,64,55,0.2)",
+                        background: med.taken_today ? "#4CAF50" : "transparent",
                         display: "flex", alignItems: "center", justifyContent: "center"
                       }}>
-                        {med.taken_today && <Check size={13} color="#fff" />}
+                        {med.taken_today && <Check size={15} color="#fff" />}
                       </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ flex: 1 }}>
                         <div style={{
-                          fontSize: 12, fontWeight: 600, color: med.taken_today ? "#C68B59" : "#1a1a1a",
+                          fontSize: 13, fontWeight: 600, color: med.taken_today ? "#4CAF50" : "#3E2723",
                           textDecoration: med.taken_today ? "line-through" : "none"
                         }}>{med.name}</div>
-                        <div style={{ fontSize: 10, color: "#9CA3AF" }}>{med.dose || ""}{med.scheduled_time ? ` · ${med.scheduled_time}` : ""}</div>
+                        <div style={{ fontSize: 11, color: "#9CA3AF" }}>{med.dose || ""}{med.scheduled_time ? ` · ${med.scheduled_time}` : ""}</div>
                       </div>
                       {med.taken_today && med.last_taken && (
-                        <span style={{ fontSize: 9, color: "#C68B59", fontWeight: 500 }}>
+                        <span style={{ fontSize: 10, color: "#4CAF50", fontWeight: 500 }}>
                           {new Date(med.last_taken).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                         </span>
                       )}
@@ -1737,37 +1926,45 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               )}
             </div>
 
-            {/* Memory Archive preview */}
-            <div className="s7">
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-                <div>
-                  <h3 style={{ fontSize: 14, fontWeight: 700, color: "#1a1a1a" }}>Memory Archive</h3>
-                  <p style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>AI-summarized recordings with emotional context</p>
+            {/* ── Recent Alerts (compact) ── */}
+            {allAlerts.filter(a => a.type === "warning").length > 0 && (
+              <div className="s6" style={{
+                background: "rgba(255,255,255,0.8)", backdropFilter: "blur(16px)",
+                borderRadius: 24, padding: isMobile ? "20px" : "24px 28px",
+                border: "1px solid rgba(229,57,53,0.08)",
+                boxShadow: "0 6px 28px rgba(62,39,35,0.05)",
+                marginBottom: 22
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+                  <div style={{
+                    width: 38, height: 38, borderRadius: 12,
+                    background: "rgba(229,57,53,0.08)",
+                    display: "flex", alignItems: "center", justifyContent: "center"
+                  }}>
+                    <AlertTriangle size={18} color="#E53935" />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: "#3E2723" }}>Needs Attention</div>
+                    <div style={{ fontSize: 11, color: "#8D6E63" }}>Alerts that may need your response</div>
+                  </div>
                 </div>
-                <button onClick={() => setNav("memories")} style={{ fontSize: 11, fontWeight: 600, color: "#5D4037", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", gap: 3 }}>
-                  View all <ChevronRight size={12} />
-                </button>
-              </div>
-              {realMemories.length === 0 ? (
-                <div className="gcard" style={{ padding: 28, textAlign: "center" }}>
-                  <Headphones size={28} color="#9CA3AF" style={{ margin: "0 auto 10px" }} />
-                  <p style={{ fontSize: 13, color: "#6b6b6b", lineHeight: 1.6 }}>
-                    No memories recorded yet.<br />
-                    <span style={{ color: "#9CA3AF", fontSize: 12 }}>Tap "Record a Memory" on the Sathi app to begin.</span>
-                  </p>
-                </div>
-              ) : (
-                <div style={{
-                  display: "grid",
-                  gridTemplateColumns: isMobile ? "1fr" : inPanel ? "1fr" : "1fr 1fr",
-                  gap: 13
-                }}>
-                  {memories.slice(0, 2).map((m, i) => (
-                    <MemoryCard key={i} {...m} index={i} profileId={profileId} onToggleHeart={handleToggleHeart} />
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {allAlerts.filter(a => a.type === "warning").slice(0, 4).map((a, i) => (
+                    <div key={i} style={{
+                      display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 14px",
+                      background: "rgba(229,57,53,0.03)", borderRadius: 14,
+                      border: "1px solid rgba(229,57,53,0.08)"
+                    }}>
+                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#E53935", marginTop: 6, flexShrink: 0 }} />
+                      <div>
+                        <p style={{ fontSize: 12.5, color: "#3E2723", lineHeight: 1.5, margin: 0, fontWeight: 500 }}>{a.text}</p>
+                        {a.time && <span style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2, display: "block" }}>{a.time}</span>}
+                      </div>
+                    </div>
                   ))}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </>
         )}
       </div>
