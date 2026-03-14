@@ -726,6 +726,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
   const [expandedStat, setExpandedStat] = useState(null);
   const [showDeepDive, setShowDeepDive] = useState(false);
   const [compareIdx, setCompareIdx] = useState(null);
+  const [activeVideoUrl, setActiveVideoUrl] = useState(null);
 
   // Alerts: only actionable/problematic events + new recordings — not routine metrics
   const buildAlerts = () => {
@@ -2177,9 +2178,9 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                         </div>
                         {/* Video thumbnail */}
                         {m.audioUrl?.includes("/video_") && (
-                          <div style={{
+                          <div onClick={(e) => { e.stopPropagation(); setActiveVideoUrl(m.audioUrl); }} style={{
                             width: 72, height: 72, borderRadius: 14, overflow: "hidden",
-                            flexShrink: 0, position: "relative",
+                            flexShrink: 0, position: "relative", cursor: "pointer",
                             background: "#1a1a1a", border: "1px solid rgba(93,64,55,0.12)"
                           }}>
                             <video
@@ -2590,6 +2591,32 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               <ShieldCheck size={16} style={{ verticalAlign: "middle", marginRight: 6 }} />
               Mark as Safe
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Video Player Modal */}
+      {activeVideoUrl && (
+        <div onClick={() => setActiveVideoUrl(null)} style={{
+          position: "fixed", inset: 0, zIndex: 9999,
+          background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          animation: "fadeUp .2s ease both"
+        }}>
+          <div onClick={e => e.stopPropagation()} style={{ position: "relative", width: "90%", maxWidth: 640 }}>
+            <button onClick={() => setActiveVideoUrl(null)} style={{
+              position: "absolute", top: -44, right: 0, background: "rgba(255,255,255,0.15)",
+              border: "none", borderRadius: 100, width: 36, height: 36, cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center"
+            }}>
+              <X size={18} color="#fff" />
+            </button>
+            <video
+              src={activeVideoUrl}
+              controls
+              autoPlay
+              style={{ width: "100%", borderRadius: 16, maxHeight: "80vh", background: "#000" }}
+            />
           </div>
         </div>
       )}
