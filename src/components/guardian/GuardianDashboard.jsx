@@ -2037,12 +2037,12 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               if (visualEvents.length === 0) return null;
 
               const markers = [
-                { key: "micro_expressions", label: "Micro-Expressions", desc: "Flat affect vs. Animated", icon: "😊", color: "#C68B59" },
-                { key: "motor_control", label: "Motor Control", desc: "Tremors & head tilting", icon: "✋", color: "#8D6E63" },
-                { key: "vocal_visual_sync", label: "Vocal-Visual Sync", desc: "Speech & facial timing", icon: "🔄", color: "#5D4037" },
-                { key: "facial_symmetry", label: "Facial Symmetry", desc: "Neurological indicator", icon: "🪞", color: "#4CAF50" },
-                { key: "skin_pallor", label: "Skin Tone", desc: "Circulation & wellness", icon: "🌡️", color: "#FF9800" },
-                { key: "eye_engagement", label: "Eye Engagement", desc: "Cognitive presence", icon: "👁️", color: "#2196F3" },
+                { key: "micro_expressions", label: "Expressive Range", desc: "Observed frequency of expression changes", icon: "😊", color: "#C68B59", infoNote: "Tracks how often facial expressions change during interactions." },
+                { key: "motor_control", label: "Movement Stability", desc: "Observed steadiness in video frame", icon: "✋", color: "#8D6E63", infoNote: "Monitors steadiness and smoothness of movement observed in video." },
+                { key: "vocal_visual_sync", label: "Vocal-Visual Sync", desc: "Speech & facial timing patterns", icon: "🔄", color: "#5D4037", infoNote: "Tracks synchronization between speech audio and facial movements." },
+                { key: "facial_symmetry", label: "Bilateral Movement", desc: "Evenness of movement on both sides", icon: "🪞", color: "#5D8A6B", infoNote: "Analysis of facial muscle patterns compared to typical baseline." },
+                { key: "skin_pallor", label: "Color Reflectance", desc: "Surface color consistency", icon: "🌡️", color: "#6B8A9E", infoNote: "Analysis of light reflection and surface color consistency in video." },
+                { key: "eye_engagement", label: "Gaze Patterns", desc: "Visual attention tracking", icon: "👁️", color: "#5B7FA5", infoNote: "Tracks gaze direction and visual attention patterns." },
               ];
 
               const Sparkline = ({ data, color }) => {
