@@ -1126,7 +1126,12 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
 
       <div style={{textAlign:"center",marginTop:16}}>
         <div style={{fontFamily:"'Playfair Display',serif",fontSize:14,color:"rgba(255,248,240,.45)",letterSpacing:"0.3em",fontWeight:400}}>ANVAYA</div>
-        <div style={{fontFamily:"'Playfair Display',serif",fontSize:isMock?40:48,color:"#FFF8F0",fontWeight:600,letterSpacing:"0.05em",marginTop:2}}>
+        {voicePhase==="idle" && fullName && (
+          <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:isMock?20:24,color:"rgba(255,248,240,.7)",fontWeight:400,marginTop:8,letterSpacing:"0.02em"}}>
+            {lang==="en"?`Namaste ${fullName.split(" ")[0]}, how are you feeling today?`:`नमस्ते ${fullName.split(" ")[0]} जी, आज आप कैसा महसूस कर रहे हैं?`}
+          </div>
+        )}
+        <div style={{fontFamily:"'Playfair Display',serif",fontSize:isMock?40:48,color:"#FFF8F0",fontWeight:600,letterSpacing:"0.05em",marginTop:voicePhase==="idle"&&fullName?4:2}}>
           {lang==="en"?"Ela":"एला"}
         </div>
         {voicePhase==="idle"&&<div style={{fontSize:16,color:"rgba(255,248,240,.55)",marginTop:5}}>
