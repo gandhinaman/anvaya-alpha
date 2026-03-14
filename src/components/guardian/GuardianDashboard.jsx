@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
-  Phone, Mic, MessageCircle, Heart, Activity, Pill,
+  Phone, Mic, MessageCircle, Heart, Activity, BookOpen,
   Home, Bell, Settings, ChevronRight, ChevronDown, Play, Pause,
   User, LogOut, Headphones, Brain, Check, Menu, X,
   TrendingUp, Zap, PhoneOff, AlertTriangle, ShieldCheck,
@@ -870,7 +870,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
   const navItems = [
     { id: "home", icon: <Home size={17} />, label: "Overview" },
     { id: "memories", icon: <Headphones size={17} />, label: "Memories" },
-    { id: "health", icon: <Activity size={17} />, label: "Health" },
+    { id: "health", icon: <Activity size={17} />, label: "Daily Rhythm" },
     { id: "alerts", icon: <Bell size={17} />, label: "Alerts" },
     { id: "settings", icon: <Settings size={17} />, label: "Settings" },
   ];
@@ -1307,10 +1307,10 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
             <div className="gcard" style={{ padding: 20 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a", marginBottom: 4 }}>Notification Preferences</div>
               <div style={{ fontSize: 11, color: "#6b6b6b", marginBottom: 12 }}>Choose which notifications you receive</div>
-              {[
+               {[
                  { key: "emergency", label: "Emergency Alerts", desc: "Critical alerts when your parent needs help", icon: <AlertTriangle size={16} color="#DC2626" /> },
-                 { key: "medication", label: "Medication Updates", desc: "When medications are taken or missed", icon: <Pill size={16} color="#8D6E63" /> },
                  { key: "memories", label: "New Memories", desc: "When a new memory is recorded", icon: <Headphones size={16} color="#C68B59" /> },
+                 { key: "connection", label: "Connection Updates", desc: "When your parent is active or shares stories", icon: <MessageCircle size={16} color="#8D6E63" /> },
               ].map(n => (
                 <div key={n.key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid rgba(93,64,55,0.06)" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -1946,8 +1946,8 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
           <div className="s2">
             {/* Section header */}
             <div style={{ marginBottom: 18 }}>
-            <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 22, fontWeight: 700, color: "#3E2723", margin: 0 }}>{parentProfile?.full_name?.split(" ")[0] || "Amma"}'s Daily Pulse</h2>
-              <p style={{ fontSize: 12, color: "#8D6E63", marginTop: 4 }}>Behavioral indicators, visual patterns, trends & medication logs</p>
+            <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 22, fontWeight: 700, color: "#3E2723", margin: 0 }}>{parentProfile?.full_name?.split(" ")[0] || "Amma"}'s Daily Rhythm</h2>
+              <p style={{ fontSize: 12, color: "#8D6E63", marginTop: 4 }}>Behavioral indicators, visual patterns & interaction trends</p>
             </div>
 
             {/* Legal notice box */}
@@ -1961,7 +1961,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               <Info size={16} color="#6B8A9E" style={{ flexShrink: 0, marginTop: 1 }} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ fontSize: 11, color: "#5B7FA5", margin: 0, lineHeight: 1.6 }}>
-                  Anvaya is a companionship and wellness observation tool. This application does not provide medical advice, diagnoses, or treatment. Insights are based on automated analysis of visual and audio patterns and should not be used as a substitute for professional medical monitoring or clinical judgment. Anvaya is not a regulated medical device.
+                  Anvaya is a memory preservation and social connection tool. This application does not provide medical advice, diagnoses, or treatment. Insights are based on automated analysis of visual and audio patterns to track behavioral trends and emotional well-being.
                 </p>
                 <button onClick={() => setShowDisclaimerModal(true)} style={{
                   background: "none", border: "none", cursor: "pointer", padding: 0, marginTop: 6,
@@ -2222,13 +2222,13 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               );
             })()}
 
-            {/* ── 3. Daily Tracking ── */}
+            {/* ── 3. Legacy Progress & Stories ── */}
             <div style={{ marginBottom: 20 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                 <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(198,139,89,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Pill size={14} color="#C68B59" />
+                  <BookOpen size={14} color="#C68B59" />
                 </div>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#3E2723" }}>Daily Tracking</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#3E2723" }}>Legacy & Connection</span>
               </div>
               <div style={{
                 display: "grid",
@@ -2237,44 +2237,39 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               }}>
                 <div className="gcard" style={{ padding: 20 }}>
                   <div style={{ marginBottom: 14 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Medication Tracker</div>
-                    <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Today's medications</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Legacy Progress</div>
+                    <div style={{ fontSize: 11, color: "#6b6b6b", marginTop: 2 }}>Family history recorded</div>
                   </div>
-                  {medications.length === 0 ? (
-                    <p style={{ fontSize: 12, color: "#9CA3AF", fontStyle: "italic" }}>No medications configured</p>
-                  ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                      {medications.map(med => (
-                        <div key={med.id} style={{
-                          display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
-                          background: med.taken_today ? "rgba(198,139,89,0.06)" : "rgba(255,248,240,0.6)",
-                          borderRadius: 12, border: `1px solid ${med.taken_today ? "rgba(198,139,89,0.15)" : "rgba(93,64,55,0.08)"}`,
-                          cursor: "pointer", transition: "all .2s"
-                        }} onClick={() => toggleMedication(med.id, !med.taken_today)}>
-                          <div style={{
-                            width: 22, height: 22, borderRadius: 6, flexShrink: 0,
-                            border: med.taken_today ? "none" : "2px solid rgba(93,64,55,0.25)",
-                            background: med.taken_today ? "#C68B59" : "transparent",
-                            display: "flex", alignItems: "center", justifyContent: "center"
-                          }}>
-                            {med.taken_today && <Check size={13} color="#fff" />}
+                  {(() => {
+                    const totalMin = Math.round(realMemories.reduce((s, m) => s + (m.duration_seconds || 0), 0) / 60);
+                    const thisMonth = realMemories.filter(m => {
+                      const d = new Date(m.created_at);
+                      const now = new Date();
+                      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                    });
+                    const monthMin = Math.round(thisMonth.reduce((s, m) => s + (m.duration_seconds || 0), 0) / 60);
+                    return (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", background: "rgba(198,139,89,0.06)", borderRadius: 14, border: "1px solid rgba(198,139,89,0.12)" }}>
+                          <span style={{ fontSize: 24 }}>📖</span>
+                          <div>
+                            <div style={{ fontSize: 20, fontWeight: 700, color: "#3E2723" }}>{realMemories.length}</div>
+                            <div style={{ fontSize: 11, color: "#8D6E63" }}>Total stories shared</div>
                           </div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{
-                              fontSize: 12, fontWeight: 600, color: med.taken_today ? "#C68B59" : "#1a1a1a",
-                              textDecoration: med.taken_today ? "line-through" : "none"
-                            }}>{med.name}</div>
-                            <div style={{ fontSize: 10, color: "#9CA3AF" }}>{med.dose || ""}{med.scheduled_time ? ` · ${med.scheduled_time}` : ""}</div>
-                          </div>
-                          {med.taken_today && med.last_taken && (
-                            <span style={{ fontSize: 9, color: "#C68B59", fontWeight: 500 }}>
-                              {new Date(med.last_taken).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                            </span>
-                          )}
                         </div>
-                      ))}
-                    </div>
-                  )}
+                        <div style={{ display: "flex", gap: 10 }}>
+                          <div style={{ flex: 1, padding: "12px 14px", background: "rgba(93,64,55,0.04)", borderRadius: 14, border: "1px solid rgba(93,64,55,0.08)", textAlign: "center" }}>
+                            <div style={{ fontSize: 18, fontWeight: 700, color: "#5D4037" }}>{totalMin}</div>
+                            <div style={{ fontSize: 10, color: "#8D6E63" }}>Total minutes</div>
+                          </div>
+                          <div style={{ flex: 1, padding: "12px 14px", background: "rgba(93,64,55,0.04)", borderRadius: 14, border: "1px solid rgba(93,64,55,0.08)", textAlign: "center" }}>
+                            <div style={{ fontSize: 18, fontWeight: 700, color: "#5D4037" }}>{monthMin}</div>
+                            <div style={{ fontSize: 10, color: "#8D6E63" }}>This month</div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <div className="gcard" style={{ padding: 20 }}>
@@ -2381,7 +2376,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                 {[
                   { key: "urgent", title: "🚨 Urgent", color: "#5B7FA5", bg: "rgba(91,127,165,0.04)", border: "rgba(91,127,165,0.12)" },
                   { key: "anomaly", title: "📊 Activity Anomalies", color: "#6B8A9E", bg: "rgba(107,138,158,0.04)", border: "rgba(107,138,158,0.12)" },
-                  { key: "medication", title: "💊 Medication Log", color: "#8D6E63", bg: "rgba(141,110,99,0.04)", border: "rgba(141,110,99,0.12)" },
+                  { key: "memory", title: "📖 Memory Activity", color: "#8D6E63", bg: "rgba(141,110,99,0.04)", border: "rgba(141,110,99,0.12)" },
                   { key: "activity", title: "🎤 Recent Activity", color: "#5D4037", bg: "rgba(93,64,55,0.04)", border: "rgba(93,64,55,0.12)" },
                 ].map(group => {
                   const groupAlerts = allAlerts.filter(a => a.category === group.key);
@@ -2533,14 +2528,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                       else parts.push(`Observed sentiment is subdued (${emoVal}%).`);
                     }
 
-                    // Medication adherence
-                    const medsTaken = medications.filter(m => m.taken_today).length;
-                    const medsTotal = medications.length;
-                    if (medsTotal > 0) {
-                      if (medsTaken === medsTotal) parts.push(`Medication adherence: all ${medsTotal} logged by user. ✅`);
-                      else if (medsTaken > 0) parts.push(`Medication adherence: ${medsTaken} of ${medsTotal} logged so far. 💊`);
-                      else parts.push(`Medication adherence: none logged yet today. 💊`);
-                    }
+                    // Medication adherence removed — legacy-first pivot
 
                     if (parts.length === 0) return `Behavioral observations will appear here once ${name} starts recording interactions.`;
                     return parts.join(" ");
@@ -2584,16 +2572,14 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                       icon: "🎙️"
                     },
                     {
-                      label: "Medication Adherence",
+                      label: "Legacy Progress",
                       status: (() => {
-                        const taken = medications.filter(m => m.taken_today).length;
-                        const total = medications.length;
-                        if (total === 0) return { text: "None configured", color: "#8D6E63", bg: "rgba(141,110,99,0.08)" };
-                        if (taken === total) return { text: "All logged ✓", color: "#5D8A6B", bg: "rgba(93,138,107,0.08)" };
-                        if (taken > 0) return { text: `${taken}/${total} logged`, color: "#6B8A9E", bg: "rgba(107,138,158,0.08)" };
-                        return { text: "Not yet logged", color: "#8D8D8D", bg: "rgba(141,141,141,0.08)" };
+                        const totalMin = Math.round(realMemories.reduce((s, m) => s + (m.duration_seconds || 0), 0) / 60);
+                        if (totalMin === 0) return { text: "No stories yet", color: "#8D6E63", bg: "rgba(141,110,99,0.08)" };
+                        if (totalMin >= 30) return { text: `${totalMin} min recorded ✓`, color: "#5D8A6B", bg: "rgba(93,138,107,0.08)" };
+                        return { text: `${totalMin} min recorded`, color: "#6B8A9E", bg: "rgba(107,138,158,0.08)" };
                       })(),
-                      icon: "💊"
+                      icon: "📖"
                     },
                     {
                       label: "Observed Sentiment",
@@ -2701,7 +2687,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                 {/* Overview footer disclaimer */}
                 <div style={{ marginTop: 16, padding: "10px 14px", borderRadius: 12, background: "transparent" }}>
                   <p style={{ fontSize: 10, color: "#9CA3AF", margin: 0, lineHeight: 1.6, textAlign: "center" }}>
-                    Anvaya is a companionship and wellness observation tool. This application does not provide medical advice, diagnoses, or treatment. Insights are based on automated analysis of visual and audio patterns and should not be used as a substitute for professional medical monitoring or clinical judgment. Anvaya is not a regulated medical device.
+                    Anvaya is a memory preservation and social connection tool. Insights are based on automated analysis of visual and audio patterns to track behavioral trends and emotional well-being. Not a regulated medical device.
                   </p>
                 </div>
               </div>

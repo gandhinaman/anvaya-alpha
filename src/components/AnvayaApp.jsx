@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import {
-  Phone, Mic, MessageCircle, Heart, Activity, Pill,
+  Phone, Mic, MessageCircle, Heart, Activity,
   Home, Bell, Settings, ChevronRight, Play, Pause, BookOpen,
   Circle, User, LogOut, Headphones, Brain, Check, Menu, X,
   TrendingUp, Zap, BarChart2, PhoneOff, AlertTriangle, ShieldCheck,
-  Loader2, Link2, BellRing, Copy, Send, Flame
+  Loader2, Link2, BellRing, Copy, Send, Sparkles
 } from "lucide-react";
 import SathiChat from "./sathi/SathiChat";
 import MemoryRecorder from "./sathi/MemoryRecorder";
@@ -416,141 +416,19 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
     age: null, health_issues: [], language: "en", interests: [], location: "",
     full_name: "", linked_user_id: null
   });
-  const [profileMeds, setProfileMeds] = useState([]);
-  const [newMedName, setNewMedName] = useState("");
-  const [newMedDose, setNewMedDose] = useState("");
-  const [newMedTime, setNewMedTime] = useState("");
-  const [newMedFreq, setNewMedFreq] = useState("daily");
-  const [newInterest, setNewInterest] = useState("");
-  const [newIllness, setNewIllness] = useState("");
-  const [illnessDropOpen, setIllnessDropOpen] = useState(false);
-  const [locationDropOpen, setLocationDropOpen] = useState(false);
-  const [profileSaving, setProfileSaving] = useState(false);
-
-  // Load meds always on mount + profile data when overlay opens
-  // Auto-reset taken_today based on frequency and last_taken
-  const shouldResetMed = (med) => {
-    if (!med.taken_today || !med.last_taken) return false;
-    const lastTaken = new Date(med.last_taken);
-    const now = new Date();
-    const freq = med.frequency || "daily";
-    if (freq === "daily") {
-      return lastTaken.toDateString() !== now.toDateString();
-    } else if (freq === "weekly") {
-      const diffMs = now - lastTaken;
-      const diffDays = diffMs / (1000 * 60 * 60 * 24);
-      return diffDays >= 7;
-    } else if (freq === "monthly") {
-      return now.getMonth() !== lastTaken.getMonth() || now.getFullYear() !== lastTaken.getFullYear();
-    }
-    return false;
-  };
-
+  // Memory of the Day prompt
+  const [memoryOfDay, setMemoryOfDay] = useState(null);
   useEffect(() => {
-    if (!userId) return;
-    const loadMeds = async () => {
-      const { data: meds } = await supabase.from("medications").select("*").eq("user_id", userId);
-      if (!meds) return;
-      // Reset any meds whose reminder period has elapsed
-      const toReset = meds.filter(shouldResetMed);
-      if (toReset.length > 0) {
-        await Promise.all(toReset.map(m =>
-          supabase.from("medications").update({ taken_today: false }).eq("id", m.id)
-        ));
-        setProfileMeds(meds.map(m => toReset.find(r => r.id === m.id) ? { ...m, taken_today: false } : m));
-      } else {
-        setProfileMeds(meds);
-      }
+    const loadPrompt = async () => {
+      try {
+        const { MEMORY_PROMPTS } = await import("@/lib/memoryPrompts");
+        const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+        const idx = dayOfYear % MEMORY_PROMPTS.length;
+        setMemoryOfDay(MEMORY_PROMPTS[idx]);
+      } catch {}
     };
-    loadMeds();
-  }, [userId]);
-
-  useEffect(() => {
-    if (!userId || profileOpen === false) return;
-    const load = async () => {
-      const { data: p } = await supabase.from("profiles")
-        .select("age, health_issues, language, interests, location, full_name, linked_user_id")
-        .eq("id", userId).maybeSingle();
-      if (p) setProfileData({
-        age: p.age, health_issues: p.health_issues || [], language: p.language || "en",
-        interests: p.interests || [], location: p.location || "", full_name: p.full_name || "",
-        linked_user_id: p.linked_user_id
-      });
-      const { data: meds } = await supabase.from("medications").select("*").eq("user_id", userId);
-      if (meds) setProfileMeds(meds);
-    };
-    load();
-  }, [userId, profileOpen]);
-
-  // Medication streak calculation
-  const [medStreak, setMedStreak] = useState(0);
-  useEffect(() => {
-    if (!userId || profileMeds.length === 0) { setMedStreak(0); return; }
-    const calcStreak = async () => {
-      const { data: events } = await supabase.from("health_events")
-        .select("recorded_at")
-        .eq("user_id", userId)
-        .eq("event_type", "medication_taken")
-        .order("recorded_at", { ascending: false })
-        .limit(100);
-      if (!events || events.length === 0) { setMedStreak(0); return; }
-      // Count consecutive days with at least one medication_taken event
-      const days = new Set(events.map(e => new Date(e.recorded_at).toDateString()));
-      let streak = 0;
-      const d = new Date();
-      // Check if today has any — if not, start from yesterday
-      if (!days.has(d.toDateString())) d.setDate(d.getDate() - 1);
-      while (days.has(d.toDateString())) { streak++; d.setDate(d.getDate() - 1); }
-      setMedStreak(streak);
-    };
-    calcStreak();
-  }, [userId, profileMeds]);
-
-  const toggleMedTaken = async (med) => {
-    const newTaken = !med.taken_today;
-    const now = new Date().toISOString();
-    await supabase.from("medications")
-      .update({ taken_today: newTaken, last_taken: newTaken ? now : null })
-      .eq("id", med.id);
-    if (newTaken) {
-      await supabase.from("health_events").insert({
-        user_id: userId,
-        event_type: "medication_taken",
-        value: { medication_name: med.name, medication_id: med.id },
-      });
-    }
-    // Refresh meds
-    const { data: meds } = await supabase.from("medications").select("*").eq("user_id", userId);
-    if (meds) setProfileMeds(meds);
-  };
-
-  const saveProfile = async () => {
-    if (!userId) return;
-    setProfileSaving(true);
-    await supabase.from("profiles").update({
-      age: profileData.age, health_issues: profileData.health_issues,
-      interests: profileData.interests, location: profileData.location,
-      full_name: profileData.full_name
-    }).eq("id", userId);
-    setProfileSaving(false);
-  };
-
-  const addMedication = async () => {
-    if (!newMedName.trim() || !userId) return;
-    const { data } = await supabase.from("medications").insert({
-      user_id: userId, name: newMedName.trim(),
-      dose: newMedDose.trim() || null,
-      scheduled_time: newMedTime || null,
-      frequency: newMedFreq
-    }).select().single();
-    if (data) setProfileMeds(prev => [...prev, data]);
-    setNewMedName(""); setNewMedDose(""); setNewMedTime(""); setNewMedFreq("daily");
-  };
-
-  const removeMedication = async (id) => {
-    await supabase.from("medications").delete().eq("id", id);
-    setProfileMeds(prev => prev.filter(m => m.id !== id));
-  };
+    loadPrompt();
+  }, []);
 
   const addInterest = () => {
     if (!newInterest.trim()) return;
@@ -1236,93 +1114,26 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
         </div>
       )}
 
-      {/* ─── MEDICATION TRACKER WIDGET ─── */}
-      {profileMeds.length > 0 && (
+      {/* ─── MEMORY OF THE DAY ─── */}
+      {memoryOfDay && voicePhase === "idle" && (
         <div style={{margin:"0 16px 4px",padding:"14px 16px",background:"rgba(255,248,240,.06)",
           border:"1.5px solid rgba(255,248,240,.1)",borderRadius:20,animation:"fadeUp .6s ease .15s both"}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
-            <div style={{display:"flex",alignItems:"center",gap:8}}>
-              <Pill size={18} color="#C68B59"/>
-              <span style={{color:"#FFF8F0",fontSize:16,fontWeight:600}}>
-                {lang==="en"?"Today's Medicines":"आज की दवाइयाँ"}
-              </span>
-            </div>
-            {medStreak > 0 && (
-              <div style={{display:"flex",alignItems:"center",gap:5,padding:"5px 12px",
-                background:"linear-gradient(135deg,rgba(255,152,0,.2),rgba(255,87,34,.15))",
-                borderRadius:100,border:"1px solid rgba(255,152,0,.25)"}}>
-                <Flame size={14} color="#FF9800"/>
-                <span style={{color:"#FF9800",fontSize:13,fontWeight:700}}>{medStreak}</span>
-                <span style={{color:"rgba(255,152,0,.7)",fontSize:11,fontWeight:500}}>
-                  {lang==="en"?"day streak":"दिन"}
-                </span>
-              </div>
-            )}
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+            <Sparkles size={18} color="#C68B59"/>
+            <span style={{color:"#FFF8F0",fontSize:16,fontWeight:600}}>
+              {lang==="en"?"Memory of the Day":"आज की याद"}
+            </span>
           </div>
-
-          {/* Progress bar */}
-          {(() => {
-            const taken = profileMeds.filter(m => m.taken_today).length;
-            const total = profileMeds.length;
-            const pct = Math.round((taken / total) * 100);
-            return (
-              <div style={{marginBottom:10}}>
-                <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                  <span style={{fontSize:12,color:"rgba(255,248,240,.45)"}}>
-                    {taken}/{total} {lang==="en"?"taken":"ली"}
-                  </span>
-                  <span style={{fontSize:12,color:pct===100?"#66BB6A":"rgba(255,248,240,.45)",fontWeight:600}}>
-                    {pct===100?(lang==="en"?"🎉 All done!":"🎉 सब हो गया!"):`${pct}%`}
-                  </span>
-                </div>
-                <div style={{height:6,borderRadius:100,background:"rgba(255,248,240,.08)",overflow:"hidden"}}>
-                  <div style={{height:"100%",borderRadius:100,transition:"width .5s ease",
-                    width:`${pct}%`,
-                    background:pct===100?"linear-gradient(90deg,#66BB6A,#43A047)":"linear-gradient(90deg,#C68B59,#D4A574)"
-                  }}/>
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* Medication items */}
-          <div style={{display:"flex",flexDirection:"column",gap:6}}>
-            {profileMeds.map(med => (
-              <button key={med.id} onClick={() => toggleMedTaken(med)} style={{
-                display:"flex",alignItems:"center",gap:10,padding:"10px 12px",
-                background:med.taken_today?"rgba(102,187,106,.1)":"rgba(255,248,240,.04)",
-                border:`1.5px solid ${med.taken_today?"rgba(102,187,106,.25)":"rgba(255,248,240,.08)"}`,
-                borderRadius:14,cursor:"pointer",width:"100%",textAlign:"left",
-                transition:"all .3s"
-              }}>
-                <div style={{
-                  width:28,height:28,borderRadius:8,flexShrink:0,
-                  background:med.taken_today?"rgba(102,187,106,.2)":"rgba(255,248,240,.08)",
-                  border:`1.5px solid ${med.taken_today?"#66BB6A":"rgba(255,248,240,.15)"}`,
-                  display:"flex",alignItems:"center",justifyContent:"center",
-                  transition:"all .3s"
-                }}>
-                  {med.taken_today && <Check size={16} color="#66BB6A" strokeWidth={3}/>}
-                </div>
-                <div style={{flex:1,minWidth:0}}>
-                  <div style={{
-                    color:med.taken_today?"rgba(255,248,240,.5)":"#FFF8F0",
-                    fontSize:15,fontWeight:600,
-                    textDecoration:med.taken_today?"line-through":"none",
-                    transition:"all .3s"
-                  }}>{med.name}</div>
-                  {(med.dose || med.scheduled_time || (med.frequency && med.frequency !== "daily")) && (
-                    <div style={{fontSize:12,color:"rgba(255,248,240,.35)",marginTop:1}}>
-                      {med.dose||""}{med.scheduled_time?` · ${med.scheduled_time}`:""}{med.frequency && med.frequency !== "daily" ? ` · ${med.frequency}` : ""}
-                    </div>
-                  )}
-                </div>
-                <span style={{fontSize:11,color:med.taken_today?"#66BB6A":"rgba(255,248,240,.3)",fontWeight:600}}>
-                  {med.taken_today?(lang==="en"?"✓ Taken":"✓ ली"):(lang==="en"?"Tap to take":"टैप करें")}
-                </span>
-              </button>
-            ))}
-          </div>
+          <p style={{color:"rgba(255,248,240,.7)",fontSize:14,lineHeight:1.6,margin:0}}>
+            {lang==="hi" ? memoryOfDay.hi : memoryOfDay.en}
+          </p>
+          <button onClick={()=>setMemoryOpen(true)} style={{
+            marginTop:10,padding:"10px 18px",borderRadius:14,border:"none",cursor:"pointer",
+            background:"linear-gradient(135deg,#C68B59,#8D6E63)",color:"#FFF8F0",fontSize:14,fontWeight:600,
+            boxShadow:"0 4px 14px rgba(198,139,89,.35)"
+          }}>
+            {lang==="en"?"Record this story":"यह कहानी रिकॉर्ड करें"}
+          </button>
         </div>
       )}
 
@@ -1330,8 +1141,8 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
         {[
           {icon:<Mic size={24} color="#FFF8F0"/>,label:lang==="en"?"Record a Memory":"यादें रिकॉर्ड करें",sub:lang==="en"?"Your voice, preserved forever":"आपकी आवाज़, सदा के लिए",acc:"#C68B59",fn:()=>setMemoryOpen(true)},
           {icon:<BookOpen size={24} color="#FFF8F0"/>,label:lang==="en"?"Memory Log":"यादों की डायरी",sub:lang==="en"?"Your memories & family comments":"आपकी यादें और परिवार की टिप्पणियाँ",acc:"#C68B59",fn:()=>openMemoryLog(),badge:seniorUnreadCount,badgeHearts:seniorUnreadHearts,badgeComments:seniorUnreadComments},
-          {icon:<MessageCircle size={24} color="#FFF8F0"/>,label:lang==="en"?"Ask Ela":"एला से पूछें",sub:lang==="en"?"Health · Reminders · Stories":"स्वास्थ्य · याद · कहानियाँ",acc:"#C68B59",fn:()=>setChatOpen(true)},
-          {icon:<Phone size={24} color="#FFF8F0"/>,label:lang==="en"?`Call ${linkedName||"Family"}`:`${linkedName||"परिवार"} को कॉल करें`,sub:linkedName||"Caregiver",acc:"#C68B59",fn:()=>setCallOpen(true)},
+          {icon:<MessageCircle size={24} color="#FFF8F0"/>,label:lang==="en"?"Ask Ela":"एला से पूछें",sub:lang==="en"?"Stories · Conversations · Wisdom":"कहानियाँ · बातचीत · ज्ञान",acc:"#C68B59",fn:()=>setChatOpen(true)},
+          {icon:<Phone size={24} color="#FFF8F0"/>,label:lang==="en"?`Call ${linkedName||"Family"}`:`${linkedName||"परिवार"} को कॉल करें`,sub:linkedName||"Family",acc:"#C68B59",fn:()=>setCallOpen(true)},
         ].map((c,i)=>(
           <button key={i} onClick={c.fn} className="glass" style={{
             display:"flex",alignItems:"center",gap:14,padding:"16px 18px",
@@ -1557,59 +1368,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
               </div>
             </div>
 
-            {/* Medications */}
-            <div>
-              <label style={{fontSize:13,color:"rgba(255,248,240,.5)",fontWeight:600,marginBottom:6,display:"block"}}>
-                💊 {lang==="en"?"Medications":"दवाइयाँ"}
-              </label>
-              {profileMeds.length > 0 && (
-                <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:10}}>
-                  {profileMeds.map(med=>(
-                    <div key={med.id} style={{display:"flex",alignItems:"center",gap:10,padding:"12px 14px",
-                      background:"rgba(255,248,240,.06)",borderRadius:14,border:"1px solid rgba(255,248,240,.1)"}}>
-                      <Pill size={18} color="#C68B59"/>
-                      <div style={{flex:1}}>
-                        <div style={{color:"#FFF8F0",fontSize:15,fontWeight:600}}>{med.name}</div>
-                        <div style={{color:"rgba(255,248,240,.45)",fontSize:12}}>
-                          {med.dose||""}{med.scheduled_time?` · ${med.scheduled_time}`:""}
-                        </div>
-                      </div>
-                      <button onClick={()=>removeMedication(med.id)} style={{background:"none",border:"none",cursor:"pointer",color:"rgba(255,248,240,.4)",fontSize:20}}>×</button>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <div style={{display:"flex",flexDirection:"column",gap:8,padding:"14px",background:"rgba(255,248,240,.04)",borderRadius:16,border:"1px dashed rgba(255,248,240,.12)"}}>
-                <input value={newMedName} onChange={e=>setNewMedName(e.target.value)}
-                  placeholder={lang==="en"?"Medicine name":"दवा का नाम"}
-                  style={{padding:"12px 14px",borderRadius:12,border:"1px solid rgba(255,248,240,.12)",
-                    background:"rgba(255,248,240,.06)",color:"#FFF8F0",fontSize:16,outline:"none"}}/>
-                <div style={{display:"flex",gap:8}}>
-                  <input value={newMedDose} onChange={e=>setNewMedDose(e.target.value)}
-                    placeholder={lang==="en"?"Dose (e.g. 500mg)":"खुराक"}
-                    style={{flex:1,padding:"12px 14px",borderRadius:12,border:"1px solid rgba(255,248,240,.12)",
-                      background:"rgba(255,248,240,.06)",color:"#FFF8F0",fontSize:15,outline:"none"}}/>
-                  <input type="time" value={newMedTime} onChange={e=>setNewMedTime(e.target.value)}
-                    style={{padding:"12px 14px",borderRadius:12,border:"1px solid rgba(255,248,240,.12)",
-                      background:"rgba(255,248,240,.06)",color:"#FFF8F0",fontSize:15,outline:"none"}}/>
-                </div>
-                <div style={{display:"flex",gap:8}}>
-                  {["daily","weekly","monthly"].map(f=>(
-                    <button key={f} type="button" onClick={()=>setNewMedFreq(f)} style={{
-                      flex:1,padding:"10px",borderRadius:12,border:`1.5px solid ${newMedFreq===f?"#C68B59":"rgba(255,248,240,.12)"}`,
-                      background:newMedFreq===f?"rgba(198,139,89,.15)":"rgba(255,248,240,.04)",
-                      color:newMedFreq===f?"#C68B59":"rgba(255,248,240,.5)",fontSize:13,fontWeight:600,cursor:"pointer",
-                      textTransform:"capitalize",transition:"all .2s"
-                    }}>{f}</button>
-                  ))}
-                </div>
-                <button onClick={addMedication} style={{padding:"14px",borderRadius:14,border:"none",
-                  background:"linear-gradient(135deg,#C68B59,#8D6E63)",color:"#FFF8F0",fontSize:16,fontWeight:700,cursor:"pointer",
-                  opacity:newMedName.trim()?1:0.4}}>
-                  {lang==="en"?"+ Add Medication":"+ दवा जोड़ें"}
-                </button>
-              </div>
-            </div>
+            {/* Medications section removed — legacy-first pivot */}
 
             {/* Interests */}
             <div>
@@ -1927,7 +1686,7 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
   const [linkLoading, setLinkLoading] = useState(false);
   const [linkError, setLinkError] = useState("");
   const [linkSuccess, setLinkSuccess] = useState("");
-  const [notifPref, setNotifPref] = useState({emergency:true,medication:true,memories:true});
+  const [notifPref, setNotifPref] = useState({emergency:true,memories:true,connection:true});
   const [signingOut, setSigningOut] = useState(false);
 
   const handleLinkAccount = async () => {
@@ -1953,7 +1712,7 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
   const navItems=[
     {id:"home",   icon:<Home size={17}/>,      label:"Overview"},
     {id:"memories",icon:<Headphones size={17}/>,label:"Memories"},
-    {id:"health", icon:<Activity size={17}/>,  label:"Health"},
+    {id:"health", icon:<Activity size={17}/>,  label:"Daily Rhythm"},
     {id:"alerts", icon:<Bell size={17}/>,      label:"Alerts"},
     {id:"settings",icon:<Settings size={17}/>, label:"Settings"},
   ];
@@ -1965,12 +1724,10 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
     {label:"Activity Level",value:derivedStats.activityLevel.value, icon:Zap,         color:"#d97706", trend:derivedStats.activityLevel.trend},
   ];
 
-  // Derive alerts from recent health events
-  const alerts = healthEvents.slice(0,3).map(e => ({
-    text: e.event_type === "medication_taken"
-      ? `Medication taken: ${e.value?.medication_name || "Unknown"}`
-      : `${e.event_type.replace(/_/g," ")} recorded`,
-    type: e.event_type === "medication_taken" ? "success" : "info"
+  // Derive alerts from recent health events (exclude medication events)
+  const alerts = healthEvents.filter(e => e.event_type !== "medication_taken").slice(0,3).map(e => ({
+    text: `${e.event_type.replace(/_/g," ")} recorded`,
+    type: "info"
   }));
   if (alerts.length === 0) {
     alerts.push({text:"No recent events", type:"info"});
@@ -2011,8 +1768,8 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
     }}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"0 20px 18px",borderBottom:"1px solid rgba(6,78,59,0.07)"}}>
         <div>
-          <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:11,color:"rgba(6,78,59,0.35)",letterSpacing:"0.3em",fontWeight:300}}>ANVAYA</div>
-          <div className="gtxt" style={{fontFamily:"'Cormorant Garamond',serif",fontSize:24,fontWeight:600}}>Caregiver</div>
+           <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:11,color:"rgba(6,78,59,0.35)",letterSpacing:"0.3em",fontWeight:300}}>ANVAYA</div>
+           <div className="gtxt" style={{fontFamily:"'Cormorant Garamond',serif",fontSize:24,fontWeight:600}}>Care Partner</div>
         </div>
         {mobile&&<button onClick={()=>setDrawer(false)} style={{background:"transparent",border:"none",cursor:"pointer"}}><X size={18} color="#FFF8F0"/></button>}
       </div>
@@ -2082,11 +1839,11 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
             )}
             <div>
               <h1 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:isMobile?24:30,fontWeight:700,color:"#064E3B",lineHeight:1.2}}>
-                {nav==="settings"?"Settings":"Caregiver Dashboard"}
+                {nav==="settings"?"Settings":`${parentProfile?.full_name?.split(" ")[0] || "Amma"}'s Dashboard`}
               </h1>
               <p style={{color:"#6b6b6b",fontSize:12,marginTop:3}}>
                 {nav==="settings"?"Manage your account & preferences":<>
-                  Monitoring {parentProfile?.full_name || "Amma"}'s wellbeing
+                  Staying connected with {parentProfile?.full_name || "Amma"}
                   <span style={{color:"#9CA3AF",fontSize:10,marginLeft:8}}>
                     Updated {lastUpdated.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}
                   </span>
@@ -2180,8 +1937,8 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
               <div style={{fontSize:11,color:"#6b6b6b",marginBottom:12}}>Choose which notifications you receive</div>
               {[
                 {key:"emergency",label:"Emergency Alerts",desc:"Critical alerts when parent needs help",icon:<AlertTriangle size={16} color="#DC2626"/>},
-                {key:"medication",label:"Medication Updates",desc:"When medications are taken or missed",icon:<Pill size={16} color="#059669"/>},
                 {key:"memories",label:"New Memories",desc:"When a new memory is recorded",icon:<Headphones size={16} color="#B45309"/>},
+                {key:"connection",label:"Connection Updates",desc:"When parent is active or shares stories",icon:<MessageCircle size={16} color="#059669"/>},
               ].map(n=>(
                 <div key={n.key} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 0",borderBottom:"1px solid rgba(6,78,59,0.06)"}}>
                   <div style={{display:"flex",alignItems:"center",gap:10}}>
@@ -2343,53 +2100,48 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
               </div>
             </div>
 
-            {/* Medication Tracker */}
+            {/* Connection Pulse — replaced medication tracker */}
             <div className="gcard s6" style={{padding:20,marginBottom:14}}>
               <div style={{marginBottom:14}}>
-                <div style={{fontSize:13,fontWeight:700,color:"#1a1a1a"}}>Medication Tracker</div>
-                <div style={{fontSize:11,color:"#6b6b6b",marginTop:2}}>Today's medications</div>
+                <div style={{fontSize:13,fontWeight:700,color:"#1a1a1a"}}>Connection Pulse</div>
+                <div style={{fontSize:11,color:"#6b6b6b",marginTop:2}}>How {parentProfile?.full_name?.split(" ")[0] || "Amma"} is staying connected</div>
               </div>
-              {medications.length === 0 ? (
-                <p style={{fontSize:12,color:"#9CA3AF",fontStyle:"italic"}}>No medications configured</p>
-              ) : (
-                <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                  {medications.map(med => (
-                    <div key={med.id} style={{
-                      display:"flex",alignItems:"center",gap:10,padding:"10px 12px",
-                      background:med.taken_today?"rgba(5,150,105,0.06)":"rgba(255,255,255,0.6)",
-                      borderRadius:12,border:`1px solid ${med.taken_today?"rgba(5,150,105,0.15)":"rgba(6,78,59,0.08)"}`,
-                      cursor:"pointer",transition:"all .2s"
-                    }} onClick={() => toggleMedication(med.id, !med.taken_today)}>
-                      <div style={{
-                        width:22,height:22,borderRadius:6,flexShrink:0,
-                        border:med.taken_today?"none":"2px solid rgba(6,78,59,0.25)",
-                        background:med.taken_today?"#059669":"transparent",
-                        display:"flex",alignItems:"center",justifyContent:"center"
-                      }}>
-                        {med.taken_today && <Check size={13} color="#FFF8F0"/>}
-                      </div>
-                      <div style={{flex:1,minWidth:0}}>
-                        <div style={{fontSize:12,fontWeight:600,color:med.taken_today?"#059669":"#1a1a1a",
-                          textDecoration:med.taken_today?"line-through":"none"}}>{med.name}</div>
-                        <div style={{fontSize:10,color:"#9CA3AF"}}>{med.dose||""}{med.scheduled_time?` · ${med.scheduled_time}`:""}</div>
-                      </div>
-                      {med.taken_today && med.last_taken && (
-                        <span style={{fontSize:9,color:"#059669",fontWeight:500}}>
-                          {new Date(med.last_taken).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}
-                        </span>
-                      )}
-                    </div>
-                  ))}
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                <div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:"rgba(5,150,105,0.06)",borderRadius:12,border:"1px solid rgba(5,150,105,0.15)"}}>
+                  <span style={{fontSize:18}}>📖</span>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:12,fontWeight:600,color:"#064E3B"}}>{realMemories.length} Stories Shared</div>
+                    <div style={{fontSize:10,color:"#9CA3AF"}}>Total memories recorded</div>
+                  </div>
                 </div>
-              )}
+                <div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:"rgba(179,69,9,0.06)",borderRadius:12,border:"1px solid rgba(179,69,9,0.15)"}}>
+                  <span style={{fontSize:18}}>🎙️</span>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:12,fontWeight:600,color:"#B45309"}}>{(() => {
+                      const totalMin = Math.round(realMemories.reduce((s,m) => s + (m.duration_seconds || 0), 0) / 60);
+                      return `${totalMin} Minutes of Legacy`;
+                    })()}</div>
+                    <div style={{fontSize:10,color:"#9CA3AF"}}>Family history recorded this month</div>
+                  </div>
+                </div>
+                {realMemories.length > 0 && realMemories[0]?.emotional_tone && (
+                  <div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:"rgba(6,78,59,0.06)",borderRadius:12,border:"1px solid rgba(6,78,59,0.15)"}}>
+                    <span style={{fontSize:18}}>💛</span>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:12,fontWeight:600,color:"#064E3B"}}>{parentProfile?.full_name?.split(" ")[0] || "Amma"} is feeling {realMemories[0].emotional_tone}</div>
+                      <div style={{fontSize:10,color:"#9CA3AF"}}>Based on most recent story</div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Memory Archive */}
             <div className="s7">
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
                 <div>
-                  <h3 style={{fontSize:14,fontWeight:700,color:"#1a1a1a"}}>Memory Archive</h3>
-                  <p style={{fontSize:11,color:"#6b6b6b",marginTop:2}}>AI-summarized recordings with emotional context</p>
+                  <h3 style={{fontSize:14,fontWeight:700,color:"#1a1a1a"}}>{parentProfile?.full_name?.split(" ")[0] || "Amma"}'s Stories</h3>
+                  <p style={{fontSize:11,color:"#6b6b6b",marginTop:2}}>Memories and moments shared with love</p>
                 </div>
                 <button style={{fontSize:11,fontWeight:600,color:"#064E3B",border:"none",background:"transparent",cursor:"pointer",display:"flex",alignItems:"center",gap:3}}>
                   View all <ChevronRight size={12}/>
