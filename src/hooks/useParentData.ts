@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { computeStreak } from "./useStreak";
 
 interface ParentProfile {
   id: string;
@@ -243,6 +244,11 @@ export function useParentData(profileId: string | null) {
 
   const stats = deriveStats(healthEvents, memories);
 
+  // Compute parent's recording streak from loaded memories
+  const parentStreak = useMemo(() => {
+    const dates = memories.map(m => m.created_at).filter(Boolean) as string[];
+    return computeStreak(dates);
+  }, [memories]);
 
   // Fetch memory comments for all loaded memories
   const [memoryComments, setMemoryComments] = useState<Record<string, any[]>>({});
@@ -291,5 +297,5 @@ export function useParentData(profileId: string | null) {
     setMemoriesLastViewedAt(now);
   };
 
-  return { parentProfile, memories, healthEvents, stats, loading, lastUpdated, memoryComments, memoryReactions, unreadCount, unreadHearts, unreadComments, markMemoriesViewed };
+  return { parentProfile, memories, healthEvents, stats, loading, lastUpdated, memoryComments, memoryReactions, unreadCount, unreadHearts, unreadComments, markMemoriesViewed, parentStreak };
 }

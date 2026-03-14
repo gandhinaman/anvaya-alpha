@@ -11,6 +11,7 @@ import MemoryRecorder from "./sathi/MemoryRecorder";
 import MemoryLog from "./sathi/MemoryLog";
 import { supabase } from "@/integrations/supabase/client";
 import { useParentData } from "@/hooks/useParentData";
+import { useStreak } from "@/hooks/useStreak";
 
 // ─── RESPONSIVE HOOK ──────────────────────────────────────────────────────────
 function useWindowSize() {
@@ -356,6 +357,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
     supabase.from("profiles").select("full_name").eq("id",linkedUserId).maybeSingle()
       .then(({data})=>{ if(data?.full_name) setLinkedName(data.full_name); });
   },[linkedUserId]);
+  const { current: streakDays, longest: longestStreak, recordedToday: streakRecordedToday } = useStreak(userId);
   const [rec,setRec]=useState(false);
   const [overlay,setOverlay]=useState(false);
   const [overlayPhase,setOverlayPhase]=useState("ask"); // ask | alerting | confirmed
@@ -1134,6 +1136,35 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
           }}>
             {lang==="en"?"Record this story":"यह कहानी रिकॉर्ड करें"}
           </button>
+        </div>
+      )}
+
+      {/* ─── RECORDING STREAK ─── */}
+      {streakDays > 0 && voicePhase === "idle" && (
+        <div style={{margin:"0 16px 4px",padding:"14px 18px",
+          background:"rgba(255,248,240,.08)",border:"1.5px solid rgba(255,248,240,.12)",
+          borderRadius:20,animation:"fadeUp .6s ease .08s both",
+          display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <span style={{fontSize:28}}>🔥</span>
+            <div>
+              <div style={{color:"#FFF8F0",fontSize:22,fontWeight:800,lineHeight:1}}>
+                {streakDays}
+                <span style={{fontSize:13,fontWeight:500,color:"rgba(255,248,240,.55)",marginLeft:5}}>
+                  {streakDays===1?(lang==="en"?"day streak":"दिन का स्ट्रीक"):(lang==="en"?"day streak":"दिन का स्ट्रीक")}
+                </span>
+              </div>
+              <div style={{fontSize:11,color:"rgba(255,248,240,.4)",marginTop:2}}>
+                {streakRecordedToday
+                  ?(lang==="en"?"Recorded today ✓":"आज रिकॉर्ड किया ✓")
+                  :(lang==="en"?"Record today to keep it going!":"आज रिकॉर्ड करें!")}
+              </div>
+            </div>
+          </div>
+          <div style={{textAlign:"right"}}>
+            <div style={{fontSize:10,color:"rgba(255,248,240,.35)"}}>{lang==="en"?"Best":"सबसे अच्छा"}</div>
+            <div style={{fontSize:16,fontWeight:700,color:"#C68B59"}}>{longestStreak}</div>
+          </div>
         </div>
       )}
 
