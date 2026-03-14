@@ -291,5 +291,5 @@ export function useParentData(profileId: string | null) {
     setMemoriesLastViewedAt(now);
   };
 
-  return { parentProfile, memories, medications, healthEvents, stats, loading, lastUpdated, toggleMedication, memoryComments, memoryReactions, unreadCount, unreadHearts, unreadComments, markMemoriesViewed };
+  return { parentProfile, memories, healthEvents, stats, loading, lastUpdated, memoryComments, memoryReactions, unreadCount, unreadHearts, unreadComments, markMemoriesViewed };
 }

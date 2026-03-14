@@ -950,15 +950,6 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
       items.push({ text: `👁️ Visual Pattern Review — ${detail}`, type: "warning", category: "urgent", time: fmtAgo(e.recorded_at), priority: 0 });
     });
 
-    // Missed medications (not taken today)
-    medications.filter(m => !m.taken_today && m.scheduled_time).forEach(m => {
-      items.push({ text: `⏰ ${m.name} not yet taken (scheduled ${m.scheduled_time})`, type: "warning", category: "medication", time: "", priority: 1 });
-    });
-
-    // Medication events (actionable)
-    healthEvents.filter(e => e.event_type === "medication_taken").forEach(e => {
-      items.push({ text: `💊 Took ${e.value?.medication_name || "medication"}`, type: "success", category: "medication", time: fmtAgo(e.recorded_at), priority: 2 });
-    });
 
     // New memories (recordings)
     realMemories.slice(0, 5).forEach(m => {

@@ -679,10 +679,6 @@ export default function SathiChat({ open, onClose, lang = "en", userId, initialM
         )}
 
         {messages.map((msg, i) => {
-          // Detect medication-related assistant messages
-          const isMedMsg = msg.role === "assistant" && !streaming &&
-            /medicine|medication|दवा|गोली|tablet|pill|taken.*med|med.*remind|दवाइ/i.test(msg.content);
-
           return (
           <div
             key={i}

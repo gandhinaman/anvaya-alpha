@@ -57,9 +57,6 @@ Deno.serve(async (req) => {
           .select("full_name, age, health_issues, interests, location, language")
           .eq("id", userId).maybeSingle();
 
-        const { data: meds } = await supabase.from("medications")
-          .select("name, dose, scheduled_time, taken_today")
-          .eq("user_id", userId);
 
         if (profile || false) {
           let context = "\n\nUSER CONTEXT (use naturally, don't recite):";
