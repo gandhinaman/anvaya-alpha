@@ -3141,24 +3141,24 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
                   <div style={{
                     width: 38, height: 38, borderRadius: 12,
-                    background: "rgba(229,57,53,0.08)",
+                    background: "rgba(107,138,158,0.1)",
                     display: "flex", alignItems: "center", justifyContent: "center"
                   }}>
-                    <AlertTriangle size={18} color="#E53935" />
+                    <AlertTriangle size={18} color="#6B8A9E" />
                   </div>
                   <div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: "#3E2723" }}>Needs Attention</div>
-                    <div style={{ fontSize: 11, color: "#8D6E63" }}>Alerts that may need your response</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: "#3E2723" }}>Activity Anomalies</div>
+                    <div style={{ fontSize: 11, color: "#8D6E63" }}>Deviations from typical patterns</div>
                   </div>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {allAlerts.filter(a => a.type === "warning").slice(0, 4).map((a, i) => (
                     <div key={i} style={{
                       display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 14px",
-                      background: "rgba(229,57,53,0.03)", borderRadius: 14,
-                      border: "1px solid rgba(229,57,53,0.08)"
+                      background: "rgba(107,138,158,0.03)", borderRadius: 14,
+                      border: "1px solid rgba(107,138,158,0.1)"
                     }}>
-                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#E53935", marginTop: 6, flexShrink: 0 }} />
+                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#6B8A9E", marginTop: 6, flexShrink: 0 }} />
                       <div>
                         <p style={{ fontSize: 12.5, color: "#3E2723", lineHeight: 1.5, margin: 0, fontWeight: 500 }}>{a.text}</p>
                         {a.time && <span style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2, display: "block" }}>{a.time}</span>}
