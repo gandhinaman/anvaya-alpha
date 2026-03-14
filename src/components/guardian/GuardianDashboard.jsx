@@ -2080,6 +2080,98 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               </div>
             </div>
 
+            {/* ── Questions for Parent ── */}
+            {parentProfile && (
+              <div style={{
+                background: "rgba(255,255,255,0.8)", backdropFilter: "blur(16px)",
+                borderRadius: 24, padding: isMobile ? "20px" : "24px 28px",
+                border: "1px solid rgba(198,139,89,0.12)",
+                boxShadow: "0 6px 28px rgba(62,39,35,0.05)",
+                marginBottom: 22, animation: "fadeUp .5s ease .25s both"
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+                  <div style={{
+                    width: 38, height: 38, borderRadius: 12,
+                    background: "linear-gradient(135deg, #C68B59, #8D6E63)",
+                    display: "flex", alignItems: "center", justifyContent: "center"
+                  }}>
+                    <HelpCircle size={18} color="#FFF8F0" />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: "#3E2723" }}>Questions for {parentProfile?.full_name?.split(" ")[0] || "Amma"}</div>
+                    <div style={{ fontSize: 11, color: "#8D6E63" }}>These will be asked during their next memory session</div>
+                  </div>
+                </div>
+
+                {/* Add new question */}
+                <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+                  <input
+                    value={newQuestion}
+                    onChange={e => setNewQuestion(e.target.value)}
+                    placeholder="Ask something you'd love to know…"
+                    onKeyDown={e => e.key === "Enter" && addQuestion()}
+                    style={{
+                      flex: 1, padding: "11px 16px", borderRadius: 14,
+                      border: "1px solid rgba(93,64,55,0.12)", outline: "none",
+                      fontSize: 13, color: "#3E2723", background: "#fff",
+                      fontFamily: "'DM Sans', sans-serif"
+                    }}
+                  />
+                  <button onClick={addQuestion} disabled={questionSending || !newQuestion.trim()} style={{
+                    width: 44, height: 44, borderRadius: 14, border: "none", cursor: "pointer",
+                    background: !newQuestion.trim() ? "rgba(93,64,55,0.08)" : "linear-gradient(135deg, #C68B59, #8D6E63)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    flexShrink: 0, opacity: questionSending ? 0.5 : 1,
+                    boxShadow: newQuestion.trim() ? "0 2px 8px rgba(198,139,89,0.3)" : "none",
+                    transition: "all .2s"
+                  }}>
+                    {questionSending ? <Loader2 size={16} color="#FFF8F0" style={{ animation: "spin 1s linear infinite" }} /> : <Plus size={17} color={newQuestion.trim() ? "#FFF8F0" : "#9CA3AF"} />}
+                  </button>
+                </div>
+
+                {/* Queued questions */}
+                {questions.length === 0 ? (
+                  <div style={{ padding: "16px 0", textAlign: "center" }}>
+                    <p style={{ fontSize: 12, color: "#9CA3AF", fontStyle: "italic" }}>
+                      No questions queued yet. Add one above and it will be asked next time {parentProfile?.full_name?.split(" ")[0] || "Amma"} records a memory.
+                    </p>
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {questions.map((q, qi) => (
+                      <div key={q.id} style={{
+                        display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 14px",
+                        background: q.used ? "rgba(76,175,80,0.04)" : "rgba(198,139,89,0.04)",
+                        borderRadius: 14,
+                        border: `1px solid ${q.used ? "rgba(76,175,80,0.12)" : "rgba(198,139,89,0.1)"}`,
+                      }}>
+                        <div style={{
+                          width: 22, height: 22, borderRadius: 6, flexShrink: 0, marginTop: 1,
+                          background: q.used ? "rgba(76,175,80,0.1)" : "rgba(198,139,89,0.1)",
+                          display: "flex", alignItems: "center", justifyContent: "center"
+                        }}>
+                          {q.used ? <Check size={12} color="#4CAF50" /> : <HelpCircle size={12} color="#C68B59" />}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <p style={{ fontSize: 13, color: "#3E2723", margin: 0, lineHeight: 1.4, fontWeight: 500 }}>"{q.question}"</p>
+                          <span style={{ fontSize: 10, color: q.used ? "#4CAF50" : "#9CA3AF", marginTop: 3, display: "block" }}>
+                            {q.used ? "✓ Asked" : "In queue"}
+                          </span>
+                        </div>
+                        {!q.used && (
+                          <button onClick={() => removeQuestion(q.id)} style={{
+                            background: "transparent", border: "none", cursor: "pointer", padding: 4,
+                            color: "#9CA3AF", opacity: 0.6
+                          }} title="Remove question">
+                            <X size={14} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* ── Recent Memories Feed ── */}
             <div className="s4" style={{ marginBottom: 22 }}>
