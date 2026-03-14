@@ -1115,7 +1115,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
       )}
 
       {/* Main content */}
-      <div className="scr" style={{ flex: 1, overflowY: "auto", padding: isMobile ? "14px 14px 80px" : "20px 24px" }}>
+      <div ref={mainContentRef} className="scr" style={{ flex: 1, overflowY: "auto", padding: isMobile ? "14px 14px 80px" : "20px 24px" }}>
 
         {/* Header */}
         <div className="s1" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, flexWrap: "wrap", gap: 10 }}>
