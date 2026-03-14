@@ -3200,6 +3200,86 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
         )}
       </div>
 
+      {/* Disclaimer Learn More Modal */}
+      {showDisclaimerModal && (
+        <>
+          <div className="fadein" onClick={() => setShowDisclaimerModal(false)} style={{
+            position: "fixed", inset: 0, background: "rgba(0,0,0,.4)", zIndex: 100,
+            backdropFilter: "blur(4px)"
+          }} />
+          <div className="fadein" style={{
+            position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)",
+            zIndex: 101, width: isMobile ? "92%" : 480,
+            background: "#FFF8F0", borderRadius: 24, padding: isMobile ? 24 : 32,
+            boxShadow: "0 16px 48px rgba(62,39,35,0.2)", border: "1px solid rgba(93,64,55,0.1)",
+            maxHeight: "80vh", overflowY: "auto"
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: 12,
+                  background: "rgba(107,138,158,0.1)",
+                  display: "flex", alignItems: "center", justifyContent: "center"
+                }}>
+                  <Info size={20} color="#5B7FA5" />
+                </div>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: "#3E2723" }}>About Anvaya Observations</div>
+                  <div style={{ fontSize: 11, color: "#8D6E63", marginTop: 2 }}>How our system works</div>
+                </div>
+              </div>
+              <button onClick={() => setShowDisclaimerModal(false)} style={{
+                background: "rgba(93,64,55,0.06)", border: "none", borderRadius: 8,
+                width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer"
+              }}>
+                <X size={16} color="#5D4037" />
+              </button>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#3E2723", marginBottom: 6 }}>What Anvaya tracks</div>
+                <p style={{ fontSize: 12, color: "#555", lineHeight: 1.7, margin: 0 }}>
+                  Anvaya observes <strong>behavioral trends</strong> — not biological vitals. Our system analyzes patterns in voice recordings and video interactions to provide objective observations about communication patterns, acoustic characteristics, facial movement patterns, and interaction engagement.
+                </p>
+              </div>
+
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#3E2723", marginBottom: 6 }}>What Anvaya does NOT do</div>
+                <p style={{ fontSize: 12, color: "#555", lineHeight: 1.7, margin: 0 }}>
+                  Anvaya does not measure blood pressure, heart rate, oxygen levels, or any clinical biomarkers. It does not diagnose medical conditions, prescribe treatments, or replace professional medical monitoring. Scores and labels represent AI-observed patterns compared to your family member's own baseline — not clinical standards.
+                </p>
+              </div>
+
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#3E2723", marginBottom: 6 }}>How to use these observations</div>
+                <p style={{ fontSize: 12, color: "#555", lineHeight: 1.7, margin: 0 }}>
+                  Use Anvaya's observations as conversation starters and awareness tools. If you notice sustained changes in patterns, consider scheduling a check-in with your family member or consulting a healthcare professional for further evaluation.
+                </p>
+              </div>
+
+              <div style={{
+                padding: "14px 16px", borderRadius: 14,
+                background: "rgba(107,138,158,0.06)", border: "1px solid rgba(107,138,158,0.1)"
+              }}>
+                <p style={{ fontSize: 11, color: "#5B7FA5", margin: 0, lineHeight: 1.6, fontWeight: 500 }}>
+                  Anvaya is a companionship and wellness observation tool. This application does not provide medical advice, diagnoses, or treatment. Insights are based on automated analysis of visual and audio patterns and should not be used as a substitute for professional medical monitoring or clinical judgment. Anvaya is not a regulated medical device.
+                </p>
+              </div>
+            </div>
+
+            <button onClick={() => setShowDisclaimerModal(false)} style={{
+              width: "100%", marginTop: 20, padding: "12px 20px", borderRadius: 14,
+              border: "none", cursor: "pointer",
+              background: "linear-gradient(135deg, #5D4037, #8D6E63)", color: "#FFF8F0",
+              fontSize: 13, fontWeight: 600, boxShadow: "0 4px 16px rgba(93,64,55,0.2)"
+            }}>
+              I Understand
+            </button>
+          </div>
+        </>
+      )}
+
       {/* Mobile bottom tab bar */}
       {isMobile && (
         <div style={{
