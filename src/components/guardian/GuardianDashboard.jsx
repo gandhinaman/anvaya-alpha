@@ -3085,7 +3085,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               )}
             </div>
 
-            {/* ── Medication Tracker ── */}
+            {/* ── Connection Pulse ── */}
             <div className="s5" style={{
               background: "rgba(255,255,255,0.8)", backdropFilter: "blur(16px)",
               borderRadius: 24, padding: isMobile ? "20px" : "24px 28px",
@@ -3099,48 +3099,35 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                   background: "linear-gradient(135deg, #8D6E63, #5D4037)",
                   display: "flex", alignItems: "center", justifyContent: "center"
                 }}>
-                  <BookOpen size={18} color="#FFF8F0" />
+                  <Heart size={18} color="#FFF8F0" />
                 </div>
                 <div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: "#3E2723" }}>Medication Tracker</div>
-                  <div style={{ fontSize: 11, color: "#8D6E63" }}>Today's medications</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: "#3E2723" }}>Connection Pulse</div>
+                  <div style={{ fontSize: 11, color: "#8D6E63" }}>Staying connected with {parentName}</div>
                 </div>
               </div>
-              {medications.length === 0 ? (
-                <p style={{ fontSize: 13, color: "#8D6E63", fontStyle: "italic" }}>No medications configured yet</p>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {medications.map(med => (
-                    <div key={med.id} style={{
-                      display: "flex", alignItems: "center", gap: 12, padding: "12px 16px",
-                      background: med.taken_today ? "rgba(76,175,80,0.05)" : "rgba(255,248,240,0.6)",
-                      borderRadius: 16, border: `1px solid ${med.taken_today ? "rgba(76,175,80,0.15)" : "rgba(93,64,55,0.08)"}`,
-                      cursor: "pointer", transition: "all .2s"
-                    }} onClick={() => toggleMedication(med.id, !med.taken_today)}>
-                      <div style={{
-                        width: 26, height: 26, borderRadius: 8, flexShrink: 0,
-                        border: med.taken_today ? "none" : "2px solid rgba(93,64,55,0.2)",
-                        background: med.taken_today ? "#4CAF50" : "transparent",
-                        display: "flex", alignItems: "center", justifyContent: "center"
-                      }}>
-                        {med.taken_today && <Check size={15} color="#fff" />}
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{
-                          fontSize: 13, fontWeight: 600, color: med.taken_today ? "#4CAF50" : "#3E2723",
-                          textDecoration: med.taken_today ? "line-through" : "none"
-                        }}>{med.name}</div>
-                        <div style={{ fontSize: 11, color: "#9CA3AF" }}>{med.dose || ""}{med.scheduled_time ? ` · ${med.scheduled_time}` : ""}</div>
-                      </div>
-                      {med.taken_today && med.last_taken && (
-                        <span style={{ fontSize: 10, color: "#4CAF50", fontWeight: 500 }}>
-                          {new Date(med.last_taken).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                        </span>
-                      )}
-                    </div>
-                  ))}
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 12, padding: "12px 16px",
+                  background: "rgba(255,248,240,0.6)", borderRadius: 16,
+                  border: "1px solid rgba(93,64,55,0.08)"
+                }}>
+                  <BookOpen size={16} color="#8D6E63" />
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "#3E2723" }}>
+                    {realMemories.length} {realMemories.length === 1 ? "Story" : "Stories"} Shared
+                  </span>
                 </div>
-              )}
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 12, padding: "12px 16px",
+                  background: "rgba(255,248,240,0.6)", borderRadius: 16,
+                  border: "1px solid rgba(93,64,55,0.08)"
+                }}>
+                  <Mic size={16} color="#8D6E63" />
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "#3E2723" }}>
+                    {Math.round((realMemories.reduce((sum, m) => sum + (m.duration_seconds || 0), 0)) / 60)} min of legacy recorded
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* ── Recent Alerts (compact) ── */}
