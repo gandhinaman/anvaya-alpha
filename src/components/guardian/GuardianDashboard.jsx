@@ -2176,9 +2176,9 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                                       {curr != null ? `${curr}%` : "—"}
                                     </div>
                                     {diff != null && (
-                                      <div style={{
+                                       <div style={{
                                         fontSize: 10, fontWeight: 600, marginTop: 2,
-                                        color: diff > 0 ? "#4CAF50" : diff < 0 ? "#E53935" : "#9CA3AF"
+                                        color: diff > 0 ? "#5D8A6B" : diff < 0 ? "#6B8A9E" : "#9CA3AF"
                                       }}>
                                         {diff > 0 ? `+${diff}` : diff < 0 ? `${diff}` : "—"}
                                       </div>
