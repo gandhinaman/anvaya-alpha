@@ -21,14 +21,6 @@ interface Memory {
   prompt_question: string | null;
 }
 
-interface Medication {
-  id: string;
-  name: string;
-  dose: string | null;
-  scheduled_time: string | null;
-  taken_today: boolean | null;
-  last_taken: string | null;
-}
 
 interface HealthEvent {
   id: string;
