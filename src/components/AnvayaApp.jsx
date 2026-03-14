@@ -1937,8 +1937,8 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
               <div style={{fontSize:11,color:"#6b6b6b",marginBottom:12}}>Choose which notifications you receive</div>
               {[
                 {key:"emergency",label:"Emergency Alerts",desc:"Critical alerts when parent needs help",icon:<AlertTriangle size={16} color="#DC2626"/>},
-                {key:"medication",label:"Medication Updates",desc:"When medications are taken or missed",icon:<Pill size={16} color="#059669"/>},
                 {key:"memories",label:"New Memories",desc:"When a new memory is recorded",icon:<Headphones size={16} color="#B45309"/>},
+                {key:"connection",label:"Connection Updates",desc:"When parent is active or shares stories",icon:<MessageCircle size={16} color="#059669"/>},
               ].map(n=>(
                 <div key={n.key} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 0",borderBottom:"1px solid rgba(6,78,59,0.06)"}}>
                   <div style={{display:"flex",alignItems:"center",gap:10}}>
