@@ -111,6 +111,13 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
   }, [open]);
 
   const shufflePrompt = () => {
+    // If currently showing a caregiver question, skip to regular prompts
+    if (caregiverQuestion) {
+      setCaregiverQuestion(null);
+      const pair = MEMORY_PROMPTS[promptIndex % MEMORY_PROMPTS.length];
+      speakPrompt(lang === "hi" ? pair.hi : pair.en);
+      return;
+    }
     const newIndex = getNextPromptIndex(promptIndex);
     setPromptIndex(newIndex);
     const pair = MEMORY_PROMPTS[newIndex];
