@@ -2154,8 +2154,8 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                       animation: `fadeUp .5s ease ${.2 + i * .1}s both`
                     }}>
                       {/* Memory header */}
-                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 12 }}>
-                        <div style={{ flex: 1 }}>
+                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 14, marginBottom: 12 }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
                           {m.emotionalTone && (
                             <span style={{
                               fontSize: 10, fontWeight: 600, padding: "3px 10px", borderRadius: 100,
@@ -2171,6 +2171,29 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                             <span style={{ fontSize: 11, color: "#8D6E63" }}>{m.duration}</span>
                           </div>
                         </div>
+                        {/* Video thumbnail */}
+                        {m.audioUrl?.includes("/video_") && (
+                          <div style={{
+                            width: 72, height: 72, borderRadius: 14, overflow: "hidden",
+                            flexShrink: 0, position: "relative",
+                            background: "#1a1a1a", border: "1px solid rgba(93,64,55,0.12)"
+                          }}>
+                            <video
+                              src={m.audioUrl}
+                              muted
+                              preload="metadata"
+                              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                              onLoadedData={e => { e.target.currentTime = 1; }}
+                            />
+                            <div style={{
+                              position: "absolute", inset: 0, display: "flex",
+                              alignItems: "center", justifyContent: "center",
+                              background: "rgba(0,0,0,0.25)"
+                            }}>
+                              <Play size={18} color="#fff" fill="#fff" style={{ opacity: 0.9 }} />
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       {/* Summary */}
