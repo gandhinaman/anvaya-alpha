@@ -2107,6 +2107,14 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                                   <div style={{ fontSize: 12, fontWeight: 600, color: "#3E2723" }}>{marker.label}</div>
                                   <div style={{ fontSize: 10, color: "#9CA3AF" }}>{marker.desc}</div>
                                 </div>
+                                {marker.infoNote && (
+                                  <div title={marker.infoNote} style={{
+                                    width: 16, height: 16, borderRadius: "50%", cursor: "help",
+                                    background: "rgba(93,64,55,0.06)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+                                  }}>
+                                    <HelpCircle size={9} color="#9CA3AF" />
+                                  </div>
+                                )}
                               </div>
                             </div>
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
