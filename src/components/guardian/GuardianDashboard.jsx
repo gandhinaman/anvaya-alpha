@@ -1917,6 +1917,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                             onDelete={m.id ? () => deleteMemory(m.id) : null}
                             deleting={deletingMemId === m.id}
                             onToggleHeart={handleToggleHeart}
+                            onReact={handleOpenReaction}
                           />
                           {/* Add to collection button */}
                           {m.id && collections.length > 0 && (
