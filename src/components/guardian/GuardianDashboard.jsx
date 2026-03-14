@@ -4,7 +4,7 @@ import {
   Home, Bell, Settings, ChevronRight, ChevronDown, Play, Pause,
   User, LogOut, Headphones, Brain, Check, Menu, X,
   TrendingUp, Zap, PhoneOff, AlertTriangle, ShieldCheck,
-  Loader2, Link2, Copy, Search, Trash2, Eye, Scan, Hand
+  Loader2, Link2, Copy, Search, Trash2, Eye, Scan, Hand, ArrowUpRight
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useParentData } from "@/hooks/useParentData";
@@ -1892,21 +1892,25 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                       icon: "👁️"
                     },
                   ].map((item, idx) => (
-                    <div key={idx} style={{
+                    <div key={idx} onClick={() => setNav("health")} style={{
                       display: "flex", alignItems: "center", justifyContent: "space-between",
                       padding: "10px 14px", borderRadius: 14,
                       background: item.status.bg,
-                      border: `1px solid ${item.status.color}18`
+                      border: `1px solid ${item.status.color}18`,
+                      cursor: "pointer", transition: "all .2s"
                     }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <span style={{ fontSize: 18 }}>{item.icon}</span>
                         <span style={{ fontSize: 13, fontWeight: 500, color: "#3E2723" }}>{item.label}</span>
                       </div>
-                      <span style={{
-                        fontSize: 12, fontWeight: 600, color: item.status.color,
-                        padding: "3px 12px", borderRadius: 100,
-                        background: `${item.status.color}10`
-                      }}>{item.status.text}</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <span style={{
+                          fontSize: 12, fontWeight: 600, color: item.status.color,
+                          padding: "3px 12px", borderRadius: 100,
+                          background: `${item.status.color}10`
+                        }}>{item.status.text}</span>
+                        <ArrowUpRight size={13} color="#9CA3AF" />
+                      </div>
                     </div>
                   ))}
                 </div>
