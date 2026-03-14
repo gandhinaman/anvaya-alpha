@@ -2544,77 +2544,74 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {[
                     {
-                      label: "Vocal Strength",
+                      label: "Acoustic Volume",
                       status: (() => {
                         const v = derivedStats.vocalEnergy.value;
                         const num = parseInt(v);
                         if (isNaN(num)) return { text: v || "No data yet", color: "#8D6E63", bg: "rgba(141,110,99,0.08)" };
-                        if (num >= 70) return { text: "Strong & Clear", color: "#4CAF50", bg: "rgba(76,175,80,0.08)" };
-                        if (num >= 40) return { text: "Moderate", color: "#FF9800", bg: "rgba(255,152,0,0.08)" };
-                        return { text: "Needs Attention", color: "#E53935", bg: "rgba(229,57,53,0.08)" };
+                        if (num >= 70) return { text: "Typical", color: "#5D8A6B", bg: "rgba(93,138,107,0.08)" };
+                        if (num >= 40) return { text: "Moderate", color: "#6B8A9E", bg: "rgba(107,138,158,0.08)" };
+                        return { text: "Below typical", color: "#8D8D8D", bg: "rgba(141,141,141,0.08)" };
                       })(),
                       icon: "🎙️"
                     },
                     {
-                      label: "Medication Today",
+                      label: "Medication Adherence",
                       status: (() => {
                         const taken = medications.filter(m => m.taken_today).length;
                         const total = medications.length;
                         if (total === 0) return { text: "None configured", color: "#8D6E63", bg: "rgba(141,110,99,0.08)" };
-                        if (taken === total) return { text: "All taken ✓", color: "#4CAF50", bg: "rgba(76,175,80,0.08)" };
-                        if (taken > 0) return { text: `${taken}/${total} taken`, color: "#FF9800", bg: "rgba(255,152,0,0.08)" };
-                        return { text: "Not yet taken", color: "#E53935", bg: "rgba(229,57,53,0.08)" };
+                        if (taken === total) return { text: "All logged ✓", color: "#5D8A6B", bg: "rgba(93,138,107,0.08)" };
+                        if (taken > 0) return { text: `${taken}/${total} logged`, color: "#6B8A9E", bg: "rgba(107,138,158,0.08)" };
+                        return { text: "Not yet logged", color: "#8D8D8D", bg: "rgba(141,141,141,0.08)" };
                       })(),
                       icon: "💊"
                     },
                     {
-                      label: "Emotional State",
+                      label: "Observed Sentiment",
                       status: (() => {
                         const trend = derivedStats.emotionalTone.trend;
                         const v = derivedStats.emotionalTone.value;
                         const num = parseInt(v);
                         if (isNaN(num) && !trend) return { text: "No data yet", color: "#8D6E63", bg: "rgba(141,110,99,0.08)" };
-                        if (num >= 60 || /joy|happy|peace|calm/i.test(trend)) return { text: trend || "Positive", color: "#4CAF50", bg: "rgba(76,175,80,0.08)" };
-                        if (num >= 35 || /nostalg|neutral/i.test(trend)) return { text: trend || "Stable", color: "#FF9800", bg: "rgba(255,152,0,0.08)" };
-                        return { text: trend || "May need support", color: "#E53935", bg: "rgba(229,57,53,0.08)" };
+                        if (num >= 60 || /joy|happy|peace|calm/i.test(trend)) return { text: trend || "Positive tone", color: "#5D8A6B", bg: "rgba(93,138,107,0.08)" };
+                        if (num >= 35 || /nostalg|neutral/i.test(trend)) return { text: trend || "Steady", color: "#6B8A9E", bg: "rgba(107,138,158,0.08)" };
+                        return { text: trend || "Subdued tone", color: "#8D8D8D", bg: "rgba(141,141,141,0.08)" };
                       })(),
                       icon: "💛"
                     },
                     {
-                      label: "Cognitive Clarity",
+                      label: "Communication Clarity",
                       status: (() => {
                         const v = derivedStats.cognitiveClarity.value;
                         const num = parseInt(v);
                         if (isNaN(num)) return { text: v || "No data yet", color: "#8D6E63", bg: "rgba(141,110,99,0.08)" };
-                        if (num >= 70) return { text: "Sharp", color: "#4CAF50", bg: "rgba(76,175,80,0.08)" };
-                        if (num >= 45) return { text: "Normal variation", color: "#FF9800", bg: "rgba(255,152,0,0.08)" };
-                        return { text: "Worth checking in", color: "#E53935", bg: "rgba(229,57,53,0.08)" };
+                        if (num >= 70) return { text: "Typical", color: "#5D8A6B", bg: "rgba(93,138,107,0.08)" };
+                        if (num >= 45) return { text: "Normal variation", color: "#6B8A9E", bg: "rgba(107,138,158,0.08)" };
+                        return { text: "Below typical", color: "#8D8D8D", bg: "rgba(141,141,141,0.08)" };
                       })(),
                       icon: "🧠"
                     },
-                    // Visual Health / Physical Appearance summary
                     {
-                      label: "Physical Appearance",
+                      label: "Visual Patterns",
                       status: (() => {
                         const name = parentProfile?.full_name?.split(" ")[0] || "Amma";
                         const visualEvents = healthEvents.filter(e => e.event_type === "visual_analysis");
                         if (visualEvents.length === 0) return { text: "No video data", color: "#8D6E63", bg: "rgba(141,110,99,0.08)" };
                         const latest = visualEvents[0]?.value;
                         if (!latest) return { text: "No video data", color: "#8D6E63", bg: "rgba(141,110,99,0.08)" };
-                        if (latest.priority_review) return { text: "Review needed", color: "#E53935", bg: "rgba(229,57,53,0.08)" };
-                        // Check key markers
+                        if (latest.priority_review) return { text: "Deviation noted", color: "#6B8A9E", bg: "rgba(107,138,158,0.08)" };
                         const symScore = latest.facial_symmetry?.score;
                         const skinScore = latest.skin_pallor?.score;
                         const eyeScore = latest.eye_engagement?.score;
                         const avgScore = [symScore, skinScore, eyeScore].filter(s => s != null);
                         const avg = avgScore.length > 0 ? avgScore.reduce((a, b) => a + b, 0) / avgScore.length : null;
-                        if (avg != null && avg >= 75) return { text: `${name} looks bright & alert`, color: "#4CAF50", bg: "rgba(76,175,80,0.08)" };
-                        if (avg != null && avg >= 50) return { text: "Normal appearance", color: "#FF9800", bg: "rgba(255,152,0,0.08)" };
-                        if (avg != null) return { text: "Worth a closer look", color: "#E53935", bg: "rgba(229,57,53,0.08)" };
-                        // Fallback to expression
-                        if (latest.facial_expression === "happy" || latest.facial_expression === "calm") return { text: `${name} looks well`, color: "#4CAF50", bg: "rgba(76,175,80,0.08)" };
-                        if (latest.facial_expression === "distressed" || latest.facial_expression === "pain") return { text: "May need attention", color: "#E53935", bg: "rgba(229,57,53,0.08)" };
-                        return { text: "Normal", color: "#8D6E63", bg: "rgba(141,110,99,0.08)" };
+                        if (avg != null && avg >= 75) return { text: "Typical patterns", color: "#5D8A6B", bg: "rgba(93,138,107,0.08)" };
+                        if (avg != null && avg >= 50) return { text: "Within range", color: "#6B8A9E", bg: "rgba(107,138,158,0.08)" };
+                        if (avg != null) return { text: "Variation noted", color: "#8D8D8D", bg: "rgba(141,141,141,0.08)" };
+                        if (latest.facial_expression === "happy" || latest.facial_expression === "calm") return { text: "Typical", color: "#5D8A6B", bg: "rgba(93,138,107,0.08)" };
+                        if (latest.facial_expression === "distressed" || latest.facial_expression === "pain") return { text: "Variation noted", color: "#8D8D8D", bg: "rgba(141,141,141,0.08)" };
+                        return { text: "Typical", color: "#8D6E63", bg: "rgba(141,110,99,0.08)" };
                       })(),
                       icon: "👁️"
                     },
