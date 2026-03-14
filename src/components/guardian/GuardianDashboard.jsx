@@ -1946,7 +1946,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
           <div className="s2">
             {/* Section header */}
             <div style={{ marginBottom: 18 }}>
-            <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 22, fontWeight: 700, color: "#3E2723", margin: 0 }}>Daily Observations</h2>
+            <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 22, fontWeight: 700, color: "#3E2723", margin: 0 }}>{parentProfile?.full_name?.split(" ")[0] || "Amma"}'s Daily Pulse</h2>
               <p style={{ fontSize: 12, color: "#8D6E63", marginTop: 4 }}>Behavioral indicators, visual patterns, trends & medication logs</p>
             </div>
 
