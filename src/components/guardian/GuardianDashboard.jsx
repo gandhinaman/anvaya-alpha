@@ -1308,7 +1308,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a", marginBottom: 4 }}>Notification Preferences</div>
               <div style={{ fontSize: 11, color: "#6b6b6b", marginBottom: 12 }}>Choose which notifications you receive</div>
               {[
-                 { key: "emergency", label: "Emergency Alerts", desc: "Critical alerts when parent needs help", icon: <AlertTriangle size={16} color="#DC2626" /> },
+                 { key: "emergency", label: "Emergency Alerts", desc: "Critical alerts when your parent needs help", icon: <AlertTriangle size={16} color="#DC2626" /> },
                  { key: "medication", label: "Medication Updates", desc: "When medications are taken or missed", icon: <Pill size={16} color="#8D6E63" /> },
                  { key: "memories", label: "New Memories", desc: "When a new memory is recorded", icon: <Headphones size={16} color="#C68B59" /> },
               ].map(n => (
