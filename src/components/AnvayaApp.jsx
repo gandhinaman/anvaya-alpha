@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import {
-  Phone, Mic, MessageCircle, Heart, Activity, Pill,
+  Phone, Mic, MessageCircle, Heart, Activity,
   Home, Bell, Settings, ChevronRight, Play, Pause, BookOpen,
   Circle, User, LogOut, Headphones, Brain, Check, Menu, X,
   TrendingUp, Zap, BarChart2, PhoneOff, AlertTriangle, ShieldCheck,
-  Loader2, Link2, BellRing, Copy, Send, Flame
+  Loader2, Link2, BellRing, Copy, Send, Sparkles
 } from "lucide-react";
 import SathiChat from "./sathi/SathiChat";
 import MemoryRecorder from "./sathi/MemoryRecorder";
