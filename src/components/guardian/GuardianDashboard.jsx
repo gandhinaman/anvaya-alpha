@@ -1186,8 +1186,8 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
           <div style={{ display: "flex", flexDirection: "column", gap: 14, maxWidth: 500 }}>
             {/* My Profile */}
             <div className="gcard" style={{ padding: 20 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a", marginBottom: 4 }}>My Profile</div>
-              <div style={{ fontSize: 11, color: "#6b6b6b", marginBottom: 14 }}>Your contact details — visible to your linked parent</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a", marginBottom: 4 }}>My Partner Profile</div>
+              <div style={{ fontSize: 11, color: "#6b6b6b", marginBottom: 14 }}>Your contact details — visible to {parentProfile?.full_name?.split(" ")[0] || "your parent"}</div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 <div>
