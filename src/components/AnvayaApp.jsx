@@ -416,141 +416,19 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
     age: null, health_issues: [], language: "en", interests: [], location: "",
     full_name: "", linked_user_id: null
   });
-  const [profileMeds, setProfileMeds] = useState([]);
-  const [newMedName, setNewMedName] = useState("");
-  const [newMedDose, setNewMedDose] = useState("");
-  const [newMedTime, setNewMedTime] = useState("");
-  const [newMedFreq, setNewMedFreq] = useState("daily");
-  const [newInterest, setNewInterest] = useState("");
-  const [newIllness, setNewIllness] = useState("");
-  const [illnessDropOpen, setIllnessDropOpen] = useState(false);
-  const [locationDropOpen, setLocationDropOpen] = useState(false);
-  const [profileSaving, setProfileSaving] = useState(false);
-
-  // Load meds always on mount + profile data when overlay opens
-  // Auto-reset taken_today based on frequency and last_taken
-  const shouldResetMed = (med) => {
-    if (!med.taken_today || !med.last_taken) return false;
-    const lastTaken = new Date(med.last_taken);
-    const now = new Date();
-    const freq = med.frequency || "daily";
-    if (freq === "daily") {
-      return lastTaken.toDateString() !== now.toDateString();
-    } else if (freq === "weekly") {
-      const diffMs = now - lastTaken;
-      const diffDays = diffMs / (1000 * 60 * 60 * 24);
-      return diffDays >= 7;
-    } else if (freq === "monthly") {
-      return now.getMonth() !== lastTaken.getMonth() || now.getFullYear() !== lastTaken.getFullYear();
-    }
-    return false;
-  };
-
+  // Memory of the Day prompt
+  const [memoryOfDay, setMemoryOfDay] = useState(null);
   useEffect(() => {
-    if (!userId) return;
-    const loadMeds = async () => {
-      const { data: meds } = await supabase.from("medications").select("*").eq("user_id", userId);
-      if (!meds) return;
-      // Reset any meds whose reminder period has elapsed
-      const toReset = meds.filter(shouldResetMed);
-      if (toReset.length > 0) {
-        await Promise.all(toReset.map(m =>
-          supabase.from("medications").update({ taken_today: false }).eq("id", m.id)
-        ));
-        setProfileMeds(meds.map(m => toReset.find(r => r.id === m.id) ? { ...m, taken_today: false } : m));
-      } else {
-        setProfileMeds(meds);
-      }
+    const loadPrompt = async () => {
+      try {
+        const { MEMORY_PROMPTS } = await import("@/lib/memoryPrompts");
+        const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+        const idx = dayOfYear % MEMORY_PROMPTS.length;
+        setMemoryOfDay(MEMORY_PROMPTS[idx]);
+      } catch {}
     };
-    loadMeds();
-  }, [userId]);
-
-  useEffect(() => {
-    if (!userId || profileOpen === false) return;
-    const load = async () => {
-      const { data: p } = await supabase.from("profiles")
-        .select("age, health_issues, language, interests, location, full_name, linked_user_id")
-        .eq("id", userId).maybeSingle();
-      if (p) setProfileData({
-        age: p.age, health_issues: p.health_issues || [], language: p.language || "en",
-        interests: p.interests || [], location: p.location || "", full_name: p.full_name || "",
-        linked_user_id: p.linked_user_id
-      });
-      const { data: meds } = await supabase.from("medications").select("*").eq("user_id", userId);
-      if (meds) setProfileMeds(meds);
-    };
-    load();
-  }, [userId, profileOpen]);
-
-  // Medication streak calculation
-  const [medStreak, setMedStreak] = useState(0);
-  useEffect(() => {
-    if (!userId || profileMeds.length === 0) { setMedStreak(0); return; }
-    const calcStreak = async () => {
-      const { data: events } = await supabase.from("health_events")
-        .select("recorded_at")
-        .eq("user_id", userId)
-        .eq("event_type", "medication_taken")
-        .order("recorded_at", { ascending: false })
-        .limit(100);
-      if (!events || events.length === 0) { setMedStreak(0); return; }
-      // Count consecutive days with at least one medication_taken event
-      const days = new Set(events.map(e => new Date(e.recorded_at).toDateString()));
-      let streak = 0;
-      const d = new Date();
-      // Check if today has any — if not, start from yesterday
-      if (!days.has(d.toDateString())) d.setDate(d.getDate() - 1);
-      while (days.has(d.toDateString())) { streak++; d.setDate(d.getDate() - 1); }
-      setMedStreak(streak);
-    };
-    calcStreak();
-  }, [userId, profileMeds]);
-
-  const toggleMedTaken = async (med) => {
-    const newTaken = !med.taken_today;
-    const now = new Date().toISOString();
-    await supabase.from("medications")
-      .update({ taken_today: newTaken, last_taken: newTaken ? now : null })
-      .eq("id", med.id);
-    if (newTaken) {
-      await supabase.from("health_events").insert({
-        user_id: userId,
-        event_type: "medication_taken",
-        value: { medication_name: med.name, medication_id: med.id },
-      });
-    }
-    // Refresh meds
-    const { data: meds } = await supabase.from("medications").select("*").eq("user_id", userId);
-    if (meds) setProfileMeds(meds);
-  };
-
-  const saveProfile = async () => {
-    if (!userId) return;
-    setProfileSaving(true);
-    await supabase.from("profiles").update({
-      age: profileData.age, health_issues: profileData.health_issues,
-      interests: profileData.interests, location: profileData.location,
-      full_name: profileData.full_name
-    }).eq("id", userId);
-    setProfileSaving(false);
-  };
-
-  const addMedication = async () => {
-    if (!newMedName.trim() || !userId) return;
-    const { data } = await supabase.from("medications").insert({
-      user_id: userId, name: newMedName.trim(),
-      dose: newMedDose.trim() || null,
-      scheduled_time: newMedTime || null,
-      frequency: newMedFreq
-    }).select().single();
-    if (data) setProfileMeds(prev => [...prev, data]);
-    setNewMedName(""); setNewMedDose(""); setNewMedTime(""); setNewMedFreq("daily");
-  };
-
-  const removeMedication = async (id) => {
-    await supabase.from("medications").delete().eq("id", id);
-    setProfileMeds(prev => prev.filter(m => m.id !== id));
-  };
+    loadPrompt();
+  }, []);
 
   const addInterest = () => {
     if (!newInterest.trim()) return;
