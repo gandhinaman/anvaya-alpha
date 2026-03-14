@@ -2594,6 +2594,32 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
           </div>
         </div>
       )}
+
+      {/* Video Player Modal */}
+      {activeVideoUrl && (
+        <div onClick={() => setActiveVideoUrl(null)} style={{
+          position: "fixed", inset: 0, zIndex: 9999,
+          background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          animation: "fadeUp .2s ease both"
+        }}>
+          <div onClick={e => e.stopPropagation()} style={{ position: "relative", width: "90%", maxWidth: 640 }}>
+            <button onClick={() => setActiveVideoUrl(null)} style={{
+              position: "absolute", top: -44, right: 0, background: "rgba(255,255,255,0.15)",
+              border: "none", borderRadius: 100, width: 36, height: 36, cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center"
+            }}>
+              <X size={18} color="#fff" />
+            </button>
+            <video
+              src={activeVideoUrl}
+              controls
+              autoPlay
+              style={{ width: "100%", borderRadius: 16, maxHeight: "80vh", background: "#000" }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
