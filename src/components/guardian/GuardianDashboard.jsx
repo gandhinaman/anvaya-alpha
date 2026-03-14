@@ -320,6 +320,7 @@ function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null
   const [commentText, setCommentText] = useState("");
   const [sending, setSending] = useState(false);
   const [recording, setRecording] = useState(false);
+  const [videoRecording, setVideoRecording] = useState(false);
   const recorderRef = useRef(null);
 
   const sendComment = async (mediaUrl = null, mediaType = null) => {
