@@ -1712,7 +1712,7 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
   const navItems=[
     {id:"home",   icon:<Home size={17}/>,      label:"Overview"},
     {id:"memories",icon:<Headphones size={17}/>,label:"Memories"},
-    {id:"health", icon:<Activity size={17}/>,  label:"Health"},
+    {id:"health", icon:<Activity size={17}/>,  label:"Daily Rhythm"},
     {id:"alerts", icon:<Bell size={17}/>,      label:"Alerts"},
     {id:"settings",icon:<Settings size={17}/>, label:"Settings"},
   ];
