@@ -143,12 +143,6 @@ export function useParentData(profileId: string | null) {
         .limit(10);
       if (mems) setMemories(mems as Memory[]);
 
-      // Fetch medications
-      const { data: meds } = await supabase
-        .from("medications")
-        .select("*")
-        .eq("user_id", parentId);
-      if (meds) setMedications(meds as Medication[]);
 
       // Fetch health events from last 7 days
       const sevenDaysAgo = new Date();
