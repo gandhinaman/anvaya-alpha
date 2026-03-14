@@ -1712,6 +1712,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                             onDelete={m.id ? () => deleteMemory(m.id) : null}
                             deleting={deletingMemId === m.id}
                             onToggleHeart={handleToggleHeart}
+                            onReact={handleOpenReaction}
                           />
                           {/* Remove from collection button */}
                           <div style={{ display: "flex", justifyContent: "flex-end", marginTop: -4, paddingRight: 8, marginBottom: 4 }}>
