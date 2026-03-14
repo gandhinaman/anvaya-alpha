@@ -2572,16 +2572,14 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                       icon: "🎙️"
                     },
                     {
-                      label: "Medication Adherence",
+                      label: "Legacy Progress",
                       status: (() => {
-                        const taken = medications.filter(m => m.taken_today).length;
-                        const total = medications.length;
-                        if (total === 0) return { text: "None configured", color: "#8D6E63", bg: "rgba(141,110,99,0.08)" };
-                        if (taken === total) return { text: "All logged ✓", color: "#5D8A6B", bg: "rgba(93,138,107,0.08)" };
-                        if (taken > 0) return { text: `${taken}/${total} logged`, color: "#6B8A9E", bg: "rgba(107,138,158,0.08)" };
-                        return { text: "Not yet logged", color: "#8D8D8D", bg: "rgba(141,141,141,0.08)" };
+                        const totalMin = Math.round(realMemories.reduce((s, m) => s + (m.duration_seconds || 0), 0) / 60);
+                        if (totalMin === 0) return { text: "No stories yet", color: "#8D6E63", bg: "rgba(141,110,99,0.08)" };
+                        if (totalMin >= 30) return { text: `${totalMin} min recorded ✓`, color: "#5D8A6B", bg: "rgba(93,138,107,0.08)" };
+                        return { text: `${totalMin} min recorded`, color: "#6B8A9E", bg: "rgba(107,138,158,0.08)" };
                       })(),
-                      icon: "💊"
+                      icon: "📖"
                     },
                     {
                       label: "Observed Sentiment",
