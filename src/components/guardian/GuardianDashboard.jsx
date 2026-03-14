@@ -679,7 +679,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
   const [linkLoading, setLinkLoading] = useState(false);
   const [linkError, setLinkError] = useState("");
   const [linkSuccess, setLinkSuccess] = useState("");
-  const [notifPref, setNotifPref] = useState({ emergency: true, medication: true, memories: true });
+  const [notifPref, setNotifPref] = useState({ emergency: true, connection: true, memories: true });
   const [signingOut, setSigningOut] = useState(false);
   const [memorySearch, setMemorySearch] = useState("");
   const [memoryFilter, setMemoryFilter] = useState("all");
