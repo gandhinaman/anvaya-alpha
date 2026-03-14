@@ -735,6 +735,8 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
   const [newCollectionEmoji, setNewCollectionEmoji] = useState("📚");
   const [collectionCreating, setCollectionCreating] = useState(false);
   const [addingToCollection, setAddingToCollection] = useState(null); // memoryId being added
+  const [collectionSearchQuery, setCollectionSearchQuery] = useState("");
+  const [showCollectionAddPanel, setShowCollectionAddPanel] = useState(false);
 
   // Fetch collections
   useEffect(() => {
@@ -1359,10 +1361,24 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
               if (!col) { setActiveCollection(null); return null; }
               const itemIds = collectionItems[activeCollection] || [];
               const colMemories = memories.filter(m => itemIds.includes(m.id));
+
+              // Search for memories to add
+              const sq = collectionSearchQuery.toLowerCase().trim();
+              const searchResults = sq ? memories.filter(m => {
+                if (itemIds.includes(m.id)) return false; // already in collection
+                return (
+                  (m.title && m.title.toLowerCase().includes(sq)) ||
+                  (m.summary && m.summary.toLowerCase().includes(sq)) ||
+                  (m.transcript && m.transcript.toLowerCase().includes(sq)) ||
+                  (m.emotionalTone && m.emotionalTone.toLowerCase().includes(sq)) ||
+                  (m.promptQuestion && m.promptQuestion.toLowerCase().includes(sq))
+                );
+              }) : [];
+
               return (
                 <>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-                    <button onClick={() => setActiveCollection(null)} style={{
+                    <button onClick={() => { setActiveCollection(null); setShowCollectionAddPanel(false); setCollectionSearchQuery(""); }} style={{
                       width: 36, height: 36, borderRadius: 10, border: "none", cursor: "pointer",
                       background: "rgba(93,64,55,0.06)", display: "flex", alignItems: "center", justifyContent: "center"
                     }}>
@@ -1376,22 +1392,156 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                     </div>
                     <span style={{ fontSize: 11, color: "#9CA3AF", fontWeight: 600 }}>{itemIds.length} {itemIds.length === 1 ? "memory" : "memories"}</span>
                   </div>
+
+                  {/* Add memories panel */}
+                  <div style={{ marginBottom: 16 }}>
+                    <button onClick={() => { setShowCollectionAddPanel(!showCollectionAddPanel); setCollectionSearchQuery(""); }} style={{
+                      width: "100%", padding: "12px 16px", borderRadius: 14, cursor: "pointer",
+                      border: showCollectionAddPanel ? "1.5px solid rgba(198,139,89,0.3)" : "1.5px dashed rgba(198,139,89,0.25)",
+                      background: showCollectionAddPanel ? "rgba(198,139,89,0.06)" : "transparent",
+                      display: "flex", alignItems: "center", gap: 8, color: "#C68B59",
+                      fontSize: 13, fontWeight: 600, transition: "all .2s"
+                    }}>
+                      <Plus size={16} /> {showCollectionAddPanel ? "Close" : "Add memories to this collection"}
+                    </button>
+
+                    {showCollectionAddPanel && (
+                      <div style={{
+                        marginTop: 10, padding: 16, borderRadius: 16,
+                        background: "rgba(255,255,255,0.9)", backdropFilter: "blur(12px)",
+                        border: "1px solid rgba(198,139,89,0.12)",
+                        boxShadow: "0 4px 20px rgba(62,39,35,0.06)",
+                        animation: "fadeUp .2s ease both"
+                      }}>
+                        {/* Search input */}
+                        <div style={{
+                          display: "flex", alignItems: "center", gap: 8, padding: "10px 14px",
+                          background: "rgba(255,248,240,0.6)", border: "1px solid rgba(93,64,55,0.1)",
+                          borderRadius: 12, marginBottom: 10
+                        }}>
+                          <Search size={15} color="#C68B59" />
+                          <input
+                            value={collectionSearchQuery}
+                            onChange={e => setCollectionSearchQuery(e.target.value)}
+                            placeholder="Search by title, keyword, or emotional tone…"
+                            autoFocus
+                            style={{
+                              flex: 1, border: "none", outline: "none", background: "transparent",
+                              fontSize: 13, color: "#3E2723", fontFamily: "'DM Sans',sans-serif"
+                            }}
+                          />
+                          {collectionSearchQuery && (
+                            <button onClick={() => setCollectionSearchQuery("")} style={{ background: "transparent", border: "none", cursor: "pointer", padding: 2 }}>
+                              <X size={13} color="#9CA3AF" />
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Quick tone filters */}
+                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
+                          {[
+                            { label: "Joyful", emoji: "😊" },
+                            { label: "Nostalgic", emoji: "🌅" },
+                            { label: "Peaceful", emoji: "🕊️" },
+                            { label: "Concerned", emoji: "😟" },
+                          ].map(tone => (
+                            <button key={tone.label} onClick={() => setCollectionSearchQuery(tone.label.toLowerCase())} style={{
+                              padding: "4px 10px", borderRadius: 100, border: "1px solid rgba(93,64,55,0.08)",
+                              background: collectionSearchQuery === tone.label.toLowerCase() ? "rgba(198,139,89,0.12)" : "transparent",
+                              color: collectionSearchQuery === tone.label.toLowerCase() ? "#C68B59" : "#8D6E63",
+                              fontSize: 11, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 3
+                            }}>
+                              <span>{tone.emoji}</span> {tone.label}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Results */}
+                        {!sq ? (
+                          <p style={{ fontSize: 12, color: "#9CA3AF", textAlign: "center", padding: "12px 0", margin: 0, fontStyle: "italic" }}>
+                            Type a keyword, title, or click a tone to find memories
+                          </p>
+                        ) : searchResults.length === 0 ? (
+                          <p style={{ fontSize: 12, color: "#9CA3AF", textAlign: "center", padding: "12px 0", margin: 0 }}>
+                            No matching memories found {itemIds.length > 0 ? "(not already in collection)" : ""}
+                          </p>
+                        ) : (
+                          <div style={{ maxHeight: 280, overflowY: "auto", display: "flex", flexDirection: "column", gap: 6 }}>
+                            {searchResults.map(m => (
+                              <div key={m.id} style={{
+                                display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
+                                borderRadius: 12, border: "1px solid rgba(93,64,55,0.08)",
+                                background: "rgba(255,248,240,0.4)", cursor: "pointer",
+                                transition: "all .15s"
+                              }}
+                              onClick={() => toggleMemoryInCollection(activeCollection, m.id)}
+                              >
+                                <div style={{
+                                  width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+                                  border: "2px solid rgba(198,139,89,0.3)", background: "transparent",
+                                  display: "flex", alignItems: "center", justifyContent: "center"
+                                }}>
+                                  <Plus size={14} color="#C68B59" />
+                                </div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ fontSize: 13, fontWeight: 600, color: "#3E2723", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                    {m.title}
+                                  </div>
+                                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
+                                    <span style={{ fontSize: 10, color: "#9CA3AF" }}>{m.date}</span>
+                                    {m.emotionalTone && (
+                                      <span style={{
+                                        fontSize: 9, fontWeight: 600, padding: "1px 7px", borderRadius: 100,
+                                        background: m.emotionalTone.toLowerCase() === "joyful" ? "rgba(76,175,80,0.1)" : "rgba(198,139,89,0.1)",
+                                        color: m.emotionalTone.toLowerCase() === "joyful" ? "#4CAF50" : "#C68B59",
+                                      }}>{m.emotionalTone}</span>
+                                    )}
+                                    <span style={{ fontSize: 10, color: "#9CA3AF" }}>{m.duration}</span>
+                                  </div>
+                                  {m.summary && (
+                                    <p style={{ fontSize: 11, color: "#6b6b6b", margin: "3px 0 0", lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                      {m.summary.slice(0, 80)}{m.summary.length > 80 ? "…" : ""}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Collection memories */}
                   {colMemories.length === 0 ? (
                     <div className="gcard" style={{ padding: 28, textAlign: "center" }}>
                       <Layers size={28} color="#9CA3AF" style={{ margin: "0 auto 10px" }} />
                       <p style={{ fontSize: 13, color: "#6b6b6b", lineHeight: 1.6 }}>
                         No memories in this collection yet.<br />
-                        <span style={{ fontSize: 12, color: "#9CA3AF" }}>Use the <Bookmark size={11} style={{ verticalAlign: "middle" }} /> button on memories to add them.</span>
+                        <span style={{ fontSize: 12, color: "#9CA3AF" }}>Use the "Add memories" button above to search and add.</span>
                       </p>
                     </div>
                   ) : (
                     <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 13 }}>
                       {colMemories.map((m, i) => (
-                        <MemoryCard key={m.id || i} {...m} index={i} profileId={profileId}
-                          onDelete={m.id ? () => deleteMemory(m.id) : null}
-                          deleting={deletingMemId === m.id}
-                          onToggleHeart={handleToggleHeart}
-                        />
+                        <div key={m.id || i} style={{ position: "relative" }}>
+                          <MemoryCard {...m} index={i} profileId={profileId}
+                            onDelete={m.id ? () => deleteMemory(m.id) : null}
+                            deleting={deletingMemId === m.id}
+                            onToggleHeart={handleToggleHeart}
+                          />
+                          {/* Remove from collection button */}
+                          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: -4, paddingRight: 8, marginBottom: 4 }}>
+                            <button onClick={() => toggleMemoryInCollection(activeCollection, m.id)} style={{
+                              display: "flex", alignItems: "center", gap: 4, padding: "3px 10px",
+                              borderRadius: 8, border: "1px solid rgba(220,38,38,0.15)",
+                              background: "rgba(220,38,38,0.04)", color: "#DC2626",
+                              fontSize: 10, fontWeight: 600, cursor: "pointer"
+                            }}>
+                              <X size={10} /> Remove from collection
+                            </button>
+                          </div>
+                        </div>
                       ))}
                     </div>
                   )}
