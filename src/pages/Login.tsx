@@ -193,9 +193,9 @@ export default function Login() {
                     {(["parent", "child"] as const).map(r => (
                       <button key={r} type="button" onClick={() => setRole(r)} style={{
                         flex: 1, padding: "11px", borderRadius: 12,
-                        border: role === r ? "1.5px solid rgba(5,150,105,0.7)" : "1px solid rgba(255,255,255,.12)",
-                        background: role === r ? "rgba(5,150,105,0.15)" : "rgba(249,249,247,.04)",
-                        color: role === r ? "#34D399" : "rgba(249,249,247,.5)",
+                        border: role === r ? "1.5px solid rgba(198,139,89,0.7)" : "1px solid rgba(255,255,255,.12)",
+                        background: role === r ? "rgba(198,139,89,0.15)" : "rgba(249,249,247,.04)",
+                        color: role === r ? "#E8C9A0" : "rgba(249,249,247,.5)",
                         fontSize: 13, fontWeight: role === r ? 600 : 400, cursor: "pointer",
                         fontFamily: "'DM Sans', sans-serif", textTransform: "capitalize", transition: "all .2s",
                       }}>
@@ -208,7 +208,7 @@ export default function Login() {
                   <div>
                     <label style={labelStyle}>Phone Number</label>
                     <input type="tel" required value={phone} onChange={e => setPhone(formatPhoneInput(e.target.value))} placeholder="+91 98765 43210"
-                      style={{ ...inputStyle, borderColor: phone.length > 0 ? (isValidPhone(phone) ? "rgba(34,197,94,0.5)" : "rgba(220,38,38,0.5)") : "rgba(255,255,255,.12)" }} />
+                      style={{ ...inputStyle, borderColor: phone.length > 0 ? (isValidPhone(phone) ? "rgba(198,139,89,0.5)" : "rgba(220,38,38,0.5)") : "rgba(255,255,255,.12)" }} />
                     <div style={{ fontSize: 10, color: phone.length > 3 && !isValidPhone(phone) ? "#fca5a5" : "rgba(249,249,247,.35)", marginTop: 4 }}>
                       {phone.length > 3 && !isValidPhone(phone) ? "Include country code, e.g. +91 98765 43210" : "Your parent can call you directly from the app"}
                     </div>
@@ -303,11 +303,11 @@ function SuccessCard({ title, description, onBack, onResend, resending, resendMs
     <div style={{ textAlign: "center", padding: "20px 0", animation: "fadeUp .4s ease both" }}>
       <div style={{
         width: 52, height: 52, borderRadius: "50%",
-        background: "rgba(5,150,105,0.2)",
+        background: "rgba(198,139,89,0.2)",
         display: "flex", alignItems: "center", justifyContent: "center",
         margin: "0 auto 14px",
       }}>
-        <span style={{ fontSize: 24, color: "#34D399" }}>✓</span>
+        <span style={{ fontSize: 24, color: "#C68B59" }}>✓</span>
       </div>
       <p style={{ color: "#F9F9F7", fontSize: 15, fontWeight: 600, marginBottom: 6 }}>{title}</p>
       <p style={{ color: "rgba(249,249,247,.5)", fontSize: 12, lineHeight: 1.6 }}>{description}</p>
@@ -326,7 +326,7 @@ function SuccessCard({ title, description, onBack, onResend, resending, resendMs
       )}
 
       {resendMsg && (
-        <p style={{ marginTop: 8, fontSize: 11, color: resendMsg.includes("resent") ? "#34D399" : "#fca5a5" }}>
+        <p style={{ marginTop: 8, fontSize: 11, color: resendMsg.includes("resent") ? "#C68B59" : "#fca5a5" }}>
           {resendMsg}
         </p>
       )}

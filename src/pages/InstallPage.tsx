@@ -12,12 +12,10 @@ export default function InstallPage() {
   const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
-    // Check if already installed
     if (window.matchMedia("(display-mode: standalone)").matches) {
       setIsInstalled(true);
     }
 
-    // Detect iOS
     const ua = navigator.userAgent;
     setIsIOS(/iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream);
 
@@ -40,7 +38,7 @@ export default function InstallPage() {
   return (
     <div style={{
       minHeight: "100vh",
-      background: "linear-gradient(135deg, #1A0F0A 0%, #2C1810 50%, #3E2723 100%)",
+      background: "linear-gradient(160deg, #1A0F0A 0%, #2C1810 40%, #3E2723 70%, #2A1B14 100%)",
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
@@ -56,7 +54,7 @@ export default function InstallPage() {
         boxShadow: "0 0 50px 12px rgba(198,139,89,.25)",
       }} />
 
-      <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 600, marginBottom: 12, textAlign: "center" }}>
+      <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 36, fontWeight: 600, marginBottom: 12, textAlign: "center" }}>
         Install Anvaya
       </h1>
       <p style={{ fontSize: 18, opacity: 0.7, marginBottom: 40, textAlign: "center", maxWidth: 340, lineHeight: 1.6 }}>
@@ -65,7 +63,7 @@ export default function InstallPage() {
 
       {isInstalled ? (
         <div style={{
-          background: "rgba(76,175,80,.15)", border: "2px solid rgba(76,175,80,.4)",
+          background: "rgba(198,139,89,.15)", border: "2px solid rgba(198,139,89,.4)",
           borderRadius: 20, padding: "20px 32px", fontSize: 19, fontWeight: 500,
         }}>
           ✅ Anvaya is installed!
@@ -77,6 +75,7 @@ export default function InstallPage() {
           padding: "18px 40px", fontSize: 20, fontWeight: 600,
           cursor: "pointer", display: "flex", alignItems: "center", gap: 12,
           boxShadow: "0 8px 24px rgba(198,139,89,.35)",
+          fontFamily: "'DM Sans', sans-serif",
         }}>
           <Download size={24} /> Install Anvaya
         </button>
