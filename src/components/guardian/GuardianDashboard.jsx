@@ -2463,7 +2463,7 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                   </p>
                 </div>
 
-                {/* Health metrics blurb */}
+                {/* Observation summary */}
                 <p style={{
                   fontSize: 14, color: "#4a3f3a", lineHeight: 1.7,
                   fontFamily: "'DM Sans', sans-serif", margin: 0,
@@ -2474,47 +2474,47 @@ export default function GuardianDashboard({ inPanel = false, profileId = null })
                     const name = parentProfile?.full_name?.split(" ")[0] || "Amma";
                     const parts = [];
 
-                    // Vocal energy
+                    // Acoustic volume
                     const vocalVal = parseInt(derivedStats.vocalEnergy.value);
                     if (!isNaN(vocalVal)) {
-                      if (vocalVal >= 70) parts.push(`${name}'s voice sounds strong and clear (${vocalVal}%).`);
-                      else if (vocalVal >= 40) parts.push(`Vocal energy is moderate at ${vocalVal}% — within normal range.`);
-                      else parts.push(`Vocal energy is low at ${vocalVal}% — could indicate fatigue or low mood.`);
+                      if (vocalVal >= 70) parts.push(`The system observed strong acoustic volume and pitch variation (${vocalVal}%) from ${name}.`);
+                      else if (vocalVal >= 40) parts.push(`Acoustic volume observed at ${vocalVal}% — within typical range.`);
+                      else parts.push(`Reduced acoustic volume noted at ${vocalVal}%.`);
                     }
 
-                    // Cognitive
+                    // Communication clarity
                     const cogVal = parseInt(derivedStats.cognitiveClarity.value);
                     if (!isNaN(cogVal)) {
-                      if (cogVal >= 70) parts.push(`Cognitive clarity looks sharp at ${cogVal}%.`);
-                      else if (cogVal >= 45) parts.push(`Cognitive scores show normal variation (${cogVal}%).`);
-                      else parts.push(`Cognitive score dipped to ${cogVal}% — worth a check-in.`);
+                      if (cogVal >= 70) parts.push(`Communication clarity observed at ${cogVal}% — fluent and varied.`);
+                      else if (cogVal >= 45) parts.push(`Communication patterns show typical variation (${cogVal}%).`);
+                      else parts.push(`Communication clarity observed at ${cogVal}% — below typical range.`);
                     }
 
-                    // Emotional
+                    // Observed sentiment
                     const emoTrend = derivedStats.emotionalTone.trend;
                     const emoVal = parseInt(derivedStats.emotionalTone.value);
                     if (emoTrend) {
-                      if (/joy|happy/i.test(emoTrend)) parts.push(`Emotionally, ${name} seems upbeat and cheerful. 😊`);
-                      else if (/peace|calm/i.test(emoTrend)) parts.push(`Emotionally, ${name} seems peaceful and relaxed. 🕊️`);
-                      else if (/nostalg/i.test(emoTrend)) parts.push(`${name} has been feeling nostalgic today. 🌅`);
-                      else if (/distress|concern/i.test(emoTrend)) parts.push(`${name} may need some support — mood seems low. 💙`);
-                      else parts.push(`Emotional state: ${emoTrend}.`);
+                      if (/joy|happy/i.test(emoTrend)) parts.push(`Observed sentiment: upbeat and cheerful tone. 😊`);
+                      else if (/peace|calm/i.test(emoTrend)) parts.push(`Observed sentiment: calm and relaxed tone. 🕊️`);
+                      else if (/nostalg/i.test(emoTrend)) parts.push(`Observed sentiment: reflective and nostalgic tone. 🌅`);
+                      else if (/distress|concern/i.test(emoTrend)) parts.push(`Observed sentiment: subdued tone noted. 💙`);
+                      else parts.push(`Observed sentiment: ${emoTrend}.`);
                     } else if (!isNaN(emoVal)) {
-                      if (emoVal >= 60) parts.push(`Emotional wellbeing looks positive (${emoVal}%).`);
-                      else if (emoVal >= 35) parts.push(`Emotional state is stable (${emoVal}%).`);
-                      else parts.push(`Emotional score is low (${emoVal}%) — consider reaching out.`);
+                      if (emoVal >= 60) parts.push(`Observed sentiment appears positive (${emoVal}%).`);
+                      else if (emoVal >= 35) parts.push(`Observed sentiment appears steady (${emoVal}%).`);
+                      else parts.push(`Observed sentiment is subdued (${emoVal}%).`);
                     }
 
-                    // Medication
+                    // Medication adherence
                     const medsTaken = medications.filter(m => m.taken_today).length;
                     const medsTotal = medications.length;
                     if (medsTotal > 0) {
-                      if (medsTaken === medsTotal) parts.push(`All ${medsTotal} medications taken today. ✅`);
-                      else if (medsTaken > 0) parts.push(`${medsTaken} of ${medsTotal} medications confirmed so far. 💊`);
-                      else parts.push(`No medications marked yet today — a gentle reminder might help. 💊`);
+                      if (medsTaken === medsTotal) parts.push(`Medication adherence: all ${medsTotal} logged by user. ✅`);
+                      else if (medsTaken > 0) parts.push(`Medication adherence: ${medsTaken} of ${medsTotal} logged so far. 💊`);
+                      else parts.push(`Medication adherence: none logged yet today. 💊`);
                     }
 
-                    if (parts.length === 0) return `Health metrics will appear here once ${name} starts recording memories and logging medications.`;
+                    if (parts.length === 0) return `Behavioral observations will appear here once ${name} starts recording interactions.`;
                     return parts.join(" ");
                   })()}
                 </p>
