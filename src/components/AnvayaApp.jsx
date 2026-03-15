@@ -1124,6 +1124,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
         </div>
       )}
 
+      <div style={{padding:"12px 18px 0"}}>
         <div style={{background:"rgba(255,248,240,.1)",border:"1.5px solid rgba(255,248,240,.15)",borderRadius:16,padding:"10px 10px 10px 18px",display:"flex",alignItems:"center",gap:8}}>
           <input value={inp} onChange={e=>{setInp(e.target.value);if(checkTrigger(e.target.value)){setOverlay(true);setOverlayPhase("ask");}}}
             onKeyDown={e=>{if(e.key==="Enter"&&inp.trim()){const q=inp.trim();setInp("");setPendingChatMsg(q);setChatOpen(true);}}}  
