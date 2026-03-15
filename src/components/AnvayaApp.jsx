@@ -508,6 +508,8 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
   const [voicePhase, setVoicePhase] = useState("idle"); // idle | listening | thinking | speaking
   const [voiceText, setVoiceText] = useState("");
   const [voiceResponse, setVoiceResponse] = useState("");
+  const [debugLog, setDebugLog] = useState([]);
+  const addDebug = (msg) => { console.log("[orb-debug]", msg); setDebugLog(prev => [...prev.slice(-6), `${new Date().toLocaleTimeString()}: ${msg}`]); };
   const recognitionRef = useRef(null);
   const synthRef = useRef(null);
   const voiceHistoryRef = useRef([]); // conversation history for context
