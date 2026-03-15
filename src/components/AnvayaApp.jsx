@@ -629,8 +629,11 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
 
         let finalTranscript = "";
         let silenceTimer = null;
+        let gotAnyResult = false;
+        const startTime = Date.now();
 
         recognition.onresult = (event) => {
+          gotAnyResult = true;
           let interim = "";
           for (let i = event.resultIndex; i < event.results.length; i++) {
             if (event.results[i].isFinal) {
@@ -650,6 +653,16 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
         recognition.onend = () => {
           setRec(false);
           speechRecRef.current = null;
+          const elapsed = Date.now() - startTime;
+          // If ended very quickly (<2s) with no results, Web Speech API likely
+          // doesn't work in this environment — fall back to WAV + Sarvam STT
+          if (!gotAnyResult && elapsed < 2000) {
+            console.log("Web Speech API ended too quickly, falling back to WAV recording");
+            setVoicePhase("listening");
+            setRec(true);
+            startWavFallback();
+            return;
+          }
           if (finalTranscript.trim()) {
             sendVoiceToLLM(finalTranscript.trim());
           } else {
