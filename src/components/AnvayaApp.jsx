@@ -1119,7 +1119,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
       {debugLog.length > 0 && (
         <div style={{padding:"4px 24px",maxHeight:80,overflowY:"auto"}}>
           {debugLog.map((line, i) => (
-            <p key={i} style={{color:"rgba(255,248,240,.35)",fontSize:10,lineHeight:1.4,margin:0,fontFamily:"monospace"}}>{line}</p>
+            <p key={i} style={{color:"#fff",fontSize:11,lineHeight:1.5,margin:0,fontFamily:"monospace",textShadow:"0 1px 3px rgba(0,0,0,.6)"}}>{line}</p>
           ))}
         </div>
       )}
