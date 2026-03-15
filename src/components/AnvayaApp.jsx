@@ -789,20 +789,25 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
   };
 
   const startWavFallback = async () => {
+    addDebug("Starting WAV fallback");
     try {
       const { startWavRecording } = await import("@/lib/wavRecorder.js");
       const recorder = await startWavRecording();
       wavRecorderRef.current = recorder;
+      addDebug("WAV recorder started");
       setVoiceText(lang === "hi" ? "बोलिए… फिर गोले को दबाएं" : "Speak now… tap orb when done");
 
       // Auto-stop after 30 seconds
       setTimeout(() => {
         if (wavRecorderRef.current) {
+          addDebug("WAV auto-stop triggered at 30s");
           startVoiceConversation(); // triggers the stop path
         }
       }, 30000);
     } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
       console.error("WAV recording error:", err);
+      addDebug(`WAV recording error: ${message}`);
       setRec(false);
       setVoiceText(lang === "hi" ? "माइक्रोफ़ोन एक्सेस नहीं मिला" : "Microphone access denied.");
       setTimeout(() => { setVoicePhase("idle"); setVoiceText(""); }, 2000);
