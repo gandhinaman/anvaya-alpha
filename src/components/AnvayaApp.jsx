@@ -508,11 +508,72 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
   const [voicePhase, setVoicePhase] = useState("idle"); // idle | listening | thinking | speaking
   const [voiceText, setVoiceText] = useState("");
   const [voiceResponse, setVoiceResponse] = useState("");
-  const [debugLog, setDebugLog] = useState([]);
-  const addDebug = (msg) => { console.log("[orb-debug]", msg); setDebugLog(prev => [...prev.slice(-6), `${new Date().toLocaleTimeString()}: ${msg}`]); };
+  const orbDebugQueueRef = useRef([]);
+  const orbDebugFlushTimeoutRef = useRef(null);
+  const orbDebugFlushingRef = useRef(false);
+  const orbDebugSessionRef = useRef(`orb-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
   const recognitionRef = useRef(null);
   const synthRef = useRef(null);
   const voiceHistoryRef = useRef([]); // conversation history for context
+
+  const flushOrbDebugLogs = async () => {
+    if (orbDebugFlushingRef.current || orbDebugQueueRef.current.length === 0) return;
+
+    orbDebugFlushingRef.current = true;
+    const entries = orbDebugQueueRef.current.splice(0, orbDebugQueueRef.current.length);
+
+    try {
+      const { error } = await supabase.functions.invoke("orb-debug", {
+        body: {
+          entries,
+          userId,
+          linkedUserId,
+          route: typeof window !== "undefined" ? window.location.pathname : "/sathi",
+        },
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error("[orb-debug] failed to persist logs", error);
+    } finally {
+      orbDebugFlushingRef.current = false;
+      if (orbDebugQueueRef.current.length > 0) {
+        void flushOrbDebugLogs();
+      }
+    }
+  };
+
+  const addDebug = (message, extra = {}) => {
+    const entry = {
+      ts: new Date().toISOString(),
+      sessionId: orbDebugSessionRef.current,
+      userId: userId || null,
+      linkedUserId: linkedUserId || null,
+      lang,
+      phase: voicePhase,
+      message,
+      extra,
+    };
+
+    console.log("[orb-debug]", entry);
+    orbDebugQueueRef.current.push(entry);
+
+    if (orbDebugQueueRef.current.length >= 5) {
+      if (orbDebugFlushTimeoutRef.current) {
+        clearTimeout(orbDebugFlushTimeoutRef.current);
+        orbDebugFlushTimeoutRef.current = null;
+      }
+      void flushOrbDebugLogs();
+      return;
+    }
+
+    if (!orbDebugFlushTimeoutRef.current) {
+      orbDebugFlushTimeoutRef.current = window.setTimeout(() => {
+        orbDebugFlushTimeoutRef.current = null;
+        void flushOrbDebugLogs();
+      }, 400);
+    }
+  };
 
   // Load today's conversation history for voice context
   useEffect(() => {
@@ -552,10 +613,13 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
         speechRecRef.current.stop();
       }
       if (wavRecorderRef.current) {
+        addDebug("Stopping WAV fallback");
         const { base64, byteLength } = wavRecorderRef.current.stop();
         wavRecorderRef.current = null;
         setRec(false);
+        addDebug("WAV recording stopped", { byteLength });
         if (byteLength < 5000) {
+          addDebug("WAV recording too short", { byteLength });
           setVoiceText(lang === "hi" ? "कुछ सुनाई नहीं दिया" : "Too short. Tap and try again.");
           setTimeout(() => { setVoicePhase("idle"); setVoiceText(""); }, 2000);
           return;
@@ -564,6 +628,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
         try {
           const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
           const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+          addDebug("Sending WAV to Sarvam STT", { byteLength, languageCode: lang === "hi" ? "hi-IN" : "en-IN" });
           const res = await fetch(
             `https://${projectId}.supabase.co/functions/v1/sarvam-stt`,
             {
@@ -573,15 +638,20 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
             }
           );
           const data = await res.json();
+          addDebug("Sarvam STT completed", { ok: res.ok, transcriptLength: data.transcript?.trim()?.length || 0, error: data.error || null });
           if (!res.ok) throw new Error(data.error || "STT failed");
           if (data.transcript?.trim()) {
+            addDebug("Sarvam transcript captured", { transcript: data.transcript.trim() });
             sendVoiceToLLM(data.transcript.trim());
           } else {
+            addDebug("Sarvam returned empty transcript");
             setVoiceText(lang === "hi" ? "कुछ सुनाई नहीं दिया" : "Couldn't hear anything. Tap and try again.");
             setTimeout(() => { setVoicePhase("idle"); setVoiceText(""); }, 2500);
           }
         } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
           console.error("Sarvam STT error:", err);
+          addDebug(`Sarvam STT error: ${message}`);
           setVoiceText(lang === "hi" ? "पहचान में समस्या हुई" : "Speech recognition failed. Try again.");
           setTimeout(() => { setVoicePhase("idle"); setVoiceText(""); }, 2000);
         }
@@ -719,20 +789,25 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
   };
 
   const startWavFallback = async () => {
+    addDebug("Starting WAV fallback");
     try {
       const { startWavRecording } = await import("@/lib/wavRecorder.js");
       const recorder = await startWavRecording();
       wavRecorderRef.current = recorder;
+      addDebug("WAV recorder started");
       setVoiceText(lang === "hi" ? "बोलिए… फिर गोले को दबाएं" : "Speak now… tap orb when done");
 
       // Auto-stop after 30 seconds
       setTimeout(() => {
         if (wavRecorderRef.current) {
+          addDebug("WAV auto-stop triggered at 30s");
           startVoiceConversation(); // triggers the stop path
         }
       }, 30000);
     } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
       console.error("WAV recording error:", err);
+      addDebug(`WAV recording error: ${message}`);
       setRec(false);
       setVoiceText(lang === "hi" ? "माइक्रोफ़ोन एक्सेस नहीं मिला" : "Microphone access denied.");
       setTimeout(() => { setVoicePhase("idle"); setVoiceText(""); }, 2000);
@@ -1114,15 +1189,6 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
           </p>
         )}
       </div>
-
-      {/* Debug log */}
-      {debugLog.length > 0 && (
-        <div style={{padding:"4px 24px",maxHeight:80,overflowY:"auto"}}>
-          {debugLog.map((line, i) => (
-            <p key={i} style={{color:"#fff",fontSize:11,lineHeight:1.5,margin:0,fontFamily:"monospace",textShadow:"0 1px 3px rgba(0,0,0,.6)"}}>{line}</p>
-          ))}
-        </div>
-      )}
 
       <div style={{padding:"12px 18px 0"}}>
         <div style={{background:"rgba(255,248,240,.1)",border:"1.5px solid rgba(255,248,240,.15)",borderRadius:16,padding:"10px 10px 10px 18px",display:"flex",alignItems:"center",gap:8}}>
