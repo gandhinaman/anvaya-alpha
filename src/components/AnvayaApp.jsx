@@ -613,10 +613,13 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
         speechRecRef.current.stop();
       }
       if (wavRecorderRef.current) {
+        addDebug("Stopping WAV fallback");
         const { base64, byteLength } = wavRecorderRef.current.stop();
         wavRecorderRef.current = null;
         setRec(false);
+        addDebug("WAV recording stopped", { byteLength });
         if (byteLength < 5000) {
+          addDebug("WAV recording too short", { byteLength });
           setVoiceText(lang === "hi" ? "कुछ सुनाई नहीं दिया" : "Too short. Tap and try again.");
           setTimeout(() => { setVoicePhase("idle"); setVoiceText(""); }, 2000);
           return;
@@ -625,6 +628,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
         try {
           const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
           const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+          addDebug("Sending WAV to Sarvam STT", { byteLength, languageCode: lang === "hi" ? "hi-IN" : "en-IN" });
           const res = await fetch(
             `https://${projectId}.supabase.co/functions/v1/sarvam-stt`,
             {
@@ -634,15 +638,20 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
             }
           );
           const data = await res.json();
+          addDebug("Sarvam STT completed", { ok: res.ok, transcriptLength: data.transcript?.trim()?.length || 0, error: data.error || null });
           if (!res.ok) throw new Error(data.error || "STT failed");
           if (data.transcript?.trim()) {
+            addDebug("Sarvam transcript captured", { transcript: data.transcript.trim() });
             sendVoiceToLLM(data.transcript.trim());
           } else {
+            addDebug("Sarvam returned empty transcript");
             setVoiceText(lang === "hi" ? "कुछ सुनाई नहीं दिया" : "Couldn't hear anything. Tap and try again.");
             setTimeout(() => { setVoicePhase("idle"); setVoiceText(""); }, 2500);
           }
         } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
           console.error("Sarvam STT error:", err);
+          addDebug(`Sarvam STT error: ${message}`);
           setVoiceText(lang === "hi" ? "पहचान में समस्या हुई" : "Speech recognition failed. Try again.");
           setTimeout(() => { setVoicePhase("idle"); setVoiceText(""); }, 2000);
         }
