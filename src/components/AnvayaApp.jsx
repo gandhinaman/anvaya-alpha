@@ -614,6 +614,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
 
     // Try Web Speech API first (works on desktop Chrome, Android Chrome)
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    addDebug(`SpeechRecognition available: ${!!SpeechRecognition}`);
     
     if (SpeechRecognition) {
       setVoicePhase("listening");
@@ -628,6 +629,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
         recognition.continuous = true;
         recognition.maxAlternatives = 1;
         speechRecRef.current = recognition;
+        addDebug(`Created recognition, lang=${recognition.lang}`);
 
         let finalTranscript = "";
         let silenceTimer = null;
@@ -640,26 +642,30 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
           for (let i = event.resultIndex; i < event.results.length; i++) {
             if (event.results[i].isFinal) {
               finalTranscript += event.results[i][0].transcript;
+              addDebug(`Final: "${event.results[i][0].transcript}" (conf: ${event.results[i][0].confidence.toFixed(2)})`);
             } else {
               interim += event.results[i][0].transcript;
             }
           }
+          if (interim) addDebug(`Interim: "${interim}"`);
           setVoiceText(finalTranscript || interim || (lang === "hi" ? "सुन रहा हूँ…" : "Listening…"));
           // Auto-stop after 3.5s of silence
           if (silenceTimer) clearTimeout(silenceTimer);
           silenceTimer = setTimeout(() => {
+            addDebug("Silence timeout — stopping");
             try { recognition.stop(); } catch (e) {}
           }, 3500);
         };
 
         recognition.onend = () => {
+          const elapsed = Date.now() - startTime;
+          addDebug(`onend fired after ${elapsed}ms, gotResult=${gotAnyResult}, final="${finalTranscript}"`);
           setRec(false);
           speechRecRef.current = null;
-          const elapsed = Date.now() - startTime;
           // If ended very quickly (<2s) with no results, Web Speech API likely
           // doesn't work in this environment — fall back to WAV + Sarvam STT
           if (!gotAnyResult && elapsed < 2000) {
-            console.log("Web Speech API ended too quickly, falling back to WAV recording");
+            addDebug("Quick fail — falling back to WAV");
             setVoicePhase("listening");
             setRec(true);
             startWavFallback();
@@ -668,13 +674,14 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
           if (finalTranscript.trim()) {
             sendVoiceToLLM(finalTranscript.trim());
           } else {
+            addDebug("No transcript captured");
             setVoiceText(lang === "hi" ? "कुछ सुनाई नहीं दिया, फिर कोशिश करें" : "Couldn't hear anything. Tap and try again.");
             setTimeout(() => { setVoicePhase("idle"); setVoiceText(""); }, 2500);
           }
         };
 
         recognition.onerror = (event) => {
-          console.error("Speech recognition error:", event.error);
+          addDebug(`onerror: ${event.error}`);
           // If Web Speech API fails, fall back to WAV recording
           if (event.error === "not-allowed" || event.error === "permission-denied") {
             setRec(false);
@@ -682,15 +689,23 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
             setVoiceText(lang === "hi" ? "माइक्रोफ़ोन एक्सेस नहीं मिला" : "Microphone access denied.");
             setTimeout(() => { setVoicePhase("idle"); setVoiceText(""); }, 2500);
           } else {
-            console.log("Web Speech API failed, falling back to WAV recording");
+            addDebug("Falling back to WAV recording");
             speechRecRef.current = null;
             startWavFallback();
           }
         };
 
+        recognition.onaudiostart = () => addDebug("audiostart");
+        recognition.onsoundstart = () => addDebug("soundstart");
+        recognition.onspeechstart = () => addDebug("speechstart");
+        recognition.onspeechend = () => addDebug("speechend");
+        recognition.onsoundend = () => addDebug("soundend");
+        recognition.onaudioend = () => addDebug("audioend");
+
         recognition.start();
+        addDebug("recognition.start() called");
       } catch (err) {
-        console.log("Web Speech API unavailable, falling back to WAV recording");
+        addDebug(`SpeechRecognition error: ${err.message}`);
         startWavFallback();
       }
     } else {
