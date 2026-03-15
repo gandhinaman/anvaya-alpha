@@ -508,6 +508,8 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
   const [voicePhase, setVoicePhase] = useState("idle"); // idle | listening | thinking | speaking
   const [voiceText, setVoiceText] = useState("");
   const [voiceResponse, setVoiceResponse] = useState("");
+  const [debugLog, setDebugLog] = useState([]);
+  const addDebug = (msg) => { console.log("[orb-debug]", msg); setDebugLog(prev => [...prev.slice(-6), `${new Date().toLocaleTimeString()}: ${msg}`]); };
   const recognitionRef = useRef(null);
   const synthRef = useRef(null);
   const voiceHistoryRef = useRef([]); // conversation history for context
@@ -612,6 +614,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
 
     // Try Web Speech API first (works on desktop Chrome, Android Chrome)
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    addDebug(`SpeechRecognition available: ${!!SpeechRecognition}`);
     
     if (SpeechRecognition) {
       setVoicePhase("listening");
@@ -626,6 +629,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
         recognition.continuous = true;
         recognition.maxAlternatives = 1;
         speechRecRef.current = recognition;
+        addDebug(`Created recognition, lang=${recognition.lang}`);
 
         let finalTranscript = "";
         let silenceTimer = null;
@@ -638,26 +642,30 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
           for (let i = event.resultIndex; i < event.results.length; i++) {
             if (event.results[i].isFinal) {
               finalTranscript += event.results[i][0].transcript;
+              addDebug(`Final: "${event.results[i][0].transcript}" (conf: ${event.results[i][0].confidence.toFixed(2)})`);
             } else {
               interim += event.results[i][0].transcript;
             }
           }
+          if (interim) addDebug(`Interim: "${interim}"`);
           setVoiceText(finalTranscript || interim || (lang === "hi" ? "सुन रहा हूँ…" : "Listening…"));
           // Auto-stop after 3.5s of silence
           if (silenceTimer) clearTimeout(silenceTimer);
           silenceTimer = setTimeout(() => {
+            addDebug("Silence timeout — stopping");
             try { recognition.stop(); } catch (e) {}
           }, 3500);
         };
 
         recognition.onend = () => {
+          const elapsed = Date.now() - startTime;
+          addDebug(`onend fired after ${elapsed}ms, gotResult=${gotAnyResult}, final="${finalTranscript}"`);
           setRec(false);
           speechRecRef.current = null;
-          const elapsed = Date.now() - startTime;
           // If ended very quickly (<2s) with no results, Web Speech API likely
           // doesn't work in this environment — fall back to WAV + Sarvam STT
           if (!gotAnyResult && elapsed < 2000) {
-            console.log("Web Speech API ended too quickly, falling back to WAV recording");
+            addDebug("Quick fail — falling back to WAV");
             setVoicePhase("listening");
             setRec(true);
             startWavFallback();
@@ -666,13 +674,14 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
           if (finalTranscript.trim()) {
             sendVoiceToLLM(finalTranscript.trim());
           } else {
+            addDebug("No transcript captured");
             setVoiceText(lang === "hi" ? "कुछ सुनाई नहीं दिया, फिर कोशिश करें" : "Couldn't hear anything. Tap and try again.");
             setTimeout(() => { setVoicePhase("idle"); setVoiceText(""); }, 2500);
           }
         };
 
         recognition.onerror = (event) => {
-          console.error("Speech recognition error:", event.error);
+          addDebug(`onerror: ${event.error}`);
           // If Web Speech API fails, fall back to WAV recording
           if (event.error === "not-allowed" || event.error === "permission-denied") {
             setRec(false);
@@ -680,15 +689,23 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
             setVoiceText(lang === "hi" ? "माइक्रोफ़ोन एक्सेस नहीं मिला" : "Microphone access denied.");
             setTimeout(() => { setVoicePhase("idle"); setVoiceText(""); }, 2500);
           } else {
-            console.log("Web Speech API failed, falling back to WAV recording");
+            addDebug("Falling back to WAV recording");
             speechRecRef.current = null;
             startWavFallback();
           }
         };
 
+        recognition.onaudiostart = () => addDebug("audiostart");
+        recognition.onsoundstart = () => addDebug("soundstart");
+        recognition.onspeechstart = () => addDebug("speechstart");
+        recognition.onspeechend = () => addDebug("speechend");
+        recognition.onsoundend = () => addDebug("soundend");
+        recognition.onaudioend = () => addDebug("audioend");
+
         recognition.start();
+        addDebug("recognition.start() called");
       } catch (err) {
-        console.log("Web Speech API unavailable, falling back to WAV recording");
+        addDebug(`SpeechRecognition error: ${err.message}`);
         startWavFallback();
       }
     } else {
@@ -1098,7 +1115,15 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
         )}
       </div>
 
-      <div style={{padding:"12px 18px 0"}}>
+      {/* Debug log */}
+      {debugLog.length > 0 && (
+        <div style={{padding:"4px 24px",maxHeight:80,overflowY:"auto"}}>
+          {debugLog.map((line, i) => (
+            <p key={i} style={{color:"rgba(255,248,240,.35)",fontSize:10,lineHeight:1.4,margin:0,fontFamily:"monospace"}}>{line}</p>
+          ))}
+        </div>
+      )}
+
         <div style={{background:"rgba(255,248,240,.1)",border:"1.5px solid rgba(255,248,240,.15)",borderRadius:16,padding:"10px 10px 10px 18px",display:"flex",alignItems:"center",gap:8}}>
           <input value={inp} onChange={e=>{setInp(e.target.value);if(checkTrigger(e.target.value)){setOverlay(true);setOverlayPhase("ask");}}}
             onKeyDown={e=>{if(e.key==="Enter"&&inp.trim()){const q=inp.trim();setInp("");setPendingChatMsg(q);setChatOpen(true);}}}  
