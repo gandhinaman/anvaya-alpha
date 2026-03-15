@@ -508,11 +508,72 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
   const [voicePhase, setVoicePhase] = useState("idle"); // idle | listening | thinking | speaking
   const [voiceText, setVoiceText] = useState("");
   const [voiceResponse, setVoiceResponse] = useState("");
-  const [debugLog, setDebugLog] = useState([]);
-  const addDebug = (msg) => { console.log("[orb-debug]", msg); setDebugLog(prev => [...prev.slice(-6), `${new Date().toLocaleTimeString()}: ${msg}`]); };
+  const orbDebugQueueRef = useRef([]);
+  const orbDebugFlushTimeoutRef = useRef(null);
+  const orbDebugFlushingRef = useRef(false);
+  const orbDebugSessionRef = useRef(`orb-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
   const recognitionRef = useRef(null);
   const synthRef = useRef(null);
   const voiceHistoryRef = useRef([]); // conversation history for context
+
+  const flushOrbDebugLogs = async () => {
+    if (orbDebugFlushingRef.current || orbDebugQueueRef.current.length === 0) return;
+
+    orbDebugFlushingRef.current = true;
+    const entries = orbDebugQueueRef.current.splice(0, orbDebugQueueRef.current.length);
+
+    try {
+      const { error } = await supabase.functions.invoke("orb-debug", {
+        body: {
+          entries,
+          userId,
+          linkedUserId,
+          route: typeof window !== "undefined" ? window.location.pathname : "/sathi",
+        },
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error("[orb-debug] failed to persist logs", error);
+    } finally {
+      orbDebugFlushingRef.current = false;
+      if (orbDebugQueueRef.current.length > 0) {
+        void flushOrbDebugLogs();
+      }
+    }
+  };
+
+  const addDebug = (message, extra = {}) => {
+    const entry = {
+      ts: new Date().toISOString(),
+      sessionId: orbDebugSessionRef.current,
+      userId: userId || null,
+      linkedUserId: linkedUserId || null,
+      lang,
+      phase: voicePhase,
+      message,
+      extra,
+    };
+
+    console.log("[orb-debug]", entry);
+    orbDebugQueueRef.current.push(entry);
+
+    if (orbDebugQueueRef.current.length >= 5) {
+      if (orbDebugFlushTimeoutRef.current) {
+        clearTimeout(orbDebugFlushTimeoutRef.current);
+        orbDebugFlushTimeoutRef.current = null;
+      }
+      void flushOrbDebugLogs();
+      return;
+    }
+
+    if (!orbDebugFlushTimeoutRef.current) {
+      orbDebugFlushTimeoutRef.current = window.setTimeout(() => {
+        orbDebugFlushTimeoutRef.current = null;
+        void flushOrbDebugLogs();
+      }, 400);
+    }
+  };
 
   // Load today's conversation history for voice context
   useEffect(() => {
