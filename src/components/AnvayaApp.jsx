@@ -429,13 +429,13 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
   // Load profile data from DB
   useEffect(()=>{
     if(!userId) return;
-    supabase.from("profiles").select("full_name,age,language,health_issues,interests,location,linked_user_id,religion,avatar_url")
+    supabase.from("profiles").select("full_name,age,language,health_issues,interests,location,linked_user_id,religion,avatar_url,gender")
       .eq("id",userId).maybeSingle().then(({data})=>{
         if(data) setProfileData({
           full_name: data.full_name||"", age: data.age, language: data.language||"en",
           health_issues: data.health_issues||[], interests: data.interests||[],
           location: data.location||"", linked_user_id: data.linked_user_id,
-          religion: data.religion||"", avatar_url: data.avatar_url||""
+          religion: data.religion||"", avatar_url: data.avatar_url||"", gender: data.gender||""
         });
       });
   },[userId]);
