@@ -169,12 +169,12 @@ Deno.serve(async (req) => {
     if (!aiRes && lovableKey) {
       const body = {
         model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...messages,
-        ],
-        stream: true,
-        max_tokens: 120,
+          messages: [
+            { role: "system", content: systemPrompt },
+            ...trimmedMessages,
+          ],
+          stream: true,
+          max_tokens: 200,
       };
 
       aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
