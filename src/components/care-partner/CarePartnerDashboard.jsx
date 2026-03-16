@@ -977,6 +977,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
 
   const handleToggleHeart = async (memoryId, isHearted) => {
     if (!profileId) return;
+    trackEvent("heart_toggle", { memory_id: memoryId, action: isHearted ? "remove" : "add" });
     if (isHearted) {
       await supabase.from("memory_reactions").delete().eq("memory_id", memoryId).eq("user_id", profileId).eq("reaction_type", "heart");
     } else {
