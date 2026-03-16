@@ -22,27 +22,76 @@ async function flushEvents() {
   try {
     await supabase.from("telemetry_events").insert(batch as any);
   } catch {
-    // If flush fails, re-queue
     eventBuffer.push(...batch);
   }
 }
 
 function flushBeacon() {
   if (eventBuffer.length === 0 && !globalSessionId) return;
-  
-  // Update session end
+
+  const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  const baseUrl = import.meta.env.VITE_SUPABASE_URL;
+
+  // Use fetch with keepalive so we can include auth headers (sendBeacon can't)
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    "apikey": anonKey,
+    "Authorization": `Bearer ${anonKey}`,
+    "Prefer": "return=minimal",
+  };
+
   if (globalSessionId) {
-    const url = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/telemetry_sessions?id=eq.${globalSessionId}`;
-    const body = JSON.stringify({ ended_at: new Date().toISOString() });
-    navigator.sendBeacon?.(url, new Blob([body], { type: "application/json" }));
+    try {
+      fetch(`${baseUrl}/rest/v1/telemetry_sessions?id=eq.${globalSessionId}`, {
+        method: "PATCH",
+        headers,
+        body: JSON.stringify({ ended_at: new Date().toISOString() }),
+        keepalive: true,
+      });
+    } catch {}
   }
 
   if (eventBuffer.length > 0) {
-    const url = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/telemetry_events`;
-    const body = JSON.stringify(eventBuffer);
-    navigator.sendBeacon?.(url, new Blob([body], { type: "application/json" }));
+    try {
+      fetch(`${baseUrl}/rest/v1/telemetry_events`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(eventBuffer),
+        keepalive: true,
+      });
+    } catch {}
     eventBuffer = [];
   }
+}
+
+/** Flush all buffered telemetry and close the session. Call before signOut. */
+export async function flushTelemetry() {
+  // Flush buffered events
+  if (eventBuffer.length > 0) {
+    const batch = [...eventBuffer];
+    eventBuffer = [];
+    try {
+      await supabase.from("telemetry_events").insert(batch as any);
+    } catch {}
+  }
+
+  // Close session
+  if (globalSessionId) {
+    try {
+      await supabase
+        .from("telemetry_sessions")
+        .update({ ended_at: new Date().toISOString() } as any)
+        .eq("id", globalSessionId);
+    } catch {}
+  }
+
+  // Reset globals
+  if (flushTimer) {
+    clearInterval(flushTimer);
+    flushTimer = null;
+  }
+  globalSessionId = null;
+  globalUserId = null;
 }
 
 export function trackEvent(eventName: string, metadata: Record<string, any> = {}, eventType = "feature_use") {
@@ -72,14 +121,12 @@ export function useTelemetry() {
       const userId = session.user.id;
       globalUserId = userId;
 
-      // Get role
       const { data: profile } = await supabase
         .from("profiles")
         .select("role")
         .eq("id", userId)
         .single();
 
-      // Skip telemetry for admin users
       if (profile?.role === "admin") return;
 
       const { data, error } = await supabase
@@ -96,10 +143,8 @@ export function useTelemetry() {
         globalSessionId = data.id;
         sessionStarted.current = true;
 
-        // Start flush interval
         flushTimer = setInterval(flushEvents, 5000);
 
-        // Track initial page view
         trackEvent(location.pathname, {}, "page_view");
         lastPath.current = location.pathname;
       }
@@ -110,35 +155,31 @@ export function useTelemetry() {
     // End session on unload
     const handleUnload = () => {
       flushBeacon();
-      if (globalSessionId) {
-        // Try to update via regular fetch as well
-        supabase
-          .from("telemetry_sessions")
-          .update({ ended_at: new Date().toISOString() } as any)
-          .eq("id", globalSessionId)
-          .then(() => {});
-      }
     };
 
     const handleVisibility = () => {
       if (document.visibilityState === "hidden") {
-        flushEvents();
-        if (globalSessionId) {
-          supabase
-            .from("telemetry_sessions")
-            .update({ ended_at: new Date().toISOString() } as any)
-            .eq("id", globalSessionId)
-            .then(() => {});
-        }
+        flushBeacon();
       }
     };
 
     window.addEventListener("beforeunload", handleUnload);
     document.addEventListener("visibilitychange", handleVisibility);
 
+    // Safety net: flush on auth sign-out event
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        flushBeacon();
+        globalSessionId = null;
+        globalUserId = null;
+        sessionStarted.current = false;
+      }
+    });
+
     return () => {
       window.removeEventListener("beforeunload", handleUnload);
       document.removeEventListener("visibilitychange", handleVisibility);
+      subscription.unsubscribe();
       if (flushTimer) clearInterval(flushTimer);
       flushEvents();
     };

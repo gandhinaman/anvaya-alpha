@@ -9,6 +9,7 @@ import {
   Sparkles
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { flushTelemetry } from "@/hooks/useTelemetry";
 import { useParentData } from "@/hooks/useParentData";
 import { filterCities } from "@/lib/cities";
 import { formatPhoneInput, isValidPhone } from "@/lib/phoneFormat";
@@ -969,6 +970,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
 
   const handleSignOut = async () => {
     setSigningOut(true);
+    await flushTelemetry();
     await supabase.auth.signOut();
     window.location.href = "/login";
   };

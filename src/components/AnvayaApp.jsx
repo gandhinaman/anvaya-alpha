@@ -10,6 +10,7 @@ import LovedOneChat from "./loved-one/LovedOneChat";
 import MemoryRecorder from "./loved-one/MemoryRecorder";
 import MemoryLog from "./loved-one/MemoryLog";
 import { supabase } from "@/integrations/supabase/client";
+import { flushTelemetry } from "@/hooks/useTelemetry";
 import { useParentData } from "@/hooks/useParentData";
 import { useStreak } from "@/hooks/useStreak";
 import { trackEvent } from "@/hooks/useTelemetry";
@@ -1339,7 +1340,7 @@ Only use ONE action tag per response. Keep your spoken response brief and natura
             <User size={20} color="rgba(255,248,240,.6)"/>
           </button>
           {!inPanel && (
-            <button onClick={async()=>{await supabase.auth.signOut();window.location.href="/login";}} style={{
+            <button onClick={async()=>{await flushTelemetry();await supabase.auth.signOut();window.location.href="/login";}} style={{
               width:48,height:48,borderRadius:14,border:"1.5px solid rgba(255,248,240,.18)",
               background:"rgba(255,248,240,.08)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0
             }} title="Sign out">
@@ -2139,6 +2140,7 @@ function CarePartnerDashboard({inPanel=false, profileId=null}) {
 
   const handleSignOut = async () => {
     setSigningOut(true);
+    await flushTelemetry();
     await supabase.auth.signOut();
     window.location.href="/login";
   };

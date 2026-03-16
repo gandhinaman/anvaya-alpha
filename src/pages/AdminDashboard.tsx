@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { flushTelemetry } from "@/hooks/useTelemetry";
 import { useProfile } from "@/hooks/useProfile";
 import { Navigate } from "react-router-dom";
 import {
@@ -149,6 +150,7 @@ export default function AdminDashboard() {
     .map(([name, count]) => ({ name, count }));
 
   const handleLogout = async () => {
+    await flushTelemetry();
     await supabase.auth.signOut();
     window.location.href = "/login";
   };
