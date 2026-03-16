@@ -222,6 +222,7 @@ export default function ReactionRecorder({ open, onClose, memoryId, memoryTitle,
       recorderRef.current = recorder;
       recorder.start(250);
       setPhase("recording");
+      trackEvent("reaction_recorder_start", { mode });
     } catch (err) {
       console.error("Recording start error:", err);
       if (stream) stream.getTracks().forEach((t) => t.stop());
