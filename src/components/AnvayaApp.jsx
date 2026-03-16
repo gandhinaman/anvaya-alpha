@@ -805,6 +805,7 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
       setVoiceText("");
       setVoiceResponse("");
       setRec(true);
+      trackEvent("voice_start", { lang, method: "web_speech" });
 
       try {
         const recognition = new SpeechRecognition();
