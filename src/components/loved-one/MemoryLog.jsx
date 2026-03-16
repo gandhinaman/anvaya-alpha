@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { X, BookOpen, MessageCircle, ChevronDown, ChevronUp, Play, Pause, Trash2, Search, Mic, Send, Heart, Gift } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { trackEvent } from "@/hooks/useTelemetry";
 
 const TONE_EMOJI = { joyful: "😊", nostalgic: "🌅", peaceful: "🕊️", concerned: "😟" };
 
