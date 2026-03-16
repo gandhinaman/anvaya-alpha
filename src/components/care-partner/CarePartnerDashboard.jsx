@@ -1296,32 +1296,32 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 <div>
                   <label style={{ fontSize: 11, fontWeight: 600, color: "#6b6b6b", marginBottom: 4, display: "block" }}>Full Name</label>
-                  <input value={guardianProfile.full_name} onChange={e => setGuardianProfile(p => ({ ...p, full_name: e.target.value }))}
+                  <input value={cpProfile.full_name} onChange={e => setCpProfile(p => ({ ...p, full_name: e.target.value }))}
                     placeholder="Your name"
                     style={{ width: "100%", padding: "11px 14px", borderRadius: 12, border: "1px solid rgba(93,64,55,0.15)", fontSize: 14, outline: "none", color: "#3E2723", fontFamily: "'DM Sans',sans-serif" }} />
                 </div>
                 <div>
                   <label style={{ fontSize: 11, fontWeight: 600, color: "#6b6b6b", marginBottom: 4, display: "block" }}>Phone Number</label>
-                  <input value={guardianProfile.phone} onChange={e => setGuardianProfile(p => ({ ...p, phone: formatPhoneInput(e.target.value) }))}
+                  <input value={cpProfile.phone} onChange={e => setCpProfile(p => ({ ...p, phone: formatPhoneInput(e.target.value) }))}
                     placeholder="+91 98765 43210" type="tel"
-                    style={{ width: "100%", padding: "11px 14px", borderRadius: 12, border: `1px solid ${guardianProfile.phone?.length > 0 ? (isValidPhone(guardianProfile.phone) ? "rgba(34,197,94,0.4)" : "rgba(220,38,38,0.4)") : "rgba(93,64,55,0.15)"}`, fontSize: 14, outline: "none", color: "#3E2723", fontFamily: "'DM Sans',sans-serif" }} />
-                  <div style={{ fontSize: 10, color: guardianProfile.phone?.length > 3 && !isValidPhone(guardianProfile.phone) ? "#DC2626" : "#9CA3AF", marginTop: 3 }}>
-                    {guardianProfile.phone?.length > 3 && !isValidPhone(guardianProfile.phone) ? "Include country code, e.g. +91 98765 43210" : "Your parent can use this to call you directly"}
+                    style={{ width: "100%", padding: "11px 14px", borderRadius: 12, border: `1px solid ${cpProfile.phone?.length > 0 ? (isValidPhone(cpProfile.phone) ? "rgba(34,197,94,0.4)" : "rgba(220,38,38,0.4)") : "rgba(93,64,55,0.15)"}`, fontSize: 14, outline: "none", color: "#3E2723", fontFamily: "'DM Sans',sans-serif" }} />
+                  <div style={{ fontSize: 10, color: cpProfile.phone?.length > 3 && !isValidPhone(cpProfile.phone) ? "#DC2626" : "#9CA3AF", marginTop: 3 }}>
+                    {cpProfile.phone?.length > 3 && !isValidPhone(cpProfile.phone) ? "Include country code, e.g. +91 98765 43210" : "Your loved one can use this to call you directly"}
                   </div>
                 </div>
                 <div style={{ position: "relative" }} ref={cityRef}>
                   <label style={{ fontSize: 11, fontWeight: 600, color: "#6b6b6b", marginBottom: 4, display: "block" }}>Location</label>
                   <input
-                    value={guardianProfile.location}
+                    value={cpProfile.location}
                     onChange={e => {
                       const val = e.target.value;
-                      setGuardianProfile(p => ({ ...p, location: val }));
+                      setCpProfile(p => ({ ...p, location: val }));
                       const matches = filterCities(val);
                       setCitySuggestions(matches);
                       setShowCitySuggestions(matches.length > 0);
                     }}
                     onFocus={() => {
-                      const matches = filterCities(guardianProfile.location);
+                      const matches = filterCities(cpProfile.location);
                       if (matches.length > 0) { setCitySuggestions(matches); setShowCitySuggestions(true); }
                     }}
                     onBlur={() => setTimeout(() => setShowCitySuggestions(false), 150)}
@@ -1340,7 +1340,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
                         <div
                           key={city}
                           onMouseDown={() => {
-                            setGuardianProfile(p => ({ ...p, location: city }));
+                            setCpProfile(p => ({ ...p, location: city }));
                             setShowCitySuggestions(false);
                           }}
                           style={{
@@ -1358,14 +1358,14 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
                     </div>
                   )}
                 </div>
-                <button onClick={saveGuardianProfile} disabled={guardianProfileLoading || (guardianProfile.phone?.length > 0 && !isValidPhone(guardianProfile.phone))} style={{
-                  width: "100%", padding: "12px", borderRadius: 12, border: "none", cursor: guardianProfileLoading ? "wait" : "pointer",
-                  background: guardianProfileSaved ? "#22C55E" : "linear-gradient(135deg,#8D6E63,#5D4037)",
-                  color: "#FFF8F0", fontSize: 13, fontWeight: 600, opacity: guardianProfileLoading ? .6 : 1,
+                <button onClick={saveCpProfile} disabled={cpProfileLoading || (cpProfile.phone?.length > 0 && !isValidPhone(cpProfile.phone))} style={{
+                  width: "100%", padding: "12px", borderRadius: 12, border: "none", cursor: cpProfileLoading ? "wait" : "pointer",
+                  background: cpProfileSaved ? "#22C55E" : "linear-gradient(135deg,#8D6E63,#5D4037)",
+                  color: "#FFF8F0", fontSize: 13, fontWeight: 600, opacity: cpProfileLoading ? .6 : 1,
                   transition: "all .3s", display: "flex", alignItems: "center", justifyContent: "center", gap: 6
                 }}>
-                  {guardianProfileLoading ? <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> : guardianProfileSaved ? <Check size={14} /> : null}
-                  {guardianProfileLoading ? "Saving…" : guardianProfileSaved ? "Saved!" : "Save Profile"}
+                  {cpProfileLoading ? <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> : cpProfileSaved ? <Check size={14} /> : null}
+                  {cpProfileLoading ? "Saving…" : cpProfileSaved ? "Saved!" : "Save Profile"}
                 </button>
               </div>
             </div>
