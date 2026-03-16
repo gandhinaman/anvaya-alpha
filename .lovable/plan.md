@@ -1,79 +1,43 @@
 
 
-# Plan: Heart Reactions, Notification Badges, and Read-State for Memories
+## Problem
 
-## What we're building
-1. **Heart reaction on memories** (caregiver can heart a memory)
-2. **Notification badge on Memories nav tab** showing unread hearts + comments count
-3. **Clear notifications** once the caregiver views the Memories tab
+Telemetry events are buffered in memory and flushed every 5 seconds, but on logout the code calls `supabase.auth.signOut()` and immediately redirects to `/login` — the auth token is invalidated before the flush can complete, so buffered events and the session `ended_at` are lost.
 
-## Database Changes
+The `sendBeacon` fallback in `flushBeacon` also lacks the required `Authorization` and `apikey` headers, so it silently fails even on tab close.
 
-### New table: `memory_reactions`
-```sql
-CREATE TABLE memory_reactions (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  memory_id uuid NOT NULL REFERENCES memories(id) ON DELETE CASCADE,
-  user_id uuid NOT NULL,
-  reaction_type text NOT NULL DEFAULT 'heart',
-  created_at timestamptz NOT NULL DEFAULT now(),
-  UNIQUE(memory_id, user_id, reaction_type)
-);
-ALTER TABLE memory_reactions ENABLE ROW LEVEL SECURITY;
+## Plan
 
--- Caregivers can heart linked parent's memories
-CREATE POLICY "Children can CRUD reactions on linked parent memories" ON memory_reactions
-  FOR ALL USING (
-    auth.uid() = user_id 
-    AND memory_id IN (SELECT id FROM memories WHERE user_id = get_linked_user_id(auth.uid()))
-  ) WITH CHECK (
-    auth.uid() = user_id 
-    AND memory_id IN (SELECT id FROM memories WHERE user_id = get_linked_user_id(auth.uid()))
-  );
+### 1. Export a `flushTelemetry()` function from `useTelemetry.ts`
 
--- Parents can read reactions on own memories
-CREATE POLICY "Parents can read reactions on own memories" ON memory_reactions
-  FOR SELECT USING (
-    memory_id IN (SELECT id FROM memories WHERE user_id = auth.uid())
-  );
+A synchronous-safe async function that:
+- Flushes all buffered events via the Supabase client
+- Updates `telemetry_sessions.ended_at` for the current session
+- Resets globals (`globalSessionId`, `globalUserId`, `sessionStarted`)
 
--- Enable realtime
-ALTER PUBLICATION supabase_realtime ADD TABLE memory_reactions;
-```
+### 2. Fix `flushBeacon` to include auth headers
 
-### New column on `profiles`: `memories_last_viewed_at`
-```sql
-ALTER TABLE profiles ADD COLUMN memories_last_viewed_at timestamptz DEFAULT NULL;
-```
+The `sendBeacon` calls for `beforeunload` need `apikey` and `Authorization` headers. Since `sendBeacon` only supports body blobs, switch to `fetch(..., { keepalive: true })` which supports headers and survives page unload.
 
-## Code Changes
+### 3. Call `flushTelemetry()` before `signOut()` in all logout handlers
 
-### 1. `src/hooks/useParentData.ts` — Fetch reactions + last-viewed timestamp
-- Fetch `memory_reactions` for all loaded memory IDs (grouped by memory)
-- Fetch `memories_last_viewed_at` from the caregiver's own profile
-- Compute `unreadCount`: count of comments + hearts with `created_at > memories_last_viewed_at`
-- Subscribe to realtime on `memory_reactions` table
-- Add `markMemoriesViewed()` function that updates `profiles.memories_last_viewed_at = now()`
-- Return `memoryReactions`, `unreadCount`, `markMemoriesViewed`
+There are 4 logout locations:
+- `AnvayaApp.jsx` — inline button (line ~1342) and `handleSignOut` (line ~2140)
+- `CarePartnerDashboard.jsx` — `handleSignOut` (line ~970)
+- `AdminDashboard.tsx` — `handleLogout` (line ~151)
 
-### 2. `src/components/guardian/GuardianDashboard.jsx`
+Each will `await flushTelemetry()` before calling `supabase.auth.signOut()`.
 
-**Nav badge**: Add unread count badge next to the "Memories" nav item (similar to Bell badge pattern already used)
+### 4. Listen to Supabase `onAuthStateChange` for `SIGNED_OUT`
 
-**Heart button on MemoryCard**: Add a heart toggle button next to the existing comment button. Clicking inserts/deletes from `memory_reactions`. Show filled heart if already hearted, outline if not. Show heart count.
+As a safety net inside `useTelemetry.ts`, listen to the auth state change event. On `SIGNED_OUT`, flush any remaining events (the token is still briefly valid at event fire time).
 
-**Mark viewed**: When `nav === "memories"` is selected, call `markMemoriesViewed()` to clear the badge count.
+### Files changed
 
-### 3. `src/components/sathi/MemoryLog.jsx` — Show hearts on senior side
-- Fetch `memory_reactions` alongside comments
-- Display heart count on each memory card (read-only for senior)
-
-### 4. `src/components/AnvayaApp.jsx` — Badge on Memory Log button (senior side)
-- Show unread comment/heart count badge on the "Memory Log" action card, clear when opened
-
-## UI Behavior
-- **Memories nav tab**: Shows a small badge (e.g., "3") for unread hearts + comments since last viewed
-- **Heart button**: Appears on each MemoryCard next to the comment button. Toggle on/off. Shows count.
-- **Opening Memories tab**: Updates `memories_last_viewed_at`, badge resets to 0
-- **Senior Memory Log**: Shows heart count per memory (read-only), badge on Memory Log button for new comments
+| File | Change |
+|---|---|
+| `src/hooks/useTelemetry.ts` | Export `flushTelemetry()`, fix beacon to use `fetch+keepalive`, add auth listener cleanup |
+| `src/components/AnvayaApp.jsx` | Import & await `flushTelemetry` before both sign-out calls |
+| `src/components/care-partner/CarePartnerDashboard.jsx` | Import & await `flushTelemetry` before sign-out |
+| `src/pages/AdminDashboard.tsx` | Import & await `flushTelemetry` before sign-out |
 
