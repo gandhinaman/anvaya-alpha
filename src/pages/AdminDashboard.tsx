@@ -101,9 +101,9 @@ export default function AdminDashboard() {
     .slice(0, 8)
     .map(([name, count]) => ({ name, count }));
 
-  // Role distribution
+  const ROLE_LABELS: Record<string, string> = { parent: "Loved One", child: "Care Partner" };
   const roleMap: Record<string, number> = {};
-  profiles.forEach(p => { roleMap[p.role] = (roleMap[p.role] || 0) + 1; });
+  profiles.forEach(p => { const label = ROLE_LABELS[p.role] || p.role; roleMap[label] = (roleMap[label] || 0) + 1; });
   const roleData = Object.entries(roleMap).map(([name, value]) => ({ name, value }));
 
   // User table
