@@ -872,6 +872,16 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
     const userMsg = { role: "user", content: text };
     const history = [...voiceHistoryRef.current, userMsg];
 
+    // Build system prompt — inject proactive context on first turn only
+    let systemOverride = lang === "hi"
+      ? "You are Ela, a warm AI companion for elderly Indian users. Respond ONLY in Hindi. CRITICAL: Keep responses to 2-3 SHORT sentences maximum — this will be read aloud, so brevity is essential. Be warm but very concise. Never give medical diagnoses."
+      : "You are Ela, a warm AI companion for elderly Indian users. Respond ONLY in English. CRITICAL: Keep responses to 2-3 SHORT sentences maximum — this will be read aloud, so brevity is essential. Be warm but very concise. Never give medical diagnoses.";
+
+    if (voiceHistoryRef.current.length === 0 && proactiveContextRef.current) {
+      systemOverride += `\n\nCONVERSATION CONTEXT (use naturally, don't recite):${proactiveContextRef.current}`;
+      proactiveContextRef.current = null; // Only inject once
+    }
+
     try {
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -888,9 +898,7 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
           body: JSON.stringify({
             messages: history.map(m => ({ role: m.role, content: m.content })),
             userId,
-            system: lang === "hi"
-              ? "You are Ela, a warm AI companion for elderly Indian users. Respond ONLY in Hindi. CRITICAL: Keep responses to 2-3 SHORT sentences maximum — this will be read aloud, so brevity is essential. Be warm but very concise. Never give medical diagnoses."
-              : "You are Ela, a warm AI companion for elderly Indian users. Respond ONLY in English. CRITICAL: Keep responses to 2-3 SHORT sentences maximum — this will be read aloud, so brevity is essential. Be warm but very concise. Never give medical diagnoses.",
+            system: systemOverride,
           }),
         }
       );
@@ -923,12 +931,32 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
         }
       }
 
-      // Save to conversation history
+      // Parse and strip action tags
+      let pendingAction = null;
+      const actionMatch = fullResponse.match(/\[ACTION:(\w+)\]/);
+      if (actionMatch) {
+        pendingAction = actionMatch[1];
+        fullResponse = fullResponse.replace(/\[ACTION:\w+\]/g, "").trim();
+        setVoiceResponse(fullResponse);
+      }
+
+      // Save to conversation history (without action tags)
       voiceHistoryRef.current = [...history, { role: "assistant", content: fullResponse }];
 
-      // Speak the response
+      // Speak the response, then trigger action
       if (fullResponse) {
-        speakResponse(fullResponse);
+        const originalOnEnd = () => {
+          // Trigger app action after TTS finishes
+          if (pendingAction) {
+            setTimeout(() => {
+              if (pendingAction === "record_memory") setMemoryOpen(true);
+              else if (pendingAction === "open_memory_log") openMemoryLog();
+              else if (pendingAction === "open_chat") { setPendingChatMsg(null); setChatOpen(true); }
+              else if (pendingAction === "call_family") setCallOpen(true);
+            }, 500);
+          }
+        };
+        speakResponse(fullResponse, originalOnEnd);
       } else {
         setVoicePhase("idle");
       }
