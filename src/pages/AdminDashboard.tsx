@@ -149,6 +149,7 @@ export default function AdminDashboard() {
     .map(([name, count]) => ({ name, count }));
 
   const handleLogout = async () => {
+    await flushTelemetry();
     await supabase.auth.signOut();
     window.location.href = "/login";
   };

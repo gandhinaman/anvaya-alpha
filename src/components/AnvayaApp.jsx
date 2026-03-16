@@ -2139,6 +2139,7 @@ function CarePartnerDashboard({inPanel=false, profileId=null}) {
 
   const handleSignOut = async () => {
     setSigningOut(true);
+    await flushTelemetry();
     await supabase.auth.signOut();
     window.location.href="/login";
   };
