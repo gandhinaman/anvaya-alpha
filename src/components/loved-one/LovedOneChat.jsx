@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { X, Mic, MicOff, Send, MessageCircle, Volume2, Check, BookOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { trackEvent } from "@/hooks/useTelemetry";
 
 // ─── Culturally-aware suggested prompts ───
 const ALL_SUGGESTED_EN = [
@@ -151,7 +152,9 @@ export default function LovedOneChat({ open, onClose, lang = "en", userId, initi
         .single();
 
       if (data?.messages && Array.isArray(data.messages) && data.messages.length > 0) {
-        setMessages(data.messages);
+        // Clean out empty assistant messages from previous incomplete streams
+        const cleaned = data.messages.filter(m => !(m.role === "assistant" && (!m.content || !m.content.trim())));
+        setMessages(cleaned.length > 0 ? cleaned : [{ role: "assistant", content: greeting }]);
       } else {
         setMessages([{ role: "assistant", content: greeting }]);
         speakText(greeting);
@@ -389,7 +392,6 @@ export default function LovedOneChat({ open, onClose, lang = "en", userId, initi
 
     // Track Ela interaction (privacy-compliant: word count + category, no raw text)
     try {
-      const { trackEvent } = await import("@/hooks/useTelemetry");
       const wordCount = text.trim().split(/\s+/).length;
       trackEvent("ela_chat", { word_count: wordCount, message_index: newMessages.length });
     } catch(e) {}
@@ -400,8 +402,13 @@ export default function LovedOneChat({ open, onClose, lang = "en", userId, initi
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
+      // Filter out empty assistant messages and the greeting to avoid confusing the AI
       const messagesForAI = newMessages.filter((m, i) => {
         if (i === 0 && m.role === "assistant" && (m.content === GREETING_EN || m.content === GREETING_HI)) {
+          return false;
+        }
+        // Skip empty assistant messages (from previously incomplete streams)
+        if (m.role === "assistant" && (!m.content || !m.content.trim())) {
           return false;
         }
         return true;
