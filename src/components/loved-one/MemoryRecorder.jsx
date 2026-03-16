@@ -19,9 +19,15 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
   const promptAudioRef = useRef(null);
   const videoPreviewRef = useRef(null);
 
+  const [promptReady, setPromptReady] = useState(false);
+
   // Fetch unused caregiver questions to use as prompts
   useEffect(() => {
-    if (!userId || !open) return;
+    if (!userId || !open) {
+      setPromptReady(false);
+      return;
+    }
+    setPromptReady(false);
     supabase.from("caregiver_questions")
       .select("*")
       .eq("parent_id", userId)
@@ -34,11 +40,11 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
         } else {
           setCaregiverQuestion(null);
         }
+        setPromptReady(true);
       });
   }, [userId, open]);
 
   const currentPrompt = useMemo(() => {
-    // Prioritize caregiver questions over random prompts
     if (caregiverQuestion) {
       return caregiverQuestion.question;
     }
@@ -100,10 +106,10 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
   }, [lang, speakWithBrowserFallback]);
 
   useEffect(() => {
-    if (open && phase === "idle") {
+    if (open && phase === "idle" && promptReady) {
       speakPrompt(currentPrompt);
     }
-  }, [open]);
+  }, [open, promptReady]);
 
   const shufflePrompt = () => {
     // If currently showing a caregiver question, skip to regular prompts
