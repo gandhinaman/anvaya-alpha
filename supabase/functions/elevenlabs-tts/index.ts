@@ -1,3 +1,5 @@
+import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -21,10 +23,9 @@ Deno.serve(async (req) => {
     });
   }
 
-  // Truncate to stay within API limits
   const truncatedText = text.length > 2400 ? text.slice(0, 2400) + "…" : text;
 
-  // ── Sarvam AI TTS (fast for Indian languages) ──
+  // ── Sarvam AI TTS (Meera voice, bulbul:v3) ──
   if (SARVAM_API_KEY) {
     try {
       const targetLang = lang === "hi" ? "hi-IN" : "en-IN";
@@ -38,27 +39,23 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           text: truncatedText,
           target_language_code: targetLang,
-          speaker: "anushka",
-          model: "bulbul:v2",
+          speaker: "meera",
+          model: "bulbul:v3",
           enable_preprocessing: true,
           pitch: 0,
-          pace: 1.0,
-          loudness: 1.0,
+          pace: 0.85,
+          loudness: 1.3,
         }),
       });
 
       if (response.ok) {
         const data = await response.json();
         if (data.audios && data.audios[0]) {
-          const audioBase64 = data.audios[0];
-          const binaryString = atob(audioBase64);
-          const bytes = new Uint8Array(binaryString.length);
-          for (let i = 0; i < binaryString.length; i++) {
-            bytes[i] = binaryString.charCodeAt(i);
-          }
-          return new Response(bytes, {
-            headers: { ...corsHeaders, "Content-Type": "audio/wav" },
-          });
+          // Return base64 WAV in JSON for Web Audio API playback
+          return new Response(
+            JSON.stringify({ audio: data.audios[0] }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
         }
       } else {
         console.error("Sarvam error:", response.status, await response.text());
@@ -68,7 +65,7 @@ Deno.serve(async (req) => {
     }
   }
 
-  // ── ElevenLabs streaming fallback (uses turbo model for speed) ──
+  // ── ElevenLabs fallback — also returns base64 JSON ──
   if (!ELEVENLABS_API_KEY) {
     return new Response(JSON.stringify({ error: "No TTS API key configured" }), {
       status: 500,
@@ -79,9 +76,8 @@ Deno.serve(async (req) => {
   const selectedVoice = voiceId || "pFZP5JQG7iQjIQuC4Bku";
 
   try {
-    // Use streaming endpoint + turbo model for lowest latency
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${selectedVoice}/stream?output_format=mp3_22050_32`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${selectedVoice}?output_format=mp3_22050_32`,
       {
         method: "POST",
         headers: {
@@ -111,14 +107,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Stream audio directly to client
-    return new Response(response.body, {
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "audio/mpeg",
-        "Transfer-Encoding": "chunked",
-      },
-    });
+    const audioBuffer = await response.arrayBuffer();
+    const audioBase64 = base64Encode(audioBuffer);
+
+    return new Response(
+      JSON.stringify({ audio: audioBase64, format: "mp3" }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   } catch (error) {
     console.error("TTS error:", error);
     return new Response(JSON.stringify({ error: error.message }), {

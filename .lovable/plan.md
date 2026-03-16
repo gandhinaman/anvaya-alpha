@@ -1,70 +1,79 @@
 
 
-# Plan: Update Backend for Redesigned Orb Voice Flow
+# Plan: Heart Reactions, Notification Badges, and Read-State for Memories
 
-## What Changed in the Spec
+## What we're building
+1. **Heart reaction on memories** (caregiver can heart a memory)
+2. **Notification badge on Memories nav tab** showing unread hearts + comments count
+3. **Clear notifications** once the caregiver views the Memories tab
 
-The spec redesigns the orb voice pipeline to be simpler and more reliable:
+## Database Changes
 
-1. **TTS**: Switch from Anushka to **Meera** voice, model **bulbul:v3** (from v2), pace **0.85** (slower for seniors), loudness **1.3** (louder for hearing), return **base64 WAV** instead of raw audio bytes
-2. **STT**: Accept raw audio blob via FormData (not base64 JSON), use `saarika:v2.5` (already correct), pass proper `language_code` (`hi-IN`/`en-IN`)
-3. **Chat**: Shorter responses (`max_tokens: 120`), simpler system prompt focused on 1-2 sentence replies
-4. **Audio playback**: Use Web Audio API (`AudioContext.decodeAudioData`) with base64 WAV instead of `<audio>` element — more reliable on iOS
+### New table: `memory_reactions`
+```sql
+CREATE TABLE memory_reactions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  memory_id uuid NOT NULL REFERENCES memories(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL,
+  reaction_type text NOT NULL DEFAULT 'heart',
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(memory_id, user_id, reaction_type)
+);
+ALTER TABLE memory_reactions ENABLE ROW LEVEL SECURITY;
 
-## Backend Changes
+-- Caregivers can heart linked parent's memories
+CREATE POLICY "Children can CRUD reactions on linked parent memories" ON memory_reactions
+  FOR ALL USING (
+    auth.uid() = user_id 
+    AND memory_id IN (SELECT id FROM memories WHERE user_id = get_linked_user_id(auth.uid()))
+  ) WITH CHECK (
+    auth.uid() = user_id 
+    AND memory_id IN (SELECT id FROM memories WHERE user_id = get_linked_user_id(auth.uid()))
+  );
 
-### 1. Update `elevenlabs-tts` Edge Function
-- Change Sarvam voice from `anushka` to `meera`
-- Change model from `bulbul:v2` to `bulbul:v3`
-- Set `pace: 0.85`, `loudness: 1.3`
-- Return JSON `{ audio: base64string }` instead of raw WAV bytes — this is what the new client-side Web Audio API playback expects
-- Keep ElevenLabs as fallback but also return base64
+-- Parents can read reactions on own memories
+CREATE POLICY "Parents can read reactions on own memories" ON memory_reactions
+  FOR SELECT USING (
+    memory_id IN (SELECT id FROM memories WHERE user_id = auth.uid())
+  );
 
-### 2. Update `sarvam-stt` Edge Function
-- Accept both current base64 JSON format AND raw FormData blob (for new orb flow)
-- Add `language_code` mapping: accept `hi-IN` / `en-IN` directly
-
-### 3. Update `chat` Edge Function
-- Add `max_tokens: 120` to the AI gateway request to enforce short responses for voice
-- The system prompt is already passed from the client, so no structural change needed
-
-### 4. Update `AnvayaApp.jsx` — Orb Voice Pipeline
-- **TTS playback**: Switch from `<audio>` blob/MediaSource to Web Audio API (`AudioContext.decodeAudioData` on base64 WAV) — more reliable on iOS Safari
-- **STT call**: Keep WAV fallback path but ensure `getUserMedia` is always called inside tap handler (iOS requirement)
-- **speakResponse**: Parse JSON `{ audio }` response, decode base64, play via AudioContext
-- Remove ElevenLabs MediaSource streaming path (Sarvam is now primary and returns base64 WAV)
-
-## Technical Details
-
-### TTS Response Format Change
-```
-// Before: raw audio/wav bytes
-return new Response(bytes, { headers: { "Content-Type": "audio/wav" } })
-
-// After: JSON with base64
-return new Response(JSON.stringify({ audio: base64 }), { 
-  headers: { "Content-Type": "application/json" } 
-})
+-- Enable realtime
+ALTER PUBLICATION supabase_realtime ADD TABLE memory_reactions;
 ```
 
-### Client-side Web Audio Playback
-```javascript
-const { audio: base64wav } = await response.json();
-const ctx = new AudioContext();
-await ctx.resume(); // iOS requirement
-const binary = atob(base64wav);
-const bytes = new Uint8Array(binary.length);
-for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-const buffer = await ctx.decodeAudioData(bytes.buffer);
-const source = ctx.createBufferSource();
-source.buffer = buffer;
-source.connect(ctx.destination);
-source.onended = () => { setVoicePhase("idle"); };
-source.start(0);
+### New column on `profiles`: `memories_last_viewed_at`
+```sql
+ALTER TABLE profiles ADD COLUMN memories_last_viewed_at timestamptz DEFAULT NULL;
 ```
 
-### Files to Modify
-- `supabase/functions/elevenlabs-tts/index.ts` — voice, model, pace, loudness, response format
-- `supabase/functions/chat/index.ts` — add max_tokens
-- `src/components/AnvayaApp.jsx` — TTS playback via Web Audio API, simplified flow
+## Code Changes
+
+### 1. `src/hooks/useParentData.ts` — Fetch reactions + last-viewed timestamp
+- Fetch `memory_reactions` for all loaded memory IDs (grouped by memory)
+- Fetch `memories_last_viewed_at` from the caregiver's own profile
+- Compute `unreadCount`: count of comments + hearts with `created_at > memories_last_viewed_at`
+- Subscribe to realtime on `memory_reactions` table
+- Add `markMemoriesViewed()` function that updates `profiles.memories_last_viewed_at = now()`
+- Return `memoryReactions`, `unreadCount`, `markMemoriesViewed`
+
+### 2. `src/components/guardian/GuardianDashboard.jsx`
+
+**Nav badge**: Add unread count badge next to the "Memories" nav item (similar to Bell badge pattern already used)
+
+**Heart button on MemoryCard**: Add a heart toggle button next to the existing comment button. Clicking inserts/deletes from `memory_reactions`. Show filled heart if already hearted, outline if not. Show heart count.
+
+**Mark viewed**: When `nav === "memories"` is selected, call `markMemoriesViewed()` to clear the badge count.
+
+### 3. `src/components/sathi/MemoryLog.jsx` — Show hearts on senior side
+- Fetch `memory_reactions` alongside comments
+- Display heart count on each memory card (read-only for senior)
+
+### 4. `src/components/AnvayaApp.jsx` — Badge on Memory Log button (senior side)
+- Show unread comment/heart count badge on the "Memory Log" action card, clear when opened
+
+## UI Behavior
+- **Memories nav tab**: Shows a small badge (e.g., "3") for unread hearts + comments since last viewed
+- **Heart button**: Appears on each MemoryCard next to the comment button. Toggle on/off. Shows count.
+- **Opening Memories tab**: Updates `memories_last_viewed_at`, badge resets to 0
+- **Senior Memory Log**: Shows heart count per memory (read-only), badge on Memory Log button for new comments
 
