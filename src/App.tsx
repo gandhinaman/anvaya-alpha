@@ -55,6 +55,7 @@ return (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <TelemetryProvider />
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/reset-password" element={<ResetPassword />} />
@@ -64,6 +65,7 @@ return (
           <Route path="/" element={<ProtectedRoute><RoleRedirect /></ProtectedRoute>} />
           <Route path="/loved-one" element={<ProtectedRoute><ParentApp /></ProtectedRoute>} />
           <Route path="/care-partner" element={<ProtectedRoute><ChildApp /></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
           {/* Legacy route redirects */}
           <Route path="/sathi" element={<ProtectedRoute><ParentApp /></ProtectedRoute>} />
           <Route path="/guardian" element={<ProtectedRoute><ChildApp /></ProtectedRoute>} />
