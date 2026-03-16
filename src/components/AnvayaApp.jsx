@@ -723,7 +723,7 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
       }
     }, 15000);
 
-    // Unlock audio on iOS — only once, skip if already done
+    // Unlock audio + pre-warm AudioContext on iOS — only once
     if (!preWarmedAudioRef.current) {
       try {
         const { unlockAudio } = await import("@/lib/audioUnlock");
@@ -731,6 +731,13 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
       } catch (e) {
         console.warn("Audio unlock failed:", e);
       }
+    }
+    // Pre-warm AudioContext during STT so TTS playback has zero cold-start
+    if (!audioContextRef.current) {
+      try {
+        audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+        await audioContextRef.current.resume();
+      } catch {}
     }
 
     // Try Web Speech API first (works on desktop Chrome, Android Chrome)
