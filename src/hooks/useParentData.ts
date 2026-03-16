@@ -136,7 +136,7 @@ export function useParentData(profileId: string | null) {
       // Fetch parent profile
       const { data: pp } = await supabase
         .from("profiles")
-        .select("id, full_name, role, language")
+        .select("id, full_name, role, language, age, location, health_issues, interests, religion, avatar_url")
         .eq("id", parentId)
         .maybeSingle();
       if (pp) setParentProfile(pp as ParentProfile);
