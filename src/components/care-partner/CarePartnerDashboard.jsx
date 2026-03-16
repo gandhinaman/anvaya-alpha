@@ -967,6 +967,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setLinkSuccess(`Linked to ${data.parent_name || "parent"}! Refreshing…`);
+      trackEvent("link_account", {});
       setTimeout(() => window.location.reload(), 1500);
     } catch (e) { setLinkError(e.message || "Failed to link"); }
     finally { setLinkLoading(false); }
