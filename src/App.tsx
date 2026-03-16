@@ -14,6 +14,8 @@ import RoleRedirect from "./pages/RoleRedirect";
 import InstallPage from "./pages/InstallPage";
 import NotFound from "./pages/NotFound";
 import TestFlight from "./pages/TestFlight";
+import AdminDashboard from "./pages/AdminDashboard";
+import { TelemetryProvider } from "./components/shared/TelemetryProvider";
 
 const queryClient = new QueryClient();
 
