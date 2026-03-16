@@ -112,13 +112,9 @@ export function useTelemetry() {
 
   // Start session
   useEffect(() => {
-    if (sessionStarted.current) return;
+    const startSession = async (userId: string) => {
+      if (sessionStarted.current) return;
 
-    const startSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) return;
-
-      const userId = session.user.id;
       globalUserId = userId;
 
       const { data: profile } = await supabase
@@ -139,42 +135,53 @@ export function useTelemetry() {
         .select("id")
         .single();
 
-      if (!error && data) {
+      if (error) {
+        console.error("[Telemetry] session insert failed:", error.message);
+        return;
+      }
+
+      if (data) {
         globalSessionId = data.id;
         sessionStarted.current = true;
 
-        flushTimer = setInterval(flushEvents, 5000);
+        if (!flushTimer) {
+          flushTimer = setInterval(flushEvents, 5000);
+        }
 
         trackEvent(location.pathname, {}, "page_view");
         lastPath.current = location.pathname;
       }
     };
 
-    startSession();
+    // Check if already authenticated
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) startSession(session.user.id);
+    });
 
-    // End session on unload
-    const handleUnload = () => {
-      flushBeacon();
-    };
-
-    const handleVisibility = () => {
-      if (document.visibilityState === "hidden") {
-        flushBeacon();
-      }
-    };
-
-    window.addEventListener("beforeunload", handleUnload);
-    document.addEventListener("visibilitychange", handleVisibility);
-
-    // Safety net: flush on auth sign-out event
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_OUT") {
+    // Listen for auth changes (login after mount, or sign-out)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session?.user) {
+        startSession(session.user.id);
+      } else if (event === "SIGNED_OUT") {
         flushBeacon();
         globalSessionId = null;
         globalUserId = null;
         sessionStarted.current = false;
+        if (flushTimer) {
+          clearInterval(flushTimer);
+          flushTimer = null;
+        }
       }
     });
+
+    // End session on unload
+    const handleUnload = () => flushBeacon();
+    const handleVisibility = () => {
+      if (document.visibilityState === "hidden") flushBeacon();
+    };
+
+    window.addEventListener("beforeunload", handleUnload);
+    document.addEventListener("visibilitychange", handleVisibility);
 
     return () => {
       window.removeEventListener("beforeunload", handleUnload);
