@@ -13,6 +13,7 @@ interface ParentProfile {
   interests: string[] | null;
   religion: string | null;
   avatar_url: string | null;
+  gender: string | null;
 }
 
 interface Memory {
