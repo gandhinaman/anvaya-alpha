@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
     }
 
     // Build personalized system prompt with user context
-    let systemPrompt = system || SATHI_SYSTEM;
+    let systemPrompt = system || ELA_SYSTEM;
 
     if (userId) {
       try {
