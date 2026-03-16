@@ -827,7 +827,10 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
         parent_id: parentProfile.id,
         question: newQuestion.trim(),
       }).select().single();
-      if (data) setQuestions(prev => [data, ...prev]);
+      if (data) {
+        setQuestions(prev => [data, ...prev]);
+        trackEvent("caregiver_question_send", { question_length: newQuestion.trim().length });
+      }
       setNewQuestion("");
     } catch (err) { console.error("Add question error:", err); }
     finally { setQuestionSending(false); }
