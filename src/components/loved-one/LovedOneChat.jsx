@@ -402,13 +402,17 @@ export default function LovedOneChat({ open, onClose, lang = "en", userId, initi
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-      // Filter out empty assistant messages and the greeting to avoid confusing the AI
-      const messagesForAI = newMessages.filter((m, i) => {
+      // Filter out empty assistant messages, greeting, and deduplicate consecutive user messages
+      const messagesForAI = newMessages.filter((m, i, arr) => {
         if (i === 0 && m.role === "assistant" && (m.content === GREETING_EN || m.content === GREETING_HI)) {
           return false;
         }
         // Skip empty assistant messages (from previously incomplete streams)
         if (m.role === "assistant" && (!m.content || !m.content.trim())) {
+          return false;
+        }
+        // Deduplicate consecutive user messages with same content
+        if (i > 0 && m.role === "user" && arr[i - 1]?.role === "user" && arr[i - 1]?.content === m.content) {
           return false;
         }
         return true;
