@@ -129,6 +129,10 @@ export default function SathiChat({ open, onClose, lang = "en", userId, initialM
       ttsAudioRef.current.pause();
       ttsAudioRef.current = null;
     }
+    if (typeof ttsControllerRef !== 'undefined' && ttsControllerRef?.current) {
+      try { ttsControllerRef.current.stop(); } catch {}
+      ttsControllerRef.current = null;
+    }
     window.speechSynthesis.cancel();
     setSpeakingIdx(-1);
   }, []);
