@@ -1,79 +1,76 @@
 
 
-# Plan: Heart Reactions, Notification Badges, and Read-State for Memories
+## Plan: Sarvam Streaming TTS + Faster Pace (iOS-compatible)
 
-## What we're building
-1. **Heart reaction on memories** (caregiver can heart a memory)
-2. **Notification badge on Memories nav tab** showing unread hearts + comments count
-3. **Clear notifications** once the caregiver views the Memories tab
+### Problem
+- TTS waits for full audio synthesis before playback — adds 2-4s latency
+- Pace at 0.85 is too slow
+- STT is batch (record → upload → wait) — adds latency
 
-## Database Changes
+### Approach
 
-### New table: `memory_reactions`
-```sql
-CREATE TABLE memory_reactions (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  memory_id uuid NOT NULL REFERENCES memories(id) ON DELETE CASCADE,
-  user_id uuid NOT NULL,
-  reaction_type text NOT NULL DEFAULT 'heart',
-  created_at timestamptz NOT NULL DEFAULT now(),
-  UNIQUE(memory_id, user_id, reaction_type)
-);
-ALTER TABLE memory_reactions ENABLE ROW LEVEL SECURITY;
+**TTS: Edge function as WebSocket→SSE bridge** (most impactful latency win)
 
--- Caregivers can heart linked parent's memories
-CREATE POLICY "Children can CRUD reactions on linked parent memories" ON memory_reactions
-  FOR ALL USING (
-    auth.uid() = user_id 
-    AND memory_id IN (SELECT id FROM memories WHERE user_id = get_linked_user_id(auth.uid()))
-  ) WITH CHECK (
-    auth.uid() = user_id 
-    AND memory_id IN (SELECT id FROM memories WHERE user_id = get_linked_user_id(auth.uid()))
-  );
-
--- Parents can read reactions on own memories
-CREATE POLICY "Parents can read reactions on own memories" ON memory_reactions
-  FOR SELECT USING (
-    memory_id IN (SELECT id FROM memories WHERE user_id = auth.uid())
-  );
-
--- Enable realtime
-ALTER PUBLICATION supabase_realtime ADD TABLE memory_reactions;
+```text
+Client ──POST──▶ Edge Function ──WS──▶ Sarvam TTS Streaming
+Client ◀──SSE────Edge Function ◀──WS──── (base64 PCM chunks)
 ```
 
-### New column on `profiles`: `memories_last_viewed_at`
-```sql
-ALTER TABLE profiles ADD COLUMN memories_last_viewed_at timestamptz DEFAULT NULL;
-```
+- Edge function opens WebSocket to `wss://api.sarvam.ai/text-to-speech/streaming`
+- Sends config (speaker: priya, pace: 1.15, codec: pcm), text, flush
+- Receives base64 PCM audio chunks → streams back as SSE `data: {"audio":"...","done":false}` events
+- Client decodes raw PCM (16-bit, mono) directly into Web Audio API AudioBuffers — no `decodeAudioData` needed, works reliably on iOS Safari
+- Audio starts playing after first chunk arrives (sub-second time-to-first-audio)
 
-## Code Changes
+**STT: Keep batch but increase pace** — Supabase Edge Functions have limited WebSocket upgrade support, so streaming STT via a WS proxy is unreliable. The batch Saaras v3 endpoint is already fast (~1-2s). We keep it as-is.
 
-### 1. `src/hooks/useParentData.ts` — Fetch reactions + last-viewed timestamp
-- Fetch `memory_reactions` for all loaded memory IDs (grouped by memory)
-- Fetch `memories_last_viewed_at` from the caregiver's own profile
-- Compute `unreadCount`: count of comments + hearts with `created_at > memories_last_viewed_at`
-- Subscribe to realtime on `memory_reactions` table
-- Add `markMemoriesViewed()` function that updates `profiles.memories_last_viewed_at = now()`
-- Return `memoryReactions`, `unreadCount`, `markMemoriesViewed`
+**Pace: 0.85 → 1.15** across all TTS calls.
 
-### 2. `src/components/guardian/GuardianDashboard.jsx`
+### iOS Compatibility
+- SSE (EventSource / fetch streaming): fully supported on iOS Safari
+- Web Audio API with raw PCM → AudioBuffer: fully supported, no `decodeAudioData` parsing issues
+- Audio unlock (existing `unlockAudio()` on first tap): preserved
+- No MediaSource dependency (not supported on iOS Safari)
 
-**Nav badge**: Add unread count badge next to the "Memories" nav item (similar to Bell badge pattern already used)
+### Changes
 
-**Heart button on MemoryCard**: Add a heart toggle button next to the existing comment button. Clicking inserts/deletes from `memory_reactions`. Show filled heart if already hearted, outline if not. Show heart count.
+#### 1. Rewrite `supabase/functions/elevenlabs-tts/index.ts`
+- Accept POST with `{ text, lang }`
+- Open WebSocket to `wss://api.sarvam.ai/text-to-speech/streaming`
+- Send config message: `{ type: "config", data: { speaker: "priya", target_language_code, pace: 1.15, output_audio_codec: "pcm", min_buffer_size: 50 } }`
+- Send text message, then flush message
+- Stream received audio chunks as SSE: `data: {"audio":"<base64>","done":false}\n\n`
+- On completion/close: `data: {"done":true}\n\n`
+- Return `Content-Type: text/event-stream`
+- Fallback: if WS fails, fall back to batch API and return single JSON response (backward compat)
 
-**Mark viewed**: When `nav === "memories"` is selected, call `markMemoriesViewed()` to clear the badge count.
+#### 2. Update `src/components/AnvayaApp.jsx` — Orb `speakResponse`
+- Parse SSE stream from fetch response using `getReader()`
+- Decode each base64 PCM chunk → create Float32Array (16-bit LE → float)
+- Queue AudioBuffers on AudioContext, schedule playback with `source.start(nextPlayTime)`
+- Set `voicePhase="speaking"` on first chunk, `"idle"` when all chunks played
+- Fallback: if response is JSON (batch fallback), use existing decodeAudioData path
 
-### 3. `src/components/sathi/MemoryLog.jsx` — Show hearts on senior side
-- Fetch `memory_reactions` alongside comments
-- Display heart count on each memory card (read-only for senior)
+#### 3. Update `src/components/sathi/SathiChat.jsx` — `speakText`
+- Same SSE streaming playback logic as orb
+- Remove dead MediaSource code path (never worked on iOS anyway)
 
-### 4. `src/components/AnvayaApp.jsx` — Badge on Memory Log button (senior side)
-- Show unread comment/heart count badge on the "Memory Log" action card, clear when opened
+#### 4. Update `src/components/sathi/MemoryRecorder.jsx` — `speakWithBrowserFallback`
+- Same streaming playback for prompt TTS
 
-## UI Behavior
-- **Memories nav tab**: Shows a small badge (e.g., "3") for unread hearts + comments since last viewed
-- **Heart button**: Appears on each MemoryCard next to the comment button. Toggle on/off. Shows count.
-- **Opening Memories tab**: Updates `memories_last_viewed_at`, badge resets to 0
-- **Senior Memory Log**: Shows heart count per memory (read-only), badge on Memory Log button for new comments
+#### 5. Shared helper: `src/lib/streamingTTS.ts`
+- Extract common streaming TTS logic into a reusable module:
+  - `streamTTS(text, lang, audioContext): Promise<{ onChunk, onDone }>` 
+  - Handles fetch → SSE parsing → PCM decoding → AudioBuffer queuing
+  - Falls back to batch JSON response automatically
+
+#### 6. Pace update
+- All TTS: `pace: 1.15` (up from 0.85)
+
+### Files Modified
+- `supabase/functions/elevenlabs-tts/index.ts` — WS→SSE bridge
+- `src/lib/streamingTTS.ts` — new shared streaming playback helper
+- `src/components/AnvayaApp.jsx` — use streamingTTS in speakResponse
+- `src/components/sathi/SathiChat.jsx` — use streamingTTS in speakText
+- `src/components/sathi/MemoryRecorder.jsx` — use streamingTTS in speakWithBrowserFallback
 
