@@ -2535,13 +2535,13 @@ export default function App() {
       {/* Content */}
       <div style={{flex:1,overflow:"hidden",display:"flex"}}>
 
-        {view==="sathi"&&(
+        {view==="loved-one"&&(
           isMobile
-            ? <SathiScreen/>
+            ? <LovedOneScreen/>
             : <div style={{flex:1,display:"flex",justifyContent:"center",alignItems:"flex-start",overflowY:"auto",background:"linear-gradient(160deg,#111 0%,#1a1a1a 100%)",padding:"40px 20px"}}>
                 <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:14}}>
-                  <div style={{fontSize:10,color:"rgba(249,249,247,.28)",letterSpacing:"0.15em",fontWeight:600}}>AVA — MOBILE PREVIEW</div>
-                  <SathiScreen inPanel/>
+                  <div style={{fontSize:10,color:"rgba(249,249,247,.28)",letterSpacing:"0.15em",fontWeight:600}}>ELA — LOVED ONE PREVIEW</div>
+                  <LovedOneScreen inPanel/>
                   <div style={{padding:"6px 14px",borderRadius:100,background:"rgba(6,78,59,.2)",border:"1px solid rgba(6,78,59,.3)"}}>
                     <span style={{fontSize:11,color:"#34D399"}}>If you're in trouble, type or say "help" to Ela</span>
                   </div>
