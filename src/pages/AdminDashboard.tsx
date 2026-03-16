@@ -50,6 +50,7 @@ export default function AdminDashboard() {
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [days, setDays] = useState(30);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   const cutoff = useMemo(() => {
     const d = new Date();
