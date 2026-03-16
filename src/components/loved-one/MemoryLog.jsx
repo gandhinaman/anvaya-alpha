@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { X, BookOpen, MessageCircle, ChevronDown, ChevronUp, Play, Pause, Trash2, Search, Mic, Send, Heart, Gift } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { trackEvent } from "@/hooks/useTelemetry";
 
 const TONE_EMOJI = { joyful: "😊", nostalgic: "🌅", peaceful: "🕊️", concerned: "😟" };
 
@@ -34,6 +35,7 @@ function CommentInput({ memoryId, userId, lang }) {
         alert("Could not send comment. Please try again.");
         return;
       }
+      trackEvent("memory_comment_send", { memory_id: memoryId, has_media: !!mediaUrl });
       setText("");
     } catch (e) { console.error("Comment error:", e); alert("Could not send comment."); }
     finally { setSending(false); }
@@ -166,6 +168,7 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
     a.onended = () => setPlayingId(null);
     setAudioEl(a);
     setPlayingId(id);
+    trackEvent("memory_play", { memory_id: id });
   };
 
   const deleteMemory = async (memoryId) => {
@@ -177,6 +180,7 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
       await supabase.from("memories").delete().eq("id", memoryId);
       setMemories((prev) => prev.filter((m) => m.id !== memoryId));
       if (expandedId === memoryId) setExpandedId(null);
+      trackEvent("memory_delete", { memory_id: memoryId });
     } catch (err) {
       console.error("Delete error:", err);
     } finally {

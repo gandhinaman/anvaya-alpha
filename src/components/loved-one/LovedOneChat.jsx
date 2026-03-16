@@ -156,6 +156,7 @@ export default function LovedOneChat({ open, onClose, lang = "en", userId, initi
         // Clean out empty assistant messages from previous incomplete streams
         const cleaned = data.messages.filter(m => !(m.role === "assistant" && (!m.content || !m.content.trim())));
         setMessages(cleaned.length > 0 ? cleaned : [{ role: "assistant", content: greeting }]);
+        trackEvent("ela_chat_history_loaded", { message_count: cleaned.length });
       } else {
         setMessages([{ role: "assistant", content: greeting }]);
         speakText(greeting);
@@ -178,6 +179,7 @@ export default function LovedOneChat({ open, onClose, lang = "en", userId, initi
       ttsControllerRef.current = null;
     }
     setSpeakingIdx(idx);
+    if (idx >= 0) trackEvent("ela_chat_tts", { message_index: idx });
 
     try {
       const { streamTTS } = await import("@/lib/streamingTTS");
@@ -256,6 +258,7 @@ export default function LovedOneChat({ open, onClose, lang = "en", userId, initi
 
         recognition.start();
         setIsListening(true);
+        trackEvent("ela_chat_voice", { lang });
         return;
       } catch {
         // Fall through to WAV fallback

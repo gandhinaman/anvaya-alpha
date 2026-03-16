@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { X, Mic, Video, Play, Pause, RotateCcw, Send, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { buildMediaRecorder } from "@/lib/mediaRecorder";
+import { trackEvent } from "@/hooks/useTelemetry";
 
 // ─── WAVEFORM VISUALIZER ──────────────────────────────────────────────────────
 function LiveWaveform({ analyserRef }) {
@@ -221,6 +222,7 @@ export default function ReactionRecorder({ open, onClose, memoryId, memoryTitle,
       recorderRef.current = recorder;
       recorder.start(250);
       setPhase("recording");
+      trackEvent("reaction_recorder_start", { mode });
     } catch (err) {
       console.error("Recording start error:", err);
       if (stream) stream.getTracks().forEach((t) => t.stop());
@@ -298,6 +300,7 @@ export default function ReactionRecorder({ open, onClose, memoryId, memoryTitle,
       }
 
       setPhase("sent");
+      trackEvent("reaction_send", { memory_id: memoryId });
     } catch (err) {
       console.error("Reaction send error:", err);
       alert("Something went wrong. Please try again.");
@@ -321,8 +324,9 @@ export default function ReactionRecorder({ open, onClose, memoryId, memoryTitle,
     if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
     if (audioCtxRef.current) audioCtxRef.current.close();
     if (previewUrl) URL.revokeObjectURL(previewUrl);
+    if (phase === "recording" || phase === "review") trackEvent("reaction_recorder_cancel", {});
     onClose();
-  }, [onClose, previewUrl]);
+  }, [onClose, previewUrl, phase]);
 
   const fmt = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 

@@ -776,6 +776,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
         value: { resolved_by: profileId, timestamp: new Date().toISOString() },
       });
     }
+    trackEvent("emergency_resolve", {});
     setEmergency(null);
   };
 
@@ -799,6 +800,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
     setReactionMemoryId(memId);
     setReactionMemoryTitle(memTitle || "A shared memory");
     setReactionOpen(true);
+    trackEvent("reaction_record", { memory_id: memId, mode: "modal_open" });
   };
 
   // Caregiver questions state
@@ -826,7 +828,10 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
         parent_id: parentProfile.id,
         question: newQuestion.trim(),
       }).select().single();
-      if (data) setQuestions(prev => [data, ...prev]);
+      if (data) {
+        setQuestions(prev => [data, ...prev]);
+        trackEvent("caregiver_question_send", { question_length: newQuestion.trim().length });
+      }
       setNewQuestion("");
     } catch (err) { console.error("Add question error:", err); }
     finally { setQuestionSending(false); }
@@ -904,6 +909,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
       }).select().single();
       if (data) {
         setCollections(prev => [data, ...prev]);
+        trackEvent("collection_create", {});
         setNewCollectionTitle("");
         setNewCollectionDesc("");
         setNewCollectionEmoji("📚");
@@ -929,6 +935,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
     } else {
       await supabase.from("memory_collection_items").insert({ collection_id: colId, memory_id: memId });
       setCollectionItems(prev => ({ ...prev, [colId]: [...(prev[colId] || []), memId] }));
+      trackEvent("collection_add_memory", { collection_id: colId });
     }
     setAddingToCollection(null);
   };
@@ -951,6 +958,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
     }).eq("id", profileId);
     setCpProfileLoading(false);
     setCpProfileSaved(true);
+    trackEvent("profile_save", {});
     setTimeout(() => setCpProfileSaved(false), 2000);
   };
 
@@ -963,6 +971,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setLinkSuccess(`Linked to ${data.parent_name || "parent"}! Refreshing…`);
+      trackEvent("link_account", {});
       setTimeout(() => window.location.reload(), 1500);
     } catch (e) { setLinkError(e.message || "Failed to link"); }
     finally { setLinkLoading(false); }
@@ -977,6 +986,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
 
   const handleToggleHeart = async (memoryId, isHearted) => {
     if (!profileId) return;
+    trackEvent("heart_toggle", { memory_id: memoryId, action: isHearted ? "remove" : "add" });
     if (isHearted) {
       await supabase.from("memory_reactions").delete().eq("memory_id", memoryId).eq("user_id", profileId).eq("reaction_type", "heart");
     } else {
@@ -1104,6 +1114,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
     try {
       await supabase.from("memory_comments").delete().eq("memory_id", memId);
       await supabase.from("memories").delete().eq("id", memId);
+      trackEvent("memory_delete", { memory_id: memId });
     } catch (err) {
       console.error("Delete error:", err);
     } finally {
@@ -2015,7 +2026,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
                     { id: "peaceful", label: "Peaceful", emoji: "🕊️" },
                     { id: "concerned", label: "Concerned", emoji: "😟" },
                   ].map(cat => (
-                    <button key={cat.id} onClick={() => setMemoryFilter(cat.id)} style={{
+                    <button key={cat.id} onClick={() => { setMemoryFilter(cat.id); trackEvent("memory_filter", { filter: cat.id }); }} style={{
                       padding: "6px 14px", borderRadius: 100, border: "none", cursor: "pointer",
                       background: memoryFilter === cat.id ? "#5D4037" : "rgba(93,64,55,0.06)",
                       color: memoryFilter === cat.id ? "#FFF8F0" : "#6b6b6b",

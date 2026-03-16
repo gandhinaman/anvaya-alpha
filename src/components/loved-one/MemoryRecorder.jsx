@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Mic, Video, Square, Check, X, Loader, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { MEMORY_PROMPTS, getNextPromptIndex } from "@/lib/memoryPrompts";
+import { trackEvent } from "@/hooks/useTelemetry";
 
 export default function MemoryRecorder({ open, onClose, lang = "en", userId, linkedName }) {
   const [phase, setPhase] = useState("idle"); // idle | recording | processing | success | error
@@ -107,6 +108,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
 
   useEffect(() => {
     if (open && phase === "idle" && promptReady) {
+      trackEvent("memory_recorder_open", { prompt: currentPrompt?.slice(0, 60) });
       speakPrompt(currentPrompt);
     }
   }, [open, promptReady]);
@@ -186,6 +188,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
       setRecordingMode(mode);
       setPhase("recording");
       setSeconds(0);
+      trackEvent("memory_recorder_start", { mode });
 
       timerRef.current = setInterval(() => {
         setSeconds((s) => s + 1);
@@ -274,6 +277,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
       const result = await res.json();
       setSavedTitle(result.title || "Your Memory");
       setPhase("success");
+      trackEvent("memory_record_complete", { duration_seconds: duration, has_audio: true, prompt_question: currentPrompt?.slice(0, 60) });
 
       // Mark caregiver question as used if one was active
       if (caregiverQuestion) {
@@ -317,7 +321,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
     >
       {/* Close button */}
       <button
-        onClick={() => { stopEverything(); onClose(); }}
+        onClick={() => { stopEverything(); trackEvent("memory_recorder_cancel", { duration_seconds: seconds }); onClose(); }}
         aria-label={lang === "hi" ? "बंद करें" : "Close"}
         style={{
           position: "fixed",

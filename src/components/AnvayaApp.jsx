@@ -458,6 +458,7 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
         avatar_url: profileData.avatar_url||null,
         gender: profileData.gender||null,
       }).eq("id",userId);
+      trackEvent("profile_save", { fields_changed: Object.keys(profileData).length });
       // Sync name to greeting immediately
       if(profileData.full_name) setAutoFullName(profileData.full_name);
     } catch(e){ console.error("Save profile error:",e); }
@@ -749,6 +750,7 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
           if (!res.ok) throw new Error(data.error || "STT failed");
           if (data.transcript?.trim()) {
             addDebug("Sarvam transcript captured", { transcript: data.transcript.trim() });
+            trackEvent("voice_complete", { lang, method: "wav_fallback" });
             sendVoiceToLLM(data.transcript.trim());
           } else {
             addDebug("Sarvam returned empty transcript");
@@ -805,6 +807,7 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
       setVoiceText("");
       setVoiceResponse("");
       setRec(true);
+      trackEvent("voice_start", { lang, method: "web_speech" });
 
       try {
         const recognition = new SpeechRecognition();
@@ -856,6 +859,7 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
             return;
           }
           if (finalTranscript.trim()) {
+            trackEvent("voice_complete", { lang, duration_ms: elapsed, method: "web_speech" });
             sendVoiceToLLM(finalTranscript.trim());
           } else {
             addDebug("No transcript captured");
@@ -898,6 +902,7 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
       setVoiceText("");
       setVoiceResponse("");
       setRec(true);
+      trackEvent("voice_start", { lang, method: "wav_fallback" });
       startWavFallback();
     }
   };
@@ -990,6 +995,7 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
     // ── STEP 1: Fast intent check (<10ms) ──
     const intent = matchIntent(text);
     if (intent) {
+      trackEvent("voice_intent_matched", { intent, transcript_preview: text.slice(0, 40) });
       handleIntentAction(intent, text);
       return;
     }
@@ -1263,8 +1269,10 @@ Only use ONE action tag per response. Keep your spoken response brief and natura
 
   // Persist language
   const switchLang = async (l) => {
+    const prevLang = lang;
     setLang(l);
     if(userId && !inPanel) {
+      trackEvent("language_switch", { from: prevLang, to: l });
       await supabase.from("profiles").update({language:l}).eq("id",userId);
     }
   };
@@ -1277,6 +1285,7 @@ Only use ONE action tag per response. Keep your spoken response brief and natura
 
   const handleEmergencyCall = async () => {
     setOverlayPhase("alerting");
+    trackEvent("emergency_trigger", { lang });
     if (linkedUserId) {
       const ch = supabase.channel(`user:${linkedUserId}`);
       ch.subscribe((status) => {
