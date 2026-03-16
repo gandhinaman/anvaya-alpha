@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           text: truncatedText,
           target_language_code: targetLang,
-          speaker: "meera",
+          speaker: "anushka",
           model: "bulbul:v3",
           enable_preprocessing: true,
           pace: 0.85,
