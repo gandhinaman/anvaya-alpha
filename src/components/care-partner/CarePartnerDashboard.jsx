@@ -1106,6 +1106,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
     try {
       await supabase.from("memory_comments").delete().eq("memory_id", memId);
       await supabase.from("memories").delete().eq("id", memId);
+      trackEvent("memory_delete", { memory_id: memId });
     } catch (err) {
       console.error("Delete error:", err);
     } finally {
