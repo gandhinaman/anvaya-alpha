@@ -986,17 +986,79 @@ Only use ONE action tag per response. Keep your spoken response brief and natura
 
       if (!res.ok) throw new Error("Failed to get response");
 
+      // ── SENTENCE-LEVEL STREAMING TTS ──
+      // Buffer tokens until sentence boundary, fire TTS per sentence for low latency
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
-      let buffer = "";
+      let sseBuffer = "";
       let fullResponse = "";
+      let sentenceBuffer = "";
+      const sentenceQueue = [];
+      let ttsPlaying = false;
+      let streamDone = false;
+      let pendingAction = null;
+
+      // Sentence boundary regex (English + Hindi)
+      const sentenceEnd = /[.?!।]\s*$/;
+
+      const { streamTTS } = await import("@/lib/streamingTTS");
+      const ctx = audioContextRef.current || new (window.AudioContext || window.webkitAudioContext)();
+      audioContextRef.current = ctx;
+
+      const playNextSentence = () => {
+        if (sentenceQueue.length === 0) {
+          ttsPlaying = false;
+          if (streamDone) {
+            setVoicePhase("idle");
+            ttsAudioRef.current = null;
+            // Trigger pending action after all TTS finishes
+            if (pendingAction) {
+              setTimeout(() => {
+                if (pendingAction === "record_memory") setMemoryOpen(true);
+                else if (pendingAction === "open_memory_log") openMemoryLog();
+                else if (pendingAction === "open_chat") { setPendingChatMsg(null); setChatOpen(true); }
+                else if (pendingAction === "call_family") setCallOpen(true);
+              }, 500);
+            }
+          }
+          return;
+        }
+        ttsPlaying = true;
+        const sentence = sentenceQueue.shift();
+        const controller = streamTTS({
+          text: sentence,
+          lang,
+          audioContext: ctx,
+          onStart: () => setVoicePhase("speaking"),
+          onEnd: () => playNextSentence(),
+          onError: (err) => {
+            console.error("Sentence TTS error:", err);
+            // Fallback: speak with browser
+            const utterance = new SpeechSynthesisUtterance(sentence);
+            utterance.lang = lang === "hi" ? "hi-IN" : "en-US";
+            utterance.rate = 0.95;
+            utterance.onend = () => playNextSentence();
+            utterance.onerror = () => playNextSentence();
+            window.speechSynthesis.speak(utterance);
+          },
+        });
+        ttsAudioRef.current = controller;
+      };
+
+      const enqueueSentence = (text) => {
+        const cleaned = text.replace(/\[ACTION:\w+\]/g, "").trim();
+        if (cleaned) {
+          sentenceQueue.push(cleaned);
+          if (!ttsPlaying) playNextSentence();
+        }
+      };
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || "";
+        sseBuffer += decoder.decode(value, { stream: true });
+        const lines = sseBuffer.split("\n");
+        sseBuffer = lines.pop() || "";
 
         for (const line of lines) {
           if (!line.startsWith("data: ")) continue;
@@ -1006,14 +1068,25 @@ Only use ONE action tag per response. Keep your spoken response brief and natura
             const parsed = JSON.parse(data);
             if (parsed.text) {
               fullResponse += parsed.text;
-              setVoiceResponse(fullResponse);
+              sentenceBuffer += parsed.text;
+              setVoiceResponse(fullResponse.replace(/\[ACTION:\w+\]/g, "").trim());
+
+              // Check for sentence boundary
+              if (sentenceEnd.test(sentenceBuffer)) {
+                enqueueSentence(sentenceBuffer);
+                sentenceBuffer = "";
+              }
             }
           } catch {}
         }
       }
 
-      // Parse and strip action tags
-      let pendingAction = null;
+      // Flush remaining buffer
+      if (sentenceBuffer.trim()) {
+        enqueueSentence(sentenceBuffer);
+      }
+
+      // Parse action tags from full response
       const actionMatch = fullResponse.match(/\[ACTION:(\w+)\]/);
       if (actionMatch) {
         pendingAction = actionMatch[1];
@@ -1021,24 +1094,13 @@ Only use ONE action tag per response. Keep your spoken response brief and natura
         setVoiceResponse(fullResponse);
       }
 
+      streamDone = true;
+
       // Save to conversation history (without action tags)
       voiceHistoryRef.current = [...history, { role: "assistant", content: fullResponse }];
 
-      // Speak the response, then trigger action
-      if (fullResponse) {
-        const originalOnEnd = () => {
-          // Trigger app action after TTS finishes
-          if (pendingAction) {
-            setTimeout(() => {
-              if (pendingAction === "record_memory") setMemoryOpen(true);
-              else if (pendingAction === "open_memory_log") openMemoryLog();
-              else if (pendingAction === "open_chat") { setPendingChatMsg(null); setChatOpen(true); }
-              else if (pendingAction === "call_family") setCallOpen(true);
-            }, 500);
-          }
-        };
-        speakResponse(fullResponse, originalOnEnd);
-      } else {
+      // If no sentences were queued (empty response), go idle
+      if (!ttsPlaying && sentenceQueue.length === 0) {
         setVoicePhase("idle");
       }
     } catch (err) {
