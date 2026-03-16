@@ -1,79 +1,78 @@
 
 
-# Plan: Heart Reactions, Notification Badges, and Read-State for Memories
+## Plan: App Telemetry & Admin Dashboard
 
-## What we're building
-1. **Heart reaction on memories** (caregiver can heart a memory)
-2. **Notification badge on Memories nav tab** showing unread hearts + comments count
-3. **Clear notifications** once the caregiver views the Memories tab
+### Overview
+Build a lightweight analytics system that tracks user sessions, page views, and feature usage across both Loved One and Care Partner UIs, with an Admin dashboard to visualize the data.
 
-## Database Changes
+### Database Schema (2 new tables)
 
-### New table: `memory_reactions`
-```sql
-CREATE TABLE memory_reactions (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  memory_id uuid NOT NULL REFERENCES memories(id) ON DELETE CASCADE,
-  user_id uuid NOT NULL,
-  reaction_type text NOT NULL DEFAULT 'heart',
-  created_at timestamptz NOT NULL DEFAULT now(),
-  UNIQUE(memory_id, user_id, reaction_type)
-);
-ALTER TABLE memory_reactions ENABLE ROW LEVEL SECURITY;
+```text
+telemetry_sessions
+├── id (uuid, PK)
+├── user_id (uuid, NOT NULL)
+├── started_at (timestamptz, default now())
+├── ended_at (timestamptz, nullable)
+├── duration_seconds (int, nullable)
+├── user_agent (text)
+└── role (text) — snapshot of user role at session time
 
--- Caregivers can heart linked parent's memories
-CREATE POLICY "Children can CRUD reactions on linked parent memories" ON memory_reactions
-  FOR ALL USING (
-    auth.uid() = user_id 
-    AND memory_id IN (SELECT id FROM memories WHERE user_id = get_linked_user_id(auth.uid()))
-  ) WITH CHECK (
-    auth.uid() = user_id 
-    AND memory_id IN (SELECT id FROM memories WHERE user_id = get_linked_user_id(auth.uid()))
-  );
-
--- Parents can read reactions on own memories
-CREATE POLICY "Parents can read reactions on own memories" ON memory_reactions
-  FOR SELECT USING (
-    memory_id IN (SELECT id FROM memories WHERE user_id = auth.uid())
-  );
-
--- Enable realtime
-ALTER PUBLICATION supabase_realtime ADD TABLE memory_reactions;
+telemetry_events
+├── id (uuid, PK)
+├── session_id (uuid, FK → telemetry_sessions)
+├── user_id (uuid, NOT NULL)
+├── event_type (text) — 'page_view' | 'feature_use'
+├── event_name (text) — e.g. 'record_memory', 'open_chat', '/loved-one'
+├── metadata (jsonb, default '{}')
+├── created_at (timestamptz, default now())
 ```
 
-### New column on `profiles`: `memories_last_viewed_at`
-```sql
-ALTER TABLE profiles ADD COLUMN memories_last_viewed_at timestamptz DEFAULT NULL;
-```
+RLS: Only admins can SELECT. Users can INSERT their own rows. Admin check via a `get_profile_role` comparison (role = 'admin').
 
-## Code Changes
+### Admin Role Setup
+- Add 'admin' as a recognized role in the app routing
+- Update `RoleRedirect` to route admin users to `/admin`
+- Update the profile for `admin@anvaya.com` to have role = 'admin'
 
-### 1. `src/hooks/useParentData.ts` — Fetch reactions + last-viewed timestamp
-- Fetch `memory_reactions` for all loaded memory IDs (grouped by memory)
-- Fetch `memories_last_viewed_at` from the caregiver's own profile
-- Compute `unreadCount`: count of comments + hearts with `created_at > memories_last_viewed_at`
-- Subscribe to realtime on `memory_reactions` table
-- Add `markMemoriesViewed()` function that updates `profiles.memories_last_viewed_at = now()`
-- Return `memoryReactions`, `unreadCount`, `markMemoriesViewed`
+### Implementation Pieces
 
-### 2. `src/components/guardian/GuardianDashboard.jsx`
+#### 1. Telemetry Hook — `src/hooks/useTelemetry.ts`
+A lightweight hook used in `App.tsx` (or a wrapper) that:
+- Creates a session row on mount (or app focus), updates `ended_at` on unmount/blur via `beforeunload` + `visibilitychange`
+- Tracks page views by listening to route changes (react-router `useLocation`)
+- Exposes `trackEvent(eventName, metadata?)` for feature-level tracking
+- Batches events (flush every 5s or on unload) to minimize network calls
+- Uses `navigator.sendBeacon` on unload for reliability
 
-**Nav badge**: Add unread count badge next to the "Memories" nav item (similar to Bell badge pattern already used)
+#### 2. Event Instrumentation
+Sprinkle `trackEvent()` calls at key interaction points:
+- **Loved One**: record_memory, open_memory_log, open_chat, call_family, save_profile, voice_orb_activate, emergency_alert
+- **Care Partner**: view_memories, react_to_memory, comment_on_memory, send_question, view_alerts, view_daily_rhythm
 
-**Heart button on MemoryCard**: Add a heart toggle button next to the existing comment button. Clicking inserts/deletes from `memory_reactions`. Show filled heart if already hearted, outline if not. Show heart count.
+#### 3. Admin Route & Dashboard — `src/pages/AdminDashboard.tsx`
+- New route `/admin` behind `ProtectedRoute` + admin role check
+- Summary cards: total users, active sessions today, avg session duration, total events
+- Charts (using existing recharts): daily active users over 30 days, top features by usage count, session duration distribution
+- User-level drill-down table: user name, role, last active, session count, top features
+- Date range filter
 
-**Mark viewed**: When `nav === "memories"` is selected, call `markMemoriesViewed()` to clear the badge count.
+#### 4. Routing Changes — `src/App.tsx` + `src/pages/RoleRedirect.tsx`
+- Add `/admin` route
+- Route admin role to `/admin` in RoleRedirect
 
-### 3. `src/components/sathi/MemoryLog.jsx` — Show hearts on senior side
-- Fetch `memory_reactions` alongside comments
-- Display heart count on each memory card (read-only for senior)
+### Files to Create/Modify
+| File | Action |
+|------|--------|
+| `supabase/migrations/...` | Create 2 tables + RLS policies |
+| `src/hooks/useTelemetry.ts` | New — session + event tracking hook |
+| `src/App.tsx` | Add admin route, wrap with telemetry provider |
+| `src/pages/RoleRedirect.tsx` | Route admin → `/admin` |
+| `src/pages/AdminDashboard.tsx` | New — analytics dashboard |
+| `src/components/AnvayaApp.jsx` | Add trackEvent calls at key features |
+| `src/components/care-partner/CarePartnerDashboard.jsx` | Add trackEvent calls |
 
-### 4. `src/components/AnvayaApp.jsx` — Badge on Memory Log button (senior side)
-- Show unread comment/heart count badge on the "Memory Log" action card, clear when opened
-
-## UI Behavior
-- **Memories nav tab**: Shows a small badge (e.g., "3") for unread hearts + comments since last viewed
-- **Heart button**: Appears on each MemoryCard next to the comment button. Toggle on/off. Shows count.
-- **Opening Memories tab**: Updates `memories_last_viewed_at`, badge resets to 0
-- **Senior Memory Log**: Shows heart count per memory (read-only), badge on Memory Log button for new comments
+### Latency Considerations
+- Events are batched client-side (array buffer flushed every 5s)
+- Session end uses `sendBeacon` — non-blocking
+- No impact on user-facing performance
 
