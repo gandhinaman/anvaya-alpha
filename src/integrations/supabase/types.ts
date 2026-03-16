@@ -338,6 +338,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string | null
           full_name: string | null
+          gender: string | null
           has_accepted_terms: boolean
           health_issues: string[] | null
           id: string
@@ -356,6 +357,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string | null
           full_name?: string | null
+          gender?: string | null
           has_accepted_terms?: boolean
           health_issues?: string[] | null
           id: string
@@ -374,6 +376,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string | null
           full_name?: string | null
+          gender?: string | null
           has_accepted_terms?: boolean
           health_issues?: string[] | null
           id?: string

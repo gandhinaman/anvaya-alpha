@@ -314,11 +314,11 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
   const [linkedName, setLinkedName]=useState(null);
   const [autoUserId, setAutoUserId]=useState(null);
   const [autoLinkedUserId, setAutoLinkedUserId]=useState(null);
-  const [autoFullName, setAutoFullName]=useState(null);
+  const [autoFullName, setAutoFullName]=useState(propFullName || null);
 
   const userId = propUserId || autoUserId;
   const linkedUserId = propLinkedUserId || autoLinkedUserId;
-  const fullName = propFullName || autoFullName;
+  const fullName = autoFullName || propFullName;
 
   // Auto-fetch profile from auth when no props provided
   useEffect(()=>{
@@ -421,7 +421,7 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
   // Profile state
   const [profileData, setProfileData] = useState({
     age: null, health_issues: [], language: "en", interests: [], location: "",
-    full_name: "", linked_user_id: null, religion: "", avatar_url: ""
+    full_name: "", linked_user_id: null, religion: "", avatar_url: "", gender: ""
   });
   const avatarInputRef = useRef(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
@@ -429,13 +429,13 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
   // Load profile data from DB
   useEffect(()=>{
     if(!userId) return;
-    supabase.from("profiles").select("full_name,age,language,health_issues,interests,location,linked_user_id,religion,avatar_url")
+    supabase.from("profiles").select("full_name,age,language,health_issues,interests,location,linked_user_id,religion,avatar_url,gender")
       .eq("id",userId).maybeSingle().then(({data})=>{
         if(data) setProfileData({
           full_name: data.full_name||"", age: data.age, language: data.language||"en",
           health_issues: data.health_issues||[], interests: data.interests||[],
           location: data.location||"", linked_user_id: data.linked_user_id,
-          religion: data.religion||"", avatar_url: data.avatar_url||""
+          religion: data.religion||"", avatar_url: data.avatar_url||"", gender: data.gender||""
         });
       });
   },[userId]);
@@ -454,7 +454,10 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
         location: profileData.location||null,
         religion: profileData.religion||null,
         avatar_url: profileData.avatar_url||null,
+        gender: profileData.gender||null,
       }).eq("id",userId);
+      // Sync name to greeting immediately
+      if(profileData.full_name) setAutoFullName(profileData.full_name);
     } catch(e){ console.error("Save profile error:",e); }
     setProfileSaving(false);
   };
@@ -1718,6 +1721,23 @@ Only use ONE action tag per response. Keep your spoken response brief and natura
                       background:profileData.language===opt.v?"rgba(198,139,89,.2)":"rgba(255,248,240,.06)",
                       color:profileData.language===opt.v?"#C68B59":"rgba(255,248,240,.6)",fontSize:15,fontWeight:600,cursor:"pointer"}}>
                     {opt.l}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Gender */}
+            <div>
+              <label style={{fontSize:13,color:"rgba(255,248,240,.5)",fontWeight:600,marginBottom:6,display:"block"}}>
+                {lang==="en"?"Gender":"लिंग"}
+              </label>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                {["Male","Female","Non-binary","Prefer not to say"].map(g=>(
+                  <button key={g} onClick={()=>setProfileData(p=>({...p,gender:g}))}
+                    style={{padding:"10px 18px",borderRadius:100,border:`1.5px solid ${profileData.gender===g?"#C68B59":"rgba(255,248,240,.15)"}`,
+                      background:profileData.gender===g?"rgba(198,139,89,.2)":"rgba(255,248,240,.06)",
+                      color:profileData.gender===g?"#C68B59":"rgba(255,248,240,.6)",fontSize:14,fontWeight:600,cursor:"pointer"}}>
+                    {g}
                   </button>
                 ))}
               </div>

@@ -13,6 +13,7 @@ interface ParentProfile {
   interests: string[] | null;
   religion: string | null;
   avatar_url: string | null;
+  gender: string | null;
 }
 
 interface Memory {
@@ -136,7 +137,7 @@ export function useParentData(profileId: string | null) {
       // Fetch parent profile
       const { data: pp } = await supabase
         .from("profiles")
-        .select("id, full_name, role, language, age, location, health_issues, interests, religion, avatar_url")
+        .select("id, full_name, role, language, age, location, health_issues, interests, religion, avatar_url, gender")
         .eq("id", parentId)
         .maybeSingle();
       if (pp) setParentProfile(pp as ParentProfile);
