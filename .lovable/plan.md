@@ -1,79 +1,56 @@
 
 
-# Plan: Heart Reactions, Notification Badges, and Read-State for Memories
+## Plan: Subtle Nudging + App-Aware Orb
 
-## What we're building
-1. **Heart reaction on memories** (caregiver can heart a memory)
-2. **Notification badge on Memories nav tab** showing unread hearts + comments count
-3. **Clear notifications** once the caregiver views the Memories tab
+### Problem
+1. The orb auto-speaks a greeting on load — too aggressive, especially on iOS where autoplay is blocked
+2. Ela has no awareness of app features, so she can't route users to "Record a Memory", "Memory Log", etc.
+3. Memory nudge and reaction summaries should happen naturally within conversation, not unprompted
 
-## Database Changes
+### Changes
 
-### New table: `memory_reactions`
-```sql
-CREATE TABLE memory_reactions (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  memory_id uuid NOT NULL REFERENCES memories(id) ON DELETE CASCADE,
-  user_id uuid NOT NULL,
-  reaction_type text NOT NULL DEFAULT 'heart',
-  created_at timestamptz NOT NULL DEFAULT now(),
-  UNIQUE(memory_id, user_id, reaction_type)
-);
-ALTER TABLE memory_reactions ENABLE ROW LEVEL SECURITY;
+#### 1. Remove proactive auto-speak on load (`AnvayaApp.jsx`)
+- Delete the entire `PROACTIVE ORB GREETING` useEffect block (lines 604-716)
+- Keep the visual unread badge text in idle state (the `seniorUnreadCount` line) — that's subtle enough
+- Instead, store the nudge/reaction context in a ref (`proactiveContextRef`) so it can be injected into the first conversation turn
 
--- Caregivers can heart linked parent's memories
-CREATE POLICY "Children can CRUD reactions on linked parent memories" ON memory_reactions
-  FOR ALL USING (
-    auth.uid() = user_id 
-    AND memory_id IN (SELECT id FROM memories WHERE user_id = get_linked_user_id(auth.uid()))
-  ) WITH CHECK (
-    auth.uid() = user_id 
-    AND memory_id IN (SELECT id FROM memories WHERE user_id = get_linked_user_id(auth.uid()))
-  );
+#### 2. Inject context into first voice message (`AnvayaApp.jsx` — `sendVoiceToLLM`)
+- Before sending the first user message to the LLM, prepend a hidden system-level context note:
+  - Whether user hasn't recorded in 24h+ (nudge)
+  - Unread reaction/comment summaries with story titles
+- This way Ela naturally weaves it into her response to whatever the user says first
+- Only inject on the first turn of a new session (check `voiceHistoryRef.current.length === 0`)
 
--- Parents can read reactions on own memories
-CREATE POLICY "Parents can read reactions on own memories" ON memory_reactions
-  FOR SELECT USING (
-    memory_id IN (SELECT id FROM memories WHERE user_id = auth.uid())
-  );
-
--- Enable realtime
-ALTER PUBLICATION supabase_realtime ADD TABLE memory_reactions;
+#### 3. Add app-awareness to Ela's system prompt (`chat/index.ts`)
+Add to `ELA_SYSTEM`:
+```
+APP FEATURES (you can suggest these when relevant):
+- "Record a Memory" — user can record a voice/video story. Suggest when they mention wanting to share a story, or if they haven't recorded in a while.
+- "Memory Log" — user can browse past recordings and see family reactions/comments.
+- "Ask Ela" (text chat) — for typing instead of talking.
+- "Call Family" — to call their linked care partner.
+When the user expresses intent to use a feature (e.g. "I want to record a memory", "show me my stories"), respond with a JSON action tag: [ACTION:record_memory], [ACTION:open_memory_log], [ACTION:open_chat], [ACTION:call_family]. Keep your verbal response brief alongside the action.
 ```
 
-### New column on `profiles`: `memories_last_viewed_at`
-```sql
-ALTER TABLE profiles ADD COLUMN memories_last_viewed_at timestamptz DEFAULT NULL;
-```
+#### 4. Parse action tags in orb response (`AnvayaApp.jsx`)
+- After `sendVoiceToLLM` gets `fullResponse`, scan for `[ACTION:...]` patterns
+- Strip the tag from displayed/spoken text
+- Trigger the corresponding UI action after TTS finishes:
+  - `record_memory` → `setMemoryOpen(true)`
+  - `open_memory_log` → `openMemoryLog()`
+  - `open_chat` → `setChatOpen(true)`
+  - `call_family` → `setCallOpen(true)`
 
-## Code Changes
+#### 5. Enrich context sent from orb (`AnvayaApp.jsx`)
+- On first conversation turn, fetch last memory time + unread counts (lightweight queries already available from existing state)
+- Append to the system prompt override sent in `sendVoiceToLLM`:
+  ```
+  CONVERSATION CONTEXT:
+  - Last memory recorded: 2 days ago (gently suggest recording if natural)
+  - Unread: 3 hearts, 1 comment from [CarePartner] on "Wedding Story"
+  ```
 
-### 1. `src/hooks/useParentData.ts` — Fetch reactions + last-viewed timestamp
-- Fetch `memory_reactions` for all loaded memory IDs (grouped by memory)
-- Fetch `memories_last_viewed_at` from the caregiver's own profile
-- Compute `unreadCount`: count of comments + hearts with `created_at > memories_last_viewed_at`
-- Subscribe to realtime on `memory_reactions` table
-- Add `markMemoriesViewed()` function that updates `profiles.memories_last_viewed_at = now()`
-- Return `memoryReactions`, `unreadCount`, `markMemoriesViewed`
-
-### 2. `src/components/guardian/GuardianDashboard.jsx`
-
-**Nav badge**: Add unread count badge next to the "Memories" nav item (similar to Bell badge pattern already used)
-
-**Heart button on MemoryCard**: Add a heart toggle button next to the existing comment button. Clicking inserts/deletes from `memory_reactions`. Show filled heart if already hearted, outline if not. Show heart count.
-
-**Mark viewed**: When `nav === "memories"` is selected, call `markMemoriesViewed()` to clear the badge count.
-
-### 3. `src/components/sathi/MemoryLog.jsx` — Show hearts on senior side
-- Fetch `memory_reactions` alongside comments
-- Display heart count on each memory card (read-only for senior)
-
-### 4. `src/components/AnvayaApp.jsx` — Badge on Memory Log button (senior side)
-- Show unread comment/heart count badge on the "Memory Log" action card, clear when opened
-
-## UI Behavior
-- **Memories nav tab**: Shows a small badge (e.g., "3") for unread hearts + comments since last viewed
-- **Heart button**: Appears on each MemoryCard next to the comment button. Toggle on/off. Shows count.
-- **Opening Memories tab**: Updates `memories_last_viewed_at`, badge resets to 0
-- **Senior Memory Log**: Shows heart count per memory (read-only), badge on Memory Log button for new comments
+### Files Modified
+- `supabase/functions/chat/index.ts` — add app-awareness instructions to ELA_SYSTEM
+- `src/components/AnvayaApp.jsx` — remove auto-speak, add context injection on first turn, parse action tags
 
