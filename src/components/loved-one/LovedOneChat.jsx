@@ -390,7 +390,6 @@ export default function LovedOneChat({ open, onClose, lang = "en", userId, initi
 
     // Track Ela interaction (privacy-compliant: word count + category, no raw text)
     try {
-      const { trackEvent } = await import("@/hooks/useTelemetry");
       const wordCount = text.trim().split(/\s+/).length;
       trackEvent("ela_chat", { word_count: wordCount, message_index: newMessages.length });
     } catch(e) {}
@@ -401,8 +400,13 @@ export default function LovedOneChat({ open, onClose, lang = "en", userId, initi
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
+      // Filter out empty assistant messages and the greeting to avoid confusing the AI
       const messagesForAI = newMessages.filter((m, i) => {
         if (i === 0 && m.role === "assistant" && (m.content === GREETING_EN || m.content === GREETING_HI)) {
+          return false;
+        }
+        // Skip empty assistant messages (from previously incomplete streams)
+        if (m.role === "assistant" && (!m.content || !m.content.trim())) {
           return false;
         }
         return true;
