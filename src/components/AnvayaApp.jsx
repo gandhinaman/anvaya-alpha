@@ -458,6 +458,7 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
         avatar_url: profileData.avatar_url||null,
         gender: profileData.gender||null,
       }).eq("id",userId);
+      trackEvent("profile_save", { fields_changed: Object.keys(profileData).length });
       // Sync name to greeting immediately
       if(profileData.full_name) setAutoFullName(profileData.full_name);
     } catch(e){ console.error("Save profile error:",e); }
