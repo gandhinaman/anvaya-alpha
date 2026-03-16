@@ -160,70 +160,37 @@ export default function SathiChat({ open, onClose, lang = "en", userId, initialM
     }
   };
 
+  const audioContextRef = useRef(null);
+  const ttsControllerRef = useRef(null);
+
   const speakText = async (text, idx = -1) => {
     stopTTS();
+    if (ttsControllerRef.current) {
+      try { ttsControllerRef.current.stop(); } catch {}
+      ttsControllerRef.current = null;
+    }
     setSpeakingIdx(idx);
 
     try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const { streamTTS } = await import("@/lib/streamingTTS");
+      const ctx = audioContextRef.current || new (window.AudioContext || window.webkitAudioContext)();
+      audioContextRef.current = ctx;
 
-      const res = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/elevenlabs-tts`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            apikey: anonKey,
-            Authorization: `Bearer ${anonKey}`,
-          },
-          body: JSON.stringify({ text, lang }),
-        }
-      );
-
-      if (!res.ok) {
-        throw new Error(`TTS failed: ${res.status}`);
-      }
-
-      const audio = new Audio();
-      ttsAudioRef.current = audio;
-      audio.onended = () => setSpeakingIdx(-1);
-      audio.onerror = () => setSpeakingIdx(-1);
-
-      // Check content type — MediaSource only works for audio/mpeg
-      const contentType = res.headers.get('content-type') || '';
-      const isMpeg = contentType.includes('audio/mpeg');
-
-      if (isMpeg && window.MediaSource && MediaSource.isTypeSupported('audio/mpeg')) {
-        const mediaSource = new MediaSource();
-        audio.src = URL.createObjectURL(mediaSource);
-        mediaSource.addEventListener('sourceopen', async () => {
-          try {
-            const sourceBuffer = mediaSource.addSourceBuffer('audio/mpeg');
-            const reader = res.body.getReader();
-            let started = false;
-            const pump = async () => {
-              const { done, value } = await reader.read();
-              if (done) {
-                if (mediaSource.readyState === 'open') mediaSource.endOfStream();
-                return;
-              }
-              sourceBuffer.appendBuffer(value);
-              if (!started) {
-                started = true;
-                audio.play().catch(() => setSpeakingIdx(-1));
-              }
-              sourceBuffer.addEventListener('updateend', pump, { once: true });
-            };
-            pump();
-          } catch { setSpeakingIdx(-1); }
-        }, { once: true });
-      } else {
-        // Blob fallback for audio/wav (Sarvam) or iOS/Safari
-        const blob = await res.blob();
-        audio.src = URL.createObjectURL(blob);
-        audio.play().catch(() => setSpeakingIdx(-1));
-      }
+      const controller = streamTTS({
+        text,
+        lang,
+        audioContext: ctx,
+        onStart: () => {},
+        onEnd: () => {
+          setSpeakingIdx(-1);
+          ttsControllerRef.current = null;
+        },
+        onError: () => {
+          setSpeakingIdx(-1);
+          ttsControllerRef.current = null;
+        },
+      });
+      ttsControllerRef.current = controller;
     } catch {
       setSpeakingIdx(-1);
     }
