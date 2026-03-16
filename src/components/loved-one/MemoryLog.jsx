@@ -167,6 +167,7 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
     a.onended = () => setPlayingId(null);
     setAudioEl(a);
     setPlayingId(id);
+    trackEvent("memory_play", { memory_id: id });
   };
 
   const deleteMemory = async (memoryId) => {
