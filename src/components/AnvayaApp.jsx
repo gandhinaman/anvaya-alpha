@@ -339,7 +339,7 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
 
   // Mic permission is now requested once at app startup in App.tsx
 
-  // Broadcast presence so guardian can see parent is online
+  // Broadcast presence so care partner can see loved one is online
   useEffect(() => {
     if (!userId) return;
     const presenceCh = supabase.channel(`presence:${userId}`);
