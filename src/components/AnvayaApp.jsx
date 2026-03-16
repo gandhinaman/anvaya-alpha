@@ -1812,8 +1812,8 @@ function MemoryCard({title, summary, duration, date, index=0, audioUrl=null, emo
   );
 }
 
-// ─── GUARDIAN DASHBOARD ───────────────────────────────────────────────────────
-function GuardianDashboard({inPanel=false, profileId=null}) {
+// ─── CARE PARTNER DASHBOARD ───────────────────────────────────────────────────
+function CarePartnerDashboard({inPanel=false, profileId=null}) {
   const {w}=useWindowSize();
   const isMobile = !inPanel && w < 768;
   const [nav,setNav]=useState("home");
