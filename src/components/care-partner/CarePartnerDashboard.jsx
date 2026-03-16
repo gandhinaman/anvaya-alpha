@@ -908,6 +908,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
       }).select().single();
       if (data) {
         setCollections(prev => [data, ...prev]);
+        trackEvent("collection_create", {});
         setNewCollectionTitle("");
         setNewCollectionDesc("");
         setNewCollectionEmoji("📚");
