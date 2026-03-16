@@ -134,6 +134,7 @@ Deno.serve(async (req) => {
 
     // Use Sarvam-30B as primary, Lovable AI as fallback
     let aiRes;
+    let prefetchedText = "";
 
     if (sarvamKey) {
       try {
@@ -143,7 +144,6 @@ Deno.serve(async (req) => {
             { role: "system", content: systemPrompt },
             ...trimmedMessages,
           ],
-          stream: true,
           max_tokens: 200,
         };
 
@@ -159,6 +159,17 @@ Deno.serve(async (req) => {
         if (!aiRes.ok) {
           console.error("Sarvam chat error:", aiRes.status, await aiRes.text());
           aiRes = null; // fall through to Lovable
+        } else if ((aiRes.headers.get("content-type") || "").includes("application/json")) {
+          const payload = await aiRes.json();
+          prefetchedText = payload?.choices?.[0]?.message?.content?.trim()
+            || payload?.choices?.[0]?.delta?.content?.trim()
+            || payload?.response?.trim()
+            || "";
+
+          if (!prefetchedText) {
+            console.error("Sarvam returned empty response, falling back");
+            aiRes = null;
+          }
         }
       } catch (sarvamErr) {
         console.error("Sarvam fetch failed, falling back:", sarvamErr);
@@ -197,42 +208,72 @@ Deno.serve(async (req) => {
       throw new Error(`AI Gateway error: ${errData}`);
     }
 
-    const reader = aiRes.body!.getReader();
+    const contentType = aiRes.headers.get("content-type") || "";
     const decoder = new TextDecoder();
     let fullText = "";
 
     const stream = new ReadableStream({
       async start(controller) {
         const encoder = new TextEncoder();
-        let buffer = "";
+        const emitText = (text: string) => {
+          if (!text) return;
+          fullText += text;
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ text })}\n\n`)
+          );
+        };
 
         try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
+          if (prefetchedText) {
+            emitText(prefetchedText);
+          } else if (contentType.includes("application/json")) {
+            const payload = await aiRes.json();
+            const text = payload?.choices?.[0]?.message?.content?.trim()
+              || payload?.choices?.[0]?.delta?.content?.trim()
+              || payload?.response?.trim()
+              || "";
 
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split("\n");
-            buffer = lines.pop() || "";
+            if (!text) {
+              throw new Error("AI provider returned an empty response");
+            }
 
-            for (const line of lines) {
-              if (!line.startsWith("data: ")) continue;
-              const data = line.slice(6).trim();
-              if (data === "[DONE]") continue;
+            emitText(text);
+          } else {
+            const reader = aiRes.body?.getReader();
+            if (!reader) throw new Error("AI response body missing");
 
-              try {
-                const parsed = JSON.parse(data);
-                const delta = parsed.choices?.[0]?.delta?.content;
-                if (delta) {
-                  fullText += delta;
-                  controller.enqueue(
-                    encoder.encode(`data: ${JSON.stringify({ text: delta })}\n\n`)
-                  );
+            let buffer = "";
+
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+
+              buffer += decoder.decode(value, { stream: true });
+              const lines = buffer.split("\n");
+              buffer = lines.pop() || "";
+
+              for (const line of lines) {
+                if (!line.startsWith("data: ")) continue;
+                const data = line.slice(6).trim();
+                if (data === "[DONE]") continue;
+
+                try {
+                  const parsed = JSON.parse(data);
+                  const delta = parsed.choices?.[0]?.delta?.content
+                    || parsed.choices?.[0]?.message?.content
+                    || parsed.text;
+                  if (delta) {
+                    emitText(delta);
+                  }
+                } catch {
+                  // skip unparseable lines
                 }
-              } catch {
-                // skip unparseable lines
               }
             }
+          }
+
+          if (!fullText.trim()) {
+            throw new Error("AI provider returned an empty response");
           }
 
           controller.enqueue(encoder.encode(`data: [DONE]\n\n`));

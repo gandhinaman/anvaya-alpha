@@ -105,6 +105,7 @@ export default function LovedOneChat({ open, onClose, lang = "en", userId, initi
   const scrollRef = useRef(null);
   const ttsAudioRef = useRef(null);
   const pendingSendRef = useRef(null);
+  const sendLockRef = useRef(false);
   const messagesRef = useRef(messages);
   messagesRef.current = messages;
 
@@ -382,10 +383,13 @@ export default function LovedOneChat({ open, onClose, lang = "en", userId, initi
   });
 
   const sendMessage = async (text) => {
-    if (!text.trim() || streaming) return;
+    if (!text.trim() || streaming || sendLockRef.current) return;
 
-    const userMsg = { role: "user", content: text.trim() };
-    const newMessages = [...messagesRef.current, userMsg];
+    sendLockRef.current = true;
+    const cleanedMessages = messagesRef.current.filter(
+      (m) => !(m.role === "assistant" && (!m.content || !m.content.trim()))
+    );
+    const newMessages = [...cleanedMessages, userMsg];
     setMessages(newMessages);
     setInput("");
     setStreaming(true);
@@ -445,6 +449,7 @@ export default function LovedOneChat({ open, onClose, lang = "en", userId, initi
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
+      let receivedText = false;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -462,6 +467,7 @@ export default function LovedOneChat({ open, onClose, lang = "en", userId, initi
           try {
             const parsed = JSON.parse(data);
             if (parsed.text) {
+              receivedText = true;
               setMessages((prev) => {
                 const updated = [...prev];
                 const last = updated[updated.length - 1];
@@ -478,6 +484,10 @@ export default function LovedOneChat({ open, onClose, lang = "en", userId, initi
             // skip
           }
         }
+      }
+
+      if (!receivedText) {
+        throw new Error("Empty AI response");
       }
     } catch (err) {
       setMessages((prev) => {
@@ -496,6 +506,7 @@ export default function LovedOneChat({ open, onClose, lang = "en", userId, initi
       });
       console.error("Chat error:", err);
     } finally {
+      sendLockRef.current = false;
       setStreaming(false);
     }
   };
