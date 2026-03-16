@@ -1723,6 +1723,23 @@ Only use ONE action tag per response. Keep your spoken response brief and natura
               </div>
             </div>
 
+            {/* Religion */}
+            <div>
+              <label style={{fontSize:13,color:"rgba(255,248,240,.5)",fontWeight:600,marginBottom:6,display:"block"}}>
+                {lang==="en"?"Religion / Faith":"धर्म"}
+              </label>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                {["Hindu","Muslim","Christian","Sikh","Buddhist","Jain","Jewish","Other","Prefer not to say"].map(r=>(
+                  <button key={r} onClick={()=>setProfileData(p=>({...p,religion:r}))}
+                    style={{padding:"10px 18px",borderRadius:100,border:`1.5px solid ${profileData.religion===r?"#C68B59":"rgba(255,248,240,.15)"}`,
+                      background:profileData.religion===r?"rgba(198,139,89,.2)":"rgba(255,248,240,.06)",
+                      color:profileData.religion===r?"#C68B59":"rgba(255,248,240,.6)",fontSize:14,fontWeight:600,cursor:"pointer"}}>
+                    {r}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Health Issues / Illnesses */}
             <div>
               <label style={{fontSize:13,color:"rgba(255,248,240,.5)",fontWeight:600,marginBottom:6,display:"block"}}>
