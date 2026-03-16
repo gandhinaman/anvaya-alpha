@@ -1269,8 +1269,10 @@ Only use ONE action tag per response. Keep your spoken response brief and natura
 
   // Persist language
   const switchLang = async (l) => {
+    const prevLang = lang;
     setLang(l);
     if(userId && !inPanel) {
+      trackEvent("language_switch", { from: prevLang, to: l });
       await supabase.from("profiles").update({language:l}).eq("id",userId);
     }
   };
