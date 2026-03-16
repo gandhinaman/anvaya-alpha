@@ -121,6 +121,7 @@ Deno.serve(async (req) => {
         ...messages,
       ],
       stream: true,
+      max_tokens: 120,
     };
 
     const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

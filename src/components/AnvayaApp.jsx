@@ -891,13 +891,14 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
   };
 
   const ttsAudioRef = useRef(null);
+  const audioContextRef = useRef(null);
 
   const speakResponse = async (text) => {
     setVoicePhase("speaking");
 
     // Stop any previous audio
     if (ttsAudioRef.current) {
-      ttsAudioRef.current.pause();
+      try { ttsAudioRef.current.stop(); } catch {}
       ttsAudioRef.current = null;
     }
     window.speechSynthesis.cancel();
@@ -923,66 +924,33 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
         throw new Error(`TTS failed: ${response.status}`);
       }
 
-      // Reuse pre-warmed Audio element if available (bypasses iOS autoplay)
-      let audio;
-      if (preWarmedAudioRef.current) {
-        audio = preWarmedAudioRef.current;
-      } else {
-        audio = new Audio();
-      }
-      ttsAudioRef.current = audio;
+      const data = await response.json();
+      if (!data.audio) throw new Error("No audio in response");
 
-      audio.onended = () => {
+      // Web Audio API playback — most reliable on iOS Safari
+      const ctx = audioContextRef.current || new (window.AudioContext || window.webkitAudioContext)();
+      audioContextRef.current = ctx;
+      await ctx.resume(); // iOS requirement
+
+      const binary = atob(data.audio);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
+      // Determine format — Sarvam returns WAV, ElevenLabs fallback returns MP3
+      const audioBuffer = await ctx.decodeAudioData(bytes.buffer.slice(0));
+      const source = ctx.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(ctx.destination);
+      ttsAudioRef.current = source;
+
+      source.onended = () => {
         setVoicePhase("idle");
         ttsAudioRef.current = null;
       };
-      audio.onerror = () => {
-        setVoicePhase("idle");
-        ttsAudioRef.current = null;
-      };
 
-      // Check content type — MediaSource streaming only works for audio/mpeg (ElevenLabs)
-      // Sarvam returns audio/wav which must use blob approach
-      const contentType = response.headers.get('content-type') || '';
-      const isMpeg = contentType.includes('audio/mpeg');
-
-      if (isMpeg && window.MediaSource && MediaSource.isTypeSupported('audio/mpeg')) {
-        // Stream audio via MediaSource (Chrome/Android)
-        const mediaSource = new MediaSource();
-        audio.src = URL.createObjectURL(mediaSource);
-        await new Promise((resolve, reject) => {
-          mediaSource.addEventListener('sourceopen', async () => {
-            try {
-              const sourceBuffer = mediaSource.addSourceBuffer('audio/mpeg');
-              const reader = response.body.getReader();
-              let started = false;
-              const pump = async () => {
-                const { done, value } = await reader.read();
-                if (done) {
-                  if (mediaSource.readyState === 'open') mediaSource.endOfStream();
-                  resolve();
-                  return;
-                }
-                sourceBuffer.appendBuffer(value);
-                if (!started) {
-                  started = true;
-                  audio.play().catch(() => {});
-                }
-                sourceBuffer.addEventListener('updateend', pump, { once: true });
-              };
-              pump();
-            } catch (e) { reject(e); }
-          }, { once: true });
-        });
-      } else {
-        // Blob fallback for audio/wav (Sarvam) or iOS/Safari
-        const audioBlob = await response.blob();
-        audio.src = URL.createObjectURL(audioBlob);
-        await audio.play();
-      }
+      source.start(0);
     } catch (err) {
-      console.error("ElevenLabs TTS error, falling back to browser:", err);
-      // Fallback to browser speech
+      console.error("TTS error, falling back to browser speech:", err);
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = lang === "hi" ? "hi-IN" : "en-US";
       utterance.rate = 0.95;
