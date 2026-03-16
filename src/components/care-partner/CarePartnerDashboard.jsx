@@ -776,6 +776,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
         value: { resolved_by: profileId, timestamp: new Date().toISOString() },
       });
     }
+    trackEvent("emergency_resolve", {});
     setEmergency(null);
   };
 
