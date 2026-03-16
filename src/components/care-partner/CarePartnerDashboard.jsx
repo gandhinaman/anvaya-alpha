@@ -938,17 +938,17 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
       });
   }, [profileId]);
 
-  const saveGuardianProfile = async () => {
+  const saveCpProfile = async () => {
     if (!profileId) return;
-    setGuardianProfileLoading(true);
+    setCpProfileLoading(true);
     await supabase.from("profiles").update({
-      full_name: guardianProfile.full_name,
-      phone: guardianProfile.phone,
-      location: guardianProfile.location,
+      full_name: cpProfile.full_name,
+      phone: cpProfile.phone,
+      location: cpProfile.location,
     }).eq("id", profileId);
-    setGuardianProfileLoading(false);
-    setGuardianProfileSaved(true);
-    setTimeout(() => setGuardianProfileSaved(false), 2000);
+    setCpProfileLoading(false);
+    setCpProfileSaved(true);
+    setTimeout(() => setCpProfileSaved(false), 2000);
   };
 
   const handleLinkAccount = async () => {
