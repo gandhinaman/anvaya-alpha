@@ -238,8 +238,8 @@ Deno.serve(async (req) => {
           controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
           controller.close();
 
-          // Save conversation to DB after streaming completes
-          if (userId) {
+          // Save conversation to DB after streaming completes (skip if empty response)
+          if (userId && fullText.trim()) {
             try {
               const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
               const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
