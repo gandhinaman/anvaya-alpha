@@ -969,13 +969,13 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
     }
     if (wavRecorderRef.current) {
       try { wavRecorderRef.current.stop(); } catch {}
-      wavRecorderRef.current = null;
       if (wavRecorderRef.current?.stream) {
         wavRecorderRef.current.stream.getTracks().forEach(t => t.stop());
       }
+      wavRecorderRef.current = null;
     }
     if (ttsAudioRef.current) {
-      ttsAudioRef.current.pause();
+      try { ttsAudioRef.current.stop(); } catch {}
       ttsAudioRef.current = null;
     }
     window.speechSynthesis.cancel();
