@@ -456,10 +456,8 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
         avatar_url: profileData.avatar_url||null,
         gender: profileData.gender||null,
       }).eq("id",userId);
-      // Sync name to greeting
-      if(profileData.full_name && profileData.full_name !== fullName) {
-        if(setAutoFullName) setAutoFullName(profileData.full_name);
-      }
+      // Sync name to greeting immediately
+      if(profileData.full_name) setAutoFullName(profileData.full_name);
     } catch(e){ console.error("Save profile error:",e); }
     setProfileSaving(false);
   };
