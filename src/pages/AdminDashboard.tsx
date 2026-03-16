@@ -6,9 +6,16 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line,
 } from "recharts";
-import { Users, Activity, Clock, MousePointerClick, LogOut, RefreshCw } from "lucide-react";
+import { Users, Activity, Clock, MousePointerClick, LogOut, RefreshCw, ArrowLeft, MessageCircle } from "lucide-react";
 
 const COLORS = ["#8D6E63", "#C68B59", "#059669", "#5D4037", "#A1887F", "#2C1810"];
+const ROLE_LABELS: Record<string, string> = { parent: "Loved One", child: "Care Partner" };
+const FEATURE_LABELS: Record<string, string> = {
+  record_memory: "Record Memory", open_memory_log: "Memory Log", open_chat: "Ask Ela",
+  call_family: "Call Family", ela_chat: "Ela Message", view_memories: "View Memories",
+  view_overview: "Overview", view_settings: "Settings", view_alerts: "Alerts",
+  view_health: "Health", view_rhythm: "Daily Rhythm",
+};
 
 interface SessionRow {
   id: string;
