@@ -421,8 +421,59 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
   // Profile state
   const [profileData, setProfileData] = useState({
     age: null, health_issues: [], language: "en", interests: [], location: "",
-    full_name: "", linked_user_id: null
+    full_name: "", linked_user_id: null, religion: "", avatar_url: ""
   });
+  const avatarInputRef = useRef(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+
+  // Load profile data from DB
+  useEffect(()=>{
+    if(!userId) return;
+    supabase.from("profiles").select("full_name,age,language,health_issues,interests,location,linked_user_id,religion,avatar_url")
+      .eq("id",userId).maybeSingle().then(({data})=>{
+        if(data) setProfileData({
+          full_name: data.full_name||"", age: data.age, language: data.language||"en",
+          health_issues: data.health_issues||[], interests: data.interests||[],
+          location: data.location||"", linked_user_id: data.linked_user_id,
+          religion: data.religion||"", avatar_url: data.avatar_url||""
+        });
+      });
+  },[userId]);
+
+  // Save profile to DB
+  const saveProfile = async ()=>{
+    if(!userId) return;
+    setProfileSaving(true);
+    try {
+      await supabase.from("profiles").update({
+        full_name: profileData.full_name||null,
+        age: profileData.age,
+        language: profileData.language,
+        health_issues: profileData.health_issues,
+        interests: profileData.interests,
+        location: profileData.location||null,
+        religion: profileData.religion||null,
+        avatar_url: profileData.avatar_url||null,
+      }).eq("id",userId);
+    } catch(e){ console.error("Save profile error:",e); }
+    setProfileSaving(false);
+  };
+
+  // Upload avatar
+  const handleAvatarUpload = async (e)=>{
+    const file = e.target.files?.[0];
+    if(!file || !userId) return;
+    setAvatarUploading(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `avatars/${userId}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("memories").upload(path, file, { upsert: true });
+      if(upErr) throw upErr;
+      const { data: { publicUrl } } = supabase.storage.from("memories").getPublicUrl(path);
+      setProfileData(p=>({...p, avatar_url: publicUrl}));
+    } catch(err){ console.error("Avatar upload error:",err); }
+    setAvatarUploading(false);
+  };
   // Memory of the Day prompt
   const [memoryOfDay, setMemoryOfDay] = useState(null);
   useEffect(() => {
@@ -1593,6 +1644,26 @@ Only use ONE action tag per response. Keep your spoken response brief and natura
 
           <div className="scr" style={{flex:1,overflowY:"auto",padding:"16px 20px",display:"flex",flexDirection:"column",gap:20}}>
 
+            {/* Profile Photo */}
+            <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:12}}>
+              <div onClick={()=>avatarInputRef.current?.click()} style={{
+                width:90,height:90,borderRadius:"50%",overflow:"hidden",cursor:"pointer",
+                border:"3px solid rgba(198,139,89,.4)",background:"rgba(255,248,240,.08)",
+                display:"flex",alignItems:"center",justifyContent:"center",position:"relative"
+              }}>
+                {profileData.avatar_url ? (
+                  <img src={profileData.avatar_url} alt="Profile" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+                ) : (
+                  <User size={36} color="rgba(255,248,240,.4)"/>
+                )}
+                {avatarUploading && <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center"}}><Loader2 size={24} color="#FFF8F0" style={{animation:"spin 1s linear infinite"}}/></div>}
+              </div>
+              <button onClick={()=>avatarInputRef.current?.click()} style={{
+                fontSize:13,color:"#C68B59",background:"none",border:"none",cursor:"pointer",fontWeight:600
+              }}>{lang==="en"?"Change Photo":"फ़ोटो बदलें"}</button>
+              <input ref={avatarInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} style={{display:"none"}}/>
+            </div>
+
             {/* Name */}
             <div>
               <label style={{fontSize:13,color:"rgba(255,248,240,.5)",fontWeight:600,marginBottom:6,display:"block"}}>
@@ -1647,6 +1718,23 @@ Only use ONE action tag per response. Keep your spoken response brief and natura
                       background:profileData.language===opt.v?"rgba(198,139,89,.2)":"rgba(255,248,240,.06)",
                       color:profileData.language===opt.v?"#C68B59":"rgba(255,248,240,.6)",fontSize:15,fontWeight:600,cursor:"pointer"}}>
                     {opt.l}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Religion */}
+            <div>
+              <label style={{fontSize:13,color:"rgba(255,248,240,.5)",fontWeight:600,marginBottom:6,display:"block"}}>
+                {lang==="en"?"Religion / Faith":"धर्म"}
+              </label>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                {["Hindu","Muslim","Christian","Sikh","Buddhist","Jain","Jewish","Other","Prefer not to say"].map(r=>(
+                  <button key={r} onClick={()=>setProfileData(p=>({...p,religion:r}))}
+                    style={{padding:"10px 18px",borderRadius:100,border:`1.5px solid ${profileData.religion===r?"#C68B59":"rgba(255,248,240,.15)"}`,
+                      background:profileData.religion===r?"rgba(198,139,89,.2)":"rgba(255,248,240,.06)",
+                      color:profileData.religion===r?"#C68B59":"rgba(255,248,240,.6)",fontSize:14,fontWeight:600,cursor:"pointer"}}>
+                    {r}
                   </button>
                 ))}
               </div>
