@@ -42,9 +42,7 @@ Deno.serve(async (req) => {
           speaker: "meera",
           model: "bulbul:v3",
           enable_preprocessing: true,
-          pitch: 0,
           pace: 0.85,
-          loudness: 1.3,
         }),
       });
 
