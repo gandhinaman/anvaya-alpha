@@ -38,10 +38,11 @@ Deno.serve(async (req) => {
 
   try {
     const { messages, system, userId } = await req.json();
-    const apiKey = Deno.env.get("LOVABLE_API_KEY");
+    const sarvamKey = Deno.env.get("SARVAM_API_KEY");
+    const lovableKey = Deno.env.get("LOVABLE_API_KEY");
 
-    if (!apiKey) {
-      throw new Error("LOVABLE_API_KEY not configured");
+    if (!sarvamKey && !lovableKey) {
+      throw new Error("No AI API key configured");
     }
 
     // Build personalized system prompt with user context
