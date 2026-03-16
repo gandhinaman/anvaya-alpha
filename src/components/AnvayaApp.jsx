@@ -2579,10 +2579,10 @@ export default function App() {
             </div>
             <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
               <div style={{fontSize:10,color:"#6b6b6b",letterSpacing:"0.13em",fontWeight:600,textAlign:"center",padding:"9px 0",background:"#F2F4F3",flexShrink:0}}>
-                GUARDIAN — CHILD DASHBOARD
+                CARE PARTNER DASHBOARD
               </div>
               <div style={{flex:1,display:"flex",overflow:"hidden"}}>
-                <GuardianDashboard inPanel/>
+                <CarePartnerDashboard inPanel/>
               </div>
             </div>
           </div>
