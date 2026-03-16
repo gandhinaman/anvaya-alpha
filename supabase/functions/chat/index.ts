@@ -115,24 +115,60 @@ Deno.serve(async (req) => {
       }
     }
 
-    const body = {
-      model: "google/gemini-2.5-flash",
-      messages: [
-        { role: "system", content: systemPrompt },
-        ...messages,
-      ],
-      stream: true,
-      max_tokens: 120,
-    };
+    // Use Sarvam-30B as primary, Lovable AI as fallback
+    let aiRes;
 
-    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify(body),
-    });
+    if (sarvamKey) {
+      const body = {
+        model: "sarvam-30b",
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...messages,
+        ],
+        stream: true,
+        max_tokens: 120,
+      };
+
+      aiRes = await fetch("https://api.sarvam.ai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "api-subscription-key": sarvamKey,
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!aiRes.ok) {
+        console.error("Sarvam chat error:", aiRes.status, await aiRes.text());
+        aiRes = null; // fall through to Lovable
+      }
+    }
+
+    if (!aiRes && lovableKey) {
+      const body = {
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...messages,
+        ],
+        stream: true,
+        max_tokens: 120,
+      };
+
+      aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${lovableKey}`,
+        },
+        body: JSON.stringify(body),
+      });
+    }
+
+    if (!aiRes || !aiRes.ok) {
+      const errData = aiRes ? await aiRes.text() : "No AI provider available";
+      throw new Error(`AI error: ${errData}`);
+    }
 
     if (!aiRes.ok) {
       const errData = await aiRes.text();
