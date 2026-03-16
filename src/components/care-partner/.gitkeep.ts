@@ -1,2 +1,2 @@
-// Guardian components barrel file
+// Care Partner components barrel file
 export {};

@@ -94,7 +94,7 @@ function pickRandomPrompts(lang, count = 4) {
 const GREETING_EN = "How can I help you? Type or speak now.";
 const GREETING_HI = "मैं आपकी कैसे मदद कर सकता हूँ? लिखें या बोलें।";
 
-export default function SathiChat({ open, onClose, lang = "en", userId, initialMessage, onInitialMessageConsumed }) {
+export default function LovedOneChat({ open, onClose, lang = "en", userId, initialMessage, onInitialMessageConsumed }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);

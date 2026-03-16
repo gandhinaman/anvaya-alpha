@@ -1,2 +1,2 @@
-// Sathi components barrel file
+// Loved One components barrel file
 export {};
