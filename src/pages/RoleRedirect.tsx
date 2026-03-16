@@ -29,5 +29,5 @@ export default function RoleRedirect() {
     return <Navigate to="/onboarding" replace />;
   }
 
-  return <Navigate to={profile.role === "child" ? "/guardian" : "/sathi"} replace />;
+  return <Navigate to={profile.role === "child" ? "/care-partner" : "/loved-one"} replace />;
 }

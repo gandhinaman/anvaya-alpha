@@ -77,7 +77,7 @@ export default function Login() {
           if (profile?.role === "parent" && !profile?.onboarding_completed) {
             navigate("/onboarding", { replace: true });
           } else {
-            navigate(profile?.role === "child" ? "/guardian" : "/sathi", { replace: true });
+            navigate(profile?.role === "child" ? "/care-partner" : "/loved-one", { replace: true });
           }
         }
       }
@@ -199,7 +199,7 @@ export default function Login() {
                         fontSize: 13, fontWeight: role === r ? 600 : 400, cursor: "pointer",
                         fontFamily: "'DM Sans', sans-serif", textTransform: "capitalize", transition: "all .2s",
                       }}>
-                        {r === "parent" ? "🙏 Care Partner" : "👤 Parent"}
+                        {r === "parent" ? "🙏 Loved One" : "👤 Care Partner"}
                       </button>
                     ))}
                   </div>

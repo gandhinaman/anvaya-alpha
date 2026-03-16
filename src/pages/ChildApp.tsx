@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import GuardianDashboard, { guardianStyles } from "@/components/guardian/GuardianDashboard";
-import SafetyConsentModal from "@/components/guardian/SafetyConsentModal";
+import CarePartnerDashboard, { carePartnerStyles } from "@/components/care-partner/CarePartnerDashboard";
+import SafetyConsentModal from "@/components/care-partner/SafetyConsentModal";
 import { useProfile } from "@/hooks/useProfile";
 
 export default function ChildApp() {
@@ -17,7 +17,7 @@ export default function ChildApp() {
 
   return (
     <div style={{ width: "100%", height: "100dvh", overflow: "hidden", position: "relative" }}>
-      <style>{guardianStyles}</style>
+      <style>{carePartnerStyles}</style>
 
       {/* Dashboard always renders but is blurred when consent is needed */}
       <div style={{
@@ -27,7 +27,7 @@ export default function ChildApp() {
         pointerEvents: needsConsent ? "none" : "auto",
         transition: "filter .3s ease",
       }}>
-        <GuardianDashboard profileId={profile?.id} />
+        <CarePartnerDashboard profileId={profile?.id} />
       </div>
 
       {needsConsent && profile && (

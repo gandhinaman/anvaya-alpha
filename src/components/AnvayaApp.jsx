@@ -6,9 +6,9 @@ import {
   TrendingUp, Zap, BarChart2, PhoneOff, AlertTriangle, ShieldCheck,
   Loader2, Link2, BellRing, Copy, Send, Sparkles
 } from "lucide-react";
-import SathiChat from "./sathi/SathiChat";
-import MemoryRecorder from "./sathi/MemoryRecorder";
-import MemoryLog from "./sathi/MemoryLog";
+import LovedOneChat from "./loved-one/LovedOneChat";
+import MemoryRecorder from "./loved-one/MemoryRecorder";
+import MemoryLog from "./loved-one/MemoryLog";
 import { supabase } from "@/integrations/supabase/client";
 import { useParentData } from "@/hooks/useParentData";
 import { useStreak } from "@/hooks/useStreak";
@@ -308,7 +308,7 @@ function CallOverlay({ open, onClose, lang, userId, linkedUserId, fromName }) {
   );
 }
 
-function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLinkedUserId=null, fullName:propFullName=null, savedLang=null}) {
+function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLinkedUserId=null, fullName:propFullName=null, savedLang=null}) {
   const {w}=useWindowSize();
   const [lang,setLang]=useState(savedLang||"en");
   const [linkedName, setLinkedName]=useState(null);
@@ -339,7 +339,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
 
   // Mic permission is now requested once at app startup in App.tsx
 
-  // Broadcast presence so guardian can see parent is online
+  // Broadcast presence so care partner can see loved one is online
   useEffect(() => {
     if (!userId) return;
     const presenceCh = supabase.channel(`presence:${userId}`);
@@ -530,7 +530,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
           entries,
           userId,
           linkedUserId,
-          route: typeof window !== "undefined" ? window.location.pathname : "/sathi",
+          route: typeof window !== "undefined" ? window.location.pathname : "/loved-one",
         },
       });
 
@@ -1451,7 +1451,7 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
         </div>
       )}
 
-      <SathiChat open={chatOpen} onClose={()=>{setChatOpen(false);setPendingChatMsg(null);}} lang={lang} userId={userId} initialMessage={pendingChatMsg} onInitialMessageConsumed={()=>setPendingChatMsg(null)}/>
+      <LovedOneChat open={chatOpen} onClose={()=>{setChatOpen(false);setPendingChatMsg(null);}} lang={lang} userId={userId} initialMessage={pendingChatMsg} onInitialMessageConsumed={()=>setPendingChatMsg(null)}/>
       <MemoryRecorder open={memoryOpen} onClose={()=>setMemoryOpen(false)} lang={lang} userId={userId} linkedName={linkedName}/>
       <CallOverlay open={callOpen} onClose={()=>setCallOpen(false)} lang={lang} userId={userId} linkedUserId={linkedUserId} fromName={linkedName||"Child"}/>
       <MemoryLog open={memoryLogOpen} onClose={()=>setMemoryLogOpen(false)} lang={lang} userId={userId}/>
@@ -1812,8 +1812,8 @@ function MemoryCard({title, summary, duration, date, index=0, audioUrl=null, emo
   );
 }
 
-// ─── GUARDIAN DASHBOARD ───────────────────────────────────────────────────────
-function GuardianDashboard({inPanel=false, profileId=null}) {
+// ─── CARE PARTNER DASHBOARD ───────────────────────────────────────────────────
+function CarePartnerDashboard({inPanel=false, profileId=null}) {
   const {w}=useWindowSize();
   const isMobile = !inPanel && w < 768;
   const [nav,setNav]=useState("home");
@@ -2487,20 +2487,20 @@ function GuardianDashboard({inPanel=false, profileId=null}) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // ROOT APP
 // ═══════════════════════════════════════════════════════════════════════════════
-export { SathiScreen, GuardianDashboard, fontStyle };
+export { LovedOneScreen, CarePartnerDashboard, fontStyle };
 
 export default function App() {
   const {w}=useWindowSize();
   const isMobile=w<768;
-  const [view,setView]=useState(isMobile?"sathi":"both");
+  const [view,setView]=useState(isMobile?"loved-one":"both");
 
   useEffect(()=>{
-    if(isMobile&&view==="both") setView("sathi");
+    if(isMobile&&view==="both") setView("loved-one");
   },[isMobile]);
 
   const tabs=[
-    {id:"sathi",   label:"Ela"},
-    {id:"guardian",label:"Caregiver"},
+    {id:"loved-one",   label:"Loved One"},
+    {id:"care-partner",label:"Care Partner"},
     ...(!isMobile?[{id:"both",label:"Both"}]:[]),
   ];
 
@@ -2535,13 +2535,13 @@ export default function App() {
       {/* Content */}
       <div style={{flex:1,overflow:"hidden",display:"flex"}}>
 
-        {view==="sathi"&&(
+        {view==="loved-one"&&(
           isMobile
-            ? <SathiScreen/>
+            ? <LovedOneScreen/>
             : <div style={{flex:1,display:"flex",justifyContent:"center",alignItems:"flex-start",overflowY:"auto",background:"linear-gradient(160deg,#111 0%,#1a1a1a 100%)",padding:"40px 20px"}}>
                 <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:14}}>
-                  <div style={{fontSize:10,color:"rgba(249,249,247,.28)",letterSpacing:"0.15em",fontWeight:600}}>AVA — MOBILE PREVIEW</div>
-                  <SathiScreen inPanel/>
+                  <div style={{fontSize:10,color:"rgba(249,249,247,.28)",letterSpacing:"0.15em",fontWeight:600}}>ELA — LOVED ONE PREVIEW</div>
+                  <LovedOneScreen inPanel/>
                   <div style={{padding:"6px 14px",borderRadius:100,background:"rgba(6,78,59,.2)",border:"1px solid rgba(6,78,59,.3)"}}>
                     <span style={{fontSize:11,color:"#34D399"}}>If you're in trouble, type or say "help" to Ela</span>
                   </div>
@@ -2549,15 +2549,15 @@ export default function App() {
               </div>
         )}
 
-        {view==="guardian"&&(
+        {view==="care-partner"&&(
           isMobile
-            ? <GuardianDashboard/>
+            ? <CarePartnerDashboard/>
             : <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
                 <div style={{fontSize:10,color:"#6b6b6b",letterSpacing:"0.13em",fontWeight:600,textAlign:"center",padding:"9px 0",background:"#F2F4F3",flexShrink:0}}>
-                  GUARDIAN — CHILD DASHBOARD
+                  CARE PARTNER DASHBOARD
                 </div>
                 <div style={{flex:1,display:"flex",overflow:"hidden"}}>
-                  <GuardianDashboard/>
+                  <CarePartnerDashboard/>
                 </div>
               </div>
         )}
@@ -2571,18 +2571,18 @@ export default function App() {
               padding:"28px 12px",borderRight:"1px solid rgba(255,255,255,.06)",
               overflowY:"auto"
             }}>
-              <div style={{fontSize:10,color:"rgba(249,249,247,.28)",letterSpacing:"0.14em",marginBottom:14,fontWeight:600}}>ELA — PARENT COMPANION</div>
-              <SathiScreen inPanel/>
+              <div style={{fontSize:10,color:"rgba(249,249,247,.28)",letterSpacing:"0.14em",marginBottom:14,fontWeight:600}}>ELA — LOVED ONE COMPANION</div>
+              <LovedOneScreen inPanel/>
               <div style={{marginTop:14,padding:"6px 13px",borderRadius:100,background:"rgba(6,78,59,.2)",border:"1px solid rgba(6,78,59,.3)"}}>
                 <span style={{fontSize:11,color:"#34D399"}}>If you're in trouble, type or say "help" to Ela</span>
               </div>
             </div>
             <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
               <div style={{fontSize:10,color:"#6b6b6b",letterSpacing:"0.13em",fontWeight:600,textAlign:"center",padding:"9px 0",background:"#F2F4F3",flexShrink:0}}>
-                GUARDIAN — CHILD DASHBOARD
+                CARE PARTNER DASHBOARD
               </div>
               <div style={{flex:1,display:"flex",overflow:"hidden"}}>
-                <GuardianDashboard inPanel/>
+                <CarePartnerDashboard inPanel/>
               </div>
             </div>
           </div>

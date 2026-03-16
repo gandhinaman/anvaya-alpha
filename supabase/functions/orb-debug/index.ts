@@ -20,7 +20,7 @@ type OrbDebugEntry = {
 
 const formatEntry = (entry: OrbDebugEntry, route?: string) => {
   const meta = entry.extra && Object.keys(entry.extra).length > 0 ? ` | meta=${JSON.stringify(entry.extra)}` : "";
-  return `${entry.ts ?? new Date().toISOString()} | session=${entry.sessionId ?? "unknown"} | route=${route ?? "/sathi"} | user=${entry.userId ?? "anonymous"} | linked=${entry.linkedUserId ?? "none"} | lang=${entry.lang ?? "unknown"} | phase=${entry.phase ?? "unknown"} | ${entry.message ?? ""}${meta}`;
+  return `${entry.ts ?? new Date().toISOString()} | session=${entry.sessionId ?? "unknown"} | route=${route ?? "/loved-one"} | user=${entry.userId ?? "anonymous"} | linked=${entry.linkedUserId ?? "none"} | lang=${entry.lang ?? "unknown"} | phase=${entry.phase ?? "unknown"} | ${entry.message ?? ""}${meta}`;
 };
 
 const ensureBucket = async (supabase: ReturnType<typeof createClient>) => {

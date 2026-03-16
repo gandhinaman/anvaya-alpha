@@ -102,7 +102,7 @@ export default function Onboarding() {
         .eq("id", session.user.id);
 
       if (updateErr) throw updateErr;
-      navigate("/sathi", { replace: true });
+      navigate("/loved-one", { replace: true });
     } catch (err: any) {
       setError(err.message || "Something went wrong");
     } finally {
