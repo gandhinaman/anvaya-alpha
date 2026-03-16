@@ -18,7 +18,6 @@ Deno.serve(async (req) => {
     let audioBytes: Uint8Array;
     let mime = "audio/wav";
     let ext = "audio.wav";
-    let languageCode = "unknown";
 
     const contentTypeHeader = req.headers.get("content-type") || "";
 
@@ -26,26 +25,22 @@ Deno.serve(async (req) => {
       // New path: raw FormData blob from orb
       const formData = await req.formData();
       const file = formData.get("file") as File;
-      const langParam = formData.get("language_code") as string;
-      
+
       if (!file) throw new Error("file is required in FormData");
-      
+
       audioBytes = new Uint8Array(await file.arrayBuffer());
-      languageCode = langParam || "unknown";
-      
+
       const fileType = file.type || "";
       if (fileType.includes("mp3") || fileType.includes("mpeg")) { mime = "audio/mp3"; ext = "audio.mp3"; }
       else if (fileType.includes("ogg")) { mime = "audio/ogg"; ext = "audio.ogg"; }
-      else if (fileType.includes("webm")) { mime = "audio/wav"; ext = "audio.wav"; }
       else if (fileType.includes("wav")) { mime = "audio/wav"; ext = "audio.wav"; }
-      
+
       console.log("FormData path - file type:", fileType, "bytes:", audioBytes.length);
     } else {
       // Legacy path: base64 JSON
-      const { audioBase64, contentType, languageCode: lc } = await req.json();
+      const { audioBase64, contentType } = await req.json();
       if (!audioBase64) throw new Error("audioBase64 is required");
-      
-      languageCode = lc || "unknown";
+
       const binaryStr = atob(audioBase64);
       audioBytes = new Uint8Array(binaryStr.length);
       for (let i = 0; i < binaryStr.length; i++) {
@@ -57,23 +52,18 @@ Deno.serve(async (req) => {
       else if (ct.includes("ogg")) { mime = "audio/ogg"; ext = "audio.ogg"; }
       else if (ct.includes("flac")) { mime = "audio/flac"; ext = "audio.flac"; }
       else if (ct.includes("aac")) { mime = "audio/aac"; ext = "audio.aac"; }
-      
+
       console.log("Base64 path - contentType:", ct, "bytes:", audioBytes.length);
     }
 
-    // Map language codes
-    if (languageCode === "hi") languageCode = "hi-IN";
-    else if (languageCode === "en") languageCode = "en-IN";
-
-    // Build multipart form data for Sarvam
+    // Build multipart form data for Sarvam Saaras v3
     const sarvamForm = new FormData();
     const blob = new Blob([audioBytes], { type: mime });
     sarvamForm.append("file", blob, ext);
-    sarvamForm.append("model", "saarika:v2.5");
-    sarvamForm.append("language_code", languageCode);
-    sarvamForm.append("with_timestamps", "false");
+    sarvamForm.append("model", "saaras:v3");
+    sarvamForm.append("mode", "transcribe");
 
-    console.log("Sending to Sarvam with mime:", mime, "lang:", languageCode);
+    console.log("Sending to Sarvam Saaras v3 with mime:", mime);
 
     const sttRes = await fetch("https://api.sarvam.ai/speech-to-text", {
       method: "POST",
@@ -88,7 +78,7 @@ Deno.serve(async (req) => {
     }
 
     const result = await sttRes.json();
-    console.log("Sarvam result:", JSON.stringify(result));
+    console.log("Saaras v3 result:", JSON.stringify(result));
 
     return new Response(
       JSON.stringify({ transcript: result.transcript || "" }),
