@@ -74,7 +74,9 @@ export default function Login() {
             .select("role, onboarding_completed")
             .eq("id", session.user.id)
             .single();
-          if (profile?.role === "parent" && !profile?.onboarding_completed) {
+          if (profile?.role === "admin") {
+            navigate("/admin", { replace: true });
+          } else if (profile?.role === "parent" && !profile?.onboarding_completed) {
             navigate("/onboarding", { replace: true });
           } else {
             navigate(profile?.role === "child" ? "/care-partner" : "/loved-one", { replace: true });
