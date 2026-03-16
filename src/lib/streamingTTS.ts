@@ -1,10 +1,9 @@
 /**
- * Streaming TTS helper — handles SSE parsing and progressive PCM playback.
+ * Streaming TTS helper — progressive audio playback from Sarvam HTTP stream.
+ * The edge function returns a binary MP3 stream. We use MediaSource on
+ * supported browsers, and blob fallback on iOS Safari.
  * Falls back to batch JSON response automatically.
- * Works on iOS Safari (no MediaSource dependency).
  */
-
-const SAMPLE_RATE = 22050; // Sarvam PCM default
 
 interface StreamTTSOptions {
   text: string;
@@ -20,7 +19,7 @@ interface StreamTTSController {
 }
 
 /**
- * Decode base64 string to Uint8Array
+ * Decode base64 string to Uint8Array (for batch fallback)
  */
 function base64ToBytes(base64: string): Uint8Array {
   const binary = atob(base64);
@@ -31,30 +30,11 @@ function base64ToBytes(base64: string): Uint8Array {
   return bytes;
 }
 
-/**
- * Convert 16-bit PCM (little-endian, mono) to Float32Array for Web Audio API
- */
-function pcm16ToFloat32(pcmBytes: Uint8Array): Float32Array {
-  const samples = pcmBytes.length / 2;
-  const float32 = new Float32Array(samples);
-  const view = new DataView(pcmBytes.buffer, pcmBytes.byteOffset, pcmBytes.byteLength);
-  for (let i = 0; i < samples; i++) {
-    const int16 = view.getInt16(i * 2, true); // little-endian
-    float32[i] = int16 / 32768;
-  }
-  return float32;
-}
-
-/**
- * Stream TTS audio from the edge function with progressive playback.
- * Returns a controller with stop().
- */
 export function streamTTS(options: StreamTTSOptions): StreamTTSController {
   const { text, lang, audioContext, onStart, onEnd, onError } = options;
   let stopped = false;
-  let scheduledSources: AudioBufferSourceNode[] = [];
-  let nextPlayTime = 0;
-  let started = false;
+  let audio: HTMLAudioElement | null = null;
+  let source: AudioBufferSourceNode | null = null;
 
   const run = async () => {
     try {
@@ -81,75 +61,91 @@ export function streamTTS(options: StreamTTSOptions): StreamTTSController {
 
       const contentType = res.headers.get("content-type") || "";
 
-      // SSE streaming path
-      if (contentType.includes("text/event-stream")) {
-        const reader = res.body!.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
-        nextPlayTime = audioContext.currentTime + 0.05; // small initial delay
+      // Binary audio stream (MP3) — primary path
+      if (contentType.includes("audio/mpeg") || contentType.includes("audio/")) {
+        // Check if MediaSource is supported (Chrome, Android) for progressive playback
+        const canUseMediaSource =
+          typeof MediaSource !== "undefined" &&
+          MediaSource.isTypeSupported("audio/mpeg");
 
-        while (!stopped) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
+        if (canUseMediaSource && res.body) {
+          // Progressive playback via MediaSource
+          audio = new Audio();
+          const mediaSource = new MediaSource();
+          audio.src = URL.createObjectURL(mediaSource);
 
-          const lines = buffer.split("\n");
-          buffer = lines.pop() || "";
+          const audioEl = audio;
 
-          for (const line of lines) {
-            if (!line.startsWith("data: ")) continue;
-            const jsonStr = line.slice(6).trim();
-            if (!jsonStr) continue;
+          await new Promise<void>((resolve, reject) => {
+            mediaSource.addEventListener(
+              "sourceopen",
+              async () => {
+                try {
+                  const sourceBuffer = mediaSource.addSourceBuffer("audio/mpeg");
+                  const reader = res.body!.getReader();
+                  let started = false;
 
-            try {
-              const parsed = JSON.parse(jsonStr);
-
-              if (parsed.done === true) {
-                // Schedule end callback after last buffer plays
-                const endDelay = Math.max(0, (nextPlayTime - audioContext.currentTime) * 1000);
-                setTimeout(() => { if (!stopped) onEnd?.(); }, endDelay);
-                return;
-              }
-
-              if (parsed.audio && !stopped) {
-                const pcmBytes = base64ToBytes(parsed.audio);
-                const float32 = pcm16ToFloat32(pcmBytes);
-
-                const audioBuffer = audioContext.createBuffer(1, float32.length, SAMPLE_RATE);
-                audioBuffer.getChannelData(0).set(float32);
-
-                const source = audioContext.createBufferSource();
-                source.buffer = audioBuffer;
-                source.connect(audioContext.destination);
-                scheduledSources.push(source);
-
-                // Schedule playback
-                if (nextPlayTime < audioContext.currentTime) {
-                  nextPlayTime = audioContext.currentTime;
+                  const pump = async () => {
+                    if (stopped) return;
+                    const { done, value } = await reader.read();
+                    if (done) {
+                      if (mediaSource.readyState === "open") {
+                        // Wait for sourceBuffer to finish before ending
+                        if (sourceBuffer.updating) {
+                          sourceBuffer.addEventListener("updateend", () => {
+                            try { mediaSource.endOfStream(); } catch {}
+                          }, { once: true });
+                        } else {
+                          try { mediaSource.endOfStream(); } catch {}
+                        }
+                      }
+                      return;
+                    }
+                    sourceBuffer.appendBuffer(value);
+                    if (!started) {
+                      started = true;
+                      onStart?.();
+                      audioEl.play().catch(() => {});
+                    }
+                    sourceBuffer.addEventListener("updateend", pump, { once: true });
+                  };
+                  pump();
+                  resolve();
+                } catch (err) {
+                  reject(err);
                 }
-                source.start(nextPlayTime);
-                nextPlayTime += audioBuffer.duration;
+              },
+              { once: true }
+            );
+          });
 
-                if (!started) {
-                  started = true;
-                  onStart?.();
-                }
-              }
-            } catch {
-              // skip malformed JSON
-            }
-          }
-        }
+          audioEl.onended = () => {
+            if (!stopped) onEnd?.();
+          };
+          audioEl.onerror = () => {
+            if (!stopped) onEnd?.();
+          };
+        } else {
+          // iOS Safari / no MediaSource — blob fallback (still faster than batch
+          // since the HTTP stream starts sending sooner than full synthesis)
+          const blob = await res.blob();
+          if (stopped) return;
 
-        // If we get here without a done message, still fire onEnd
-        if (!stopped) {
-          const endDelay = Math.max(0, (nextPlayTime - audioContext.currentTime) * 1000);
-          setTimeout(() => { if (!stopped) onEnd?.(); }, endDelay);
+          audio = new Audio();
+          audio.src = URL.createObjectURL(blob);
+          onStart?.();
+          audio.onended = () => {
+            if (!stopped) onEnd?.();
+          };
+          audio.onerror = () => {
+            if (!stopped) onEnd?.();
+          };
+          await audio.play();
         }
         return;
       }
 
-      // Batch JSON fallback (backward compat with old response format)
+      // JSON fallback (batch response with base64 audio)
       const data = await res.json();
       if (stopped) return;
 
@@ -161,16 +157,10 @@ export function streamTTS(options: StreamTTSOptions): StreamTTSController {
 
       if (stopped) return;
 
-      const source = audioContext.createBufferSource();
+      source = audioContext.createBufferSource();
       source.buffer = audioBuffer;
       source.connect(audioContext.destination);
-      scheduledSources.push(source);
-
-      if (!started) {
-        started = true;
-        onStart?.();
-      }
-
+      onStart?.();
       source.onended = () => {
         if (!stopped) onEnd?.();
       };
@@ -187,10 +177,17 @@ export function streamTTS(options: StreamTTSOptions): StreamTTSController {
   return {
     stop: () => {
       stopped = true;
-      for (const s of scheduledSources) {
-        try { s.stop(); } catch {}
+      if (audio) {
+        try {
+          audio.pause();
+          audio.src = "";
+        } catch {}
+        audio = null;
       }
-      scheduledSources = [];
+      if (source) {
+        try { source.stop(); } catch {}
+        source = null;
+      }
     },
   };
 }
