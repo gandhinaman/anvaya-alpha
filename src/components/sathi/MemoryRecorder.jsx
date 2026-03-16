@@ -57,52 +57,47 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
     window.speechSynthesis.speak(utterance);
   }, [lang]);
 
+  const audioContextRef = useRef(null);
+  const ttsControllerRef = useRef(null);
+
   const speakPrompt = useCallback(async (text) => {
     try {
       setIsSpeakingPrompt(true);
+      if (ttsControllerRef.current) {
+        try { ttsControllerRef.current.stop(); } catch {}
+        ttsControllerRef.current = null;
+      }
       if (promptAudioRef.current) {
         promptAudioRef.current.pause();
         promptAudioRef.current = null;
       }
       window.speechSynthesis.cancel();
 
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const { streamTTS } = await import("@/lib/streamingTTS");
+      const ctx = audioContextRef.current || new (window.AudioContext || window.webkitAudioContext)();
+      audioContextRef.current = ctx;
 
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/elevenlabs-tts`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            apikey: anonKey,
-            Authorization: `Bearer ${anonKey}`,
-          },
-          body: JSON.stringify({ text, lang }),
-        }
-      );
-
-      if (!response.ok) {
-        console.error("TTS failed, using browser voice:", response.status);
-        speakWithBrowserFallback(text);
-        return;
-      }
-
-      const audioBlob = await response.blob();
-      const audioUrl = URL.createObjectURL(audioBlob);
-      const audio = new Audio(audioUrl);
-      promptAudioRef.current = audio;
-      audio.onended = () => setIsSpeakingPrompt(false);
-      audio.onerror = () => {
-        setIsSpeakingPrompt(false);
-        speakWithBrowserFallback(text);
-      };
-      await audio.play();
+      const controller = streamTTS({
+        text,
+        lang,
+        audioContext: ctx,
+        onStart: () => {},
+        onEnd: () => {
+          setIsSpeakingPrompt(false);
+          ttsControllerRef.current = null;
+        },
+        onError: (err) => {
+          console.error("Prompt TTS error, falling back to browser:", err);
+          ttsControllerRef.current = null;
+          speakWithBrowserFallback(text);
+        },
+      });
+      ttsControllerRef.current = controller;
     } catch (err) {
       console.error("Prompt TTS error, falling back to browser:", err);
       speakWithBrowserFallback(text);
     }
-  }, [speakWithBrowserFallback]);
+  }, [lang, speakWithBrowserFallback]);
 
   useEffect(() => {
     if (open && phase === "idle") {

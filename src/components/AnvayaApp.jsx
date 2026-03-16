@@ -905,51 +905,33 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
     window.speechSynthesis.cancel();
 
     try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/elevenlabs-tts`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            apikey: anonKey,
-            Authorization: `Bearer ${anonKey}`,
-          },
-          body: JSON.stringify({ text, lang }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`TTS failed: ${response.status}`);
-      }
-
-      const data = await response.json();
-      if (!data.audio) throw new Error("No audio in response");
-
-      // Web Audio API playback — most reliable on iOS Safari
+      const { streamTTS } = await import("@/lib/streamingTTS");
       const ctx = audioContextRef.current || new (window.AudioContext || window.webkitAudioContext)();
       audioContextRef.current = ctx;
-      await ctx.resume(); // iOS requirement
 
-      const binary = atob(data.audio);
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-
-      // Determine format — Sarvam returns WAV, ElevenLabs fallback returns MP3
-      const audioBuffer = await ctx.decodeAudioData(bytes.buffer.slice(0));
-      const source = ctx.createBufferSource();
-      source.buffer = audioBuffer;
-      source.connect(ctx.destination);
-      ttsAudioRef.current = source;
-
-      source.onended = () => {
-        setVoicePhase("idle");
-        ttsAudioRef.current = null;
-      };
-
-      source.start(0);
+      const controller = streamTTS({
+        text,
+        lang,
+        audioContext: ctx,
+        onStart: () => setVoicePhase("speaking"),
+        onEnd: () => {
+          setVoicePhase("idle");
+          ttsAudioRef.current = null;
+        },
+        onError: (err) => {
+          console.error("Streaming TTS error, falling back to browser speech:", err);
+          ttsAudioRef.current = null;
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.lang = lang === "hi" ? "hi-IN" : "en-US";
+          utterance.rate = 0.95;
+          utterance.pitch = 1;
+          synthRef.current = utterance;
+          utterance.onend = () => setVoicePhase("idle");
+          utterance.onerror = () => setVoicePhase("idle");
+          window.speechSynthesis.speak(utterance);
+        },
+      });
+      ttsAudioRef.current = controller;
     } catch (err) {
       console.error("TTS error, falling back to browser speech:", err);
       const utterance = new SpeechSynthesisUtterance(text);
