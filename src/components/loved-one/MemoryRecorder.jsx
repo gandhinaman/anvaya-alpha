@@ -106,10 +106,10 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
   }, [lang, speakWithBrowserFallback]);
 
   useEffect(() => {
-    if (open && phase === "idle") {
+    if (open && phase === "idle" && promptReady) {
       speakPrompt(currentPrompt);
     }
-  }, [open]);
+  }, [open, promptReady]);
 
   const shufflePrompt = () => {
     // If currently showing a caregiver question, skip to regular prompts
