@@ -1728,6 +1728,23 @@ Only use ONE action tag per response. Keep your spoken response brief and natura
               </div>
             </div>
 
+            {/* Gender */}
+            <div>
+              <label style={{fontSize:13,color:"rgba(255,248,240,.5)",fontWeight:600,marginBottom:6,display:"block"}}>
+                {lang==="en"?"Gender":"लिंग"}
+              </label>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                {["Male","Female","Non-binary","Prefer not to say"].map(g=>(
+                  <button key={g} onClick={()=>setProfileData(p=>({...p,gender:g}))}
+                    style={{padding:"10px 18px",borderRadius:100,border:`1.5px solid ${profileData.gender===g?"#C68B59":"rgba(255,248,240,.15)"}`,
+                      background:profileData.gender===g?"rgba(198,139,89,.2)":"rgba(255,248,240,.06)",
+                      color:profileData.gender===g?"#C68B59":"rgba(255,248,240,.6)",fontSize:14,fontWeight:600,cursor:"pointer"}}>
+                    {g}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Religion */}
             <div>
               <label style={{fontSize:13,color:"rgba(255,248,240,.5)",fontWeight:600,marginBottom:6,display:"block"}}>

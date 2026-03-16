@@ -1467,6 +1467,11 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
                       <span style={{ color: "#8D6E63" }}>Age</span><span style={{ fontWeight: 600 }}>{parentProfile.age}</span>
                     </div>
                   )}
+                  {parentProfile.gender && (
+                    <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", background: "rgba(93,64,55,0.04)", borderRadius: 10 }}>
+                      <span style={{ color: "#8D6E63" }}>Gender</span><span style={{ fontWeight: 600 }}>{parentProfile.gender}</span>
+                    </div>
+                  )}
                   {parentProfile.location && (
                     <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", background: "rgba(93,64,55,0.04)", borderRadius: 10 }}>
                       <span style={{ color: "#8D6E63" }}>Location</span><span style={{ fontWeight: 600 }}>{parentProfile.location}</span>
