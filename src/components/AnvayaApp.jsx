@@ -421,7 +421,7 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
   // Profile state
   const [profileData, setProfileData] = useState({
     age: null, health_issues: [], language: "en", interests: [], location: "",
-    full_name: "", linked_user_id: null, religion: "", avatar_url: ""
+    full_name: "", linked_user_id: null, religion: "", avatar_url: "", gender: ""
   });
   const avatarInputRef = useRef(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
