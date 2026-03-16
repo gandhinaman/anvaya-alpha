@@ -1451,7 +1451,7 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
         </div>
       )}
 
-      <SathiChat open={chatOpen} onClose={()=>{setChatOpen(false);setPendingChatMsg(null);}} lang={lang} userId={userId} initialMessage={pendingChatMsg} onInitialMessageConsumed={()=>setPendingChatMsg(null)}/>
+      <LovedOneChat open={chatOpen} onClose={()=>{setChatOpen(false);setPendingChatMsg(null);}} lang={lang} userId={userId} initialMessage={pendingChatMsg} onInitialMessageConsumed={()=>setPendingChatMsg(null)}/>
       <MemoryRecorder open={memoryOpen} onClose={()=>setMemoryOpen(false)} lang={lang} userId={userId} linkedName={linkedName}/>
       <CallOverlay open={callOpen} onClose={()=>setCallOpen(false)} lang={lang} userId={userId} linkedUserId={linkedUserId} fromName={linkedName||"Child"}/>
       <MemoryLog open={memoryLogOpen} onClose={()=>setMemoryLogOpen(false)} lang={lang} userId={userId}/>
