@@ -1518,10 +1518,10 @@ Only use ONE action tag per response. Keep your spoken response brief and natura
 
       <div style={{padding:"16px 16px",display:"flex",flexDirection:"column",gap:14,flex:1,justifyContent:"flex-end"}}>
         {[
-          {icon:<Mic size={24} color="#FFF8F0"/>,label:lang==="en"?"Record a Memory":"यादें रिकॉर्ड करें",sub:lang==="en"?"Your voice, preserved forever":"आपकी आवाज़, सदा के लिए",acc:"#C68B59",fn:()=>setMemoryOpen(true)},
-          {icon:<BookOpen size={24} color="#FFF8F0"/>,label:lang==="en"?"Memory Log":"यादों की डायरी",sub:lang==="en"?"Your memories & family comments":"आपकी यादें और परिवार की टिप्पणियाँ",acc:"#C68B59",fn:()=>openMemoryLog(),badge:seniorUnreadCount,badgeHearts:seniorUnreadHearts,badgeComments:seniorUnreadComments},
-          {icon:<MessageCircle size={24} color="#FFF8F0"/>,label:lang==="en"?"Ask Ela":"एला से पूछें",sub:lang==="en"?"Stories · Conversations · Wisdom":"कहानियाँ · बातचीत · ज्ञान",acc:"#C68B59",fn:()=>setChatOpen(true)},
-          {icon:<Phone size={24} color="#FFF8F0"/>,label:lang==="en"?`Call ${linkedName||"Family"}`:`${linkedName||"परिवार"} को कॉल करें`,sub:linkedName||"Family",acc:"#C68B59",fn:()=>setCallOpen(true)},
+          {icon:<Mic size={24} color="#FFF8F0"/>,label:lang==="en"?"Record a Memory":"यादें रिकॉर्ड करें",sub:lang==="en"?"Your voice, preserved forever":"आपकी आवाज़, सदा के लिए",acc:"#C68B59",fn:()=>{setMemoryOpen(true);try{const{trackEvent}=require("@/hooks/useTelemetry");trackEvent("record_memory");}catch(e){}}},
+          {icon:<BookOpen size={24} color="#FFF8F0"/>,label:lang==="en"?"Memory Log":"यादों की डायरी",sub:lang==="en"?"Your memories & family comments":"आपकी यादें और परिवार की टिप्पणियाँ",acc:"#C68B59",fn:()=>{openMemoryLog();try{const{trackEvent}=require("@/hooks/useTelemetry");trackEvent("open_memory_log");}catch(e){}},badge:seniorUnreadCount,badgeHearts:seniorUnreadHearts,badgeComments:seniorUnreadComments},
+          {icon:<MessageCircle size={24} color="#FFF8F0"/>,label:lang==="en"?"Ask Ela":"एला से पूछें",sub:lang==="en"?"Stories · Conversations · Wisdom":"कहानियाँ · बातचीत · ज्ञान",acc:"#C68B59",fn:()=>{setChatOpen(true);try{const{trackEvent}=require("@/hooks/useTelemetry");trackEvent("open_chat");}catch(e){}}},
+          {icon:<Phone size={24} color="#FFF8F0"/>,label:lang==="en"?`Call ${linkedName||"Family"}`:`${linkedName||"परिवार"} को कॉल करें`,sub:linkedName||"Family",acc:"#C68B59",fn:()=>{setCallOpen(true);try{const{trackEvent}=require("@/hooks/useTelemetry");trackEvent("call_family");}catch(e){}}},
         ].map((c,i)=>(
           <button key={i} onClick={c.fn} className="glass" style={{
             display:"flex",alignItems:"center",gap:14,padding:"16px 18px",

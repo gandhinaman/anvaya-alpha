@@ -694,6 +694,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
   // Mark memories as viewed when switching to memories tab
   const setNavWithMark = (id) => {
     setNav(id);
+    try { const { trackEvent } = require("@/hooks/useTelemetry"); trackEvent("view_" + id); } catch(e) {}
     // Scroll main content to top
     if (mainContentRef.current) mainContentRef.current.scrollTop = 0;
     if (id === "memories") {
