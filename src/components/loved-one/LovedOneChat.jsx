@@ -105,6 +105,7 @@ export default function LovedOneChat({ open, onClose, lang = "en", userId, initi
   const scrollRef = useRef(null);
   const ttsAudioRef = useRef(null);
   const pendingSendRef = useRef(null);
+  const sendLockRef = useRef(false);
   const messagesRef = useRef(messages);
   messagesRef.current = messages;
 

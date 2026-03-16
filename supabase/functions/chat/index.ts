@@ -134,6 +134,7 @@ Deno.serve(async (req) => {
 
     // Use Sarvam-30B as primary, Lovable AI as fallback
     let aiRes;
+    let prefetchedText = "";
 
     if (sarvamKey) {
       try {
@@ -158,6 +159,17 @@ Deno.serve(async (req) => {
         if (!aiRes.ok) {
           console.error("Sarvam chat error:", aiRes.status, await aiRes.text());
           aiRes = null; // fall through to Lovable
+        } else if ((aiRes.headers.get("content-type") || "").includes("application/json")) {
+          const payload = await aiRes.json();
+          prefetchedText = payload?.choices?.[0]?.message?.content?.trim()
+            || payload?.choices?.[0]?.delta?.content?.trim()
+            || payload?.response?.trim()
+            || "";
+
+          if (!prefetchedText) {
+            console.error("Sarvam returned empty response, falling back");
+            aiRes = null;
+          }
         }
       } catch (sarvamErr) {
         console.error("Sarvam fetch failed, falling back:", sarvamErr);
