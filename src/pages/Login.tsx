@@ -77,7 +77,7 @@ export default function Login() {
           if (profile?.role === "parent" && !profile?.onboarding_completed) {
             navigate("/onboarding", { replace: true });
           } else {
-            navigate(profile?.role === "child" ? "/guardian" : "/sathi", { replace: true });
+            navigate(profile?.role === "child" ? "/care-partner" : "/loved-one", { replace: true });
           }
         }
       }
