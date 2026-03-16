@@ -1267,7 +1267,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
            <Link2 size={32} color="#5D4037" style={{ margin: "0 auto 12px" }} />
              <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 22, fontWeight: 600, color: "#3E2723", marginBottom: 8 }}>No parent linked yet</div>
              <p style={{ fontSize: 13, color: "#6b6b6b", lineHeight: 1.6, marginBottom: 16 }}>
-               Ask your parent to share their 6-digit linking code from the Sathi app, then enter it in Settings.
+               Ask your loved one to share their 6-digit linking code from the app, then enter it in Settings.
              </p>
              <button onClick={() => setNav("settings")} style={{
                padding: "12px 24px", borderRadius: 14, border: "none", cursor: "pointer",
