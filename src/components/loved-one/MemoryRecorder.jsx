@@ -277,6 +277,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
       const result = await res.json();
       setSavedTitle(result.title || "Your Memory");
       setPhase("success");
+      trackEvent("memory_record_complete", { duration_seconds: duration, has_audio: true, prompt_question: currentPrompt?.slice(0, 60) });
 
       // Mark caregiver question as used if one was active
       if (caregiverQuestion) {
