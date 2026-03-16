@@ -152,7 +152,9 @@ export default function LovedOneChat({ open, onClose, lang = "en", userId, initi
         .single();
 
       if (data?.messages && Array.isArray(data.messages) && data.messages.length > 0) {
-        setMessages(data.messages);
+        // Clean out empty assistant messages from previous incomplete streams
+        const cleaned = data.messages.filter(m => !(m.role === "assistant" && (!m.content || !m.content.trim())));
+        setMessages(cleaned.length > 0 ? cleaned : [{ role: "assistant", content: greeting }]);
       } else {
         setMessages([{ role: "assistant", content: greeting }]);
         speakText(greeting);
