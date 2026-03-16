@@ -129,6 +129,9 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Trim conversation to last 20 messages to avoid context overflow
+    const trimmedMessages = messages.length > 20 ? messages.slice(-20) : messages;
+
     // Use Sarvam-30B as primary, Lovable AI as fallback
     let aiRes;
 
@@ -138,10 +141,10 @@ Deno.serve(async (req) => {
           model: "sarvam-30b",
           messages: [
             { role: "system", content: systemPrompt },
-            ...messages,
+            ...trimmedMessages,
           ],
           stream: true,
-          max_tokens: 120,
+          max_tokens: 200,
         };
 
         aiRes = await fetch("https://api.sarvam.ai/v1/chat/completions", {
