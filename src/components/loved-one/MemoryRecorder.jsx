@@ -321,7 +321,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
     >
       {/* Close button */}
       <button
-        onClick={() => { stopEverything(); onClose(); }}
+        onClick={() => { stopEverything(); trackEvent("memory_recorder_cancel", { duration_seconds: seconds }); onClose(); }}
         aria-label={lang === "hi" ? "बंद करें" : "Close"}
         style={{
           position: "fixed",

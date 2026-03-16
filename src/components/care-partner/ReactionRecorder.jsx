@@ -324,8 +324,9 @@ export default function ReactionRecorder({ open, onClose, memoryId, memoryTitle,
     if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
     if (audioCtxRef.current) audioCtxRef.current.close();
     if (previewUrl) URL.revokeObjectURL(previewUrl);
+    if (phase === "recording" || phase === "review") trackEvent("reaction_recorder_cancel", {});
     onClose();
-  }, [onClose, previewUrl]);
+  }, [onClose, previewUrl, phase]);
 
   const fmt = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 

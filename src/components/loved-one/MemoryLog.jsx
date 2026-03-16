@@ -35,6 +35,7 @@ function CommentInput({ memoryId, userId, lang }) {
         alert("Could not send comment. Please try again.");
         return;
       }
+      trackEvent("memory_comment_send", { memory_id: memoryId, has_media: !!mediaUrl });
       setText("");
     } catch (e) { console.error("Comment error:", e); alert("Could not send comment."); }
     finally { setSending(false); }

@@ -179,6 +179,7 @@ export default function LovedOneChat({ open, onClose, lang = "en", userId, initi
       ttsControllerRef.current = null;
     }
     setSpeakingIdx(idx);
+    if (idx >= 0) trackEvent("ela_chat_tts", { message_index: idx });
 
     try {
       const { streamTTS } = await import("@/lib/streamingTTS");

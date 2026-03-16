@@ -2026,7 +2026,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
                     { id: "peaceful", label: "Peaceful", emoji: "🕊️" },
                     { id: "concerned", label: "Concerned", emoji: "😟" },
                   ].map(cat => (
-                    <button key={cat.id} onClick={() => setMemoryFilter(cat.id)} style={{
+                    <button key={cat.id} onClick={() => { setMemoryFilter(cat.id); trackEvent("memory_filter", { filter: cat.id }); }} style={{
                       padding: "6px 14px", borderRadius: 100, border: "none", cursor: "pointer",
                       background: memoryFilter === cat.id ? "#5D4037" : "rgba(93,64,55,0.06)",
                       color: memoryFilter === cat.id ? "#FFF8F0" : "#6b6b6b",
