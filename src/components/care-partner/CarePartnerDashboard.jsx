@@ -799,6 +799,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
     setReactionMemoryId(memId);
     setReactionMemoryTitle(memTitle || "A shared memory");
     setReactionOpen(true);
+    trackEvent("reaction_record", { memory_id: memId, mode: "modal_open" });
   };
 
   // Caregiver questions state
