@@ -128,12 +128,13 @@ export default function AdminDashboard() {
         return sorted[0]?.[0] || "—";
       })();
       return {
+        id: p.id,
         name: p.full_name || "Unknown",
         role: p.role,
         sessions: userSessions.length,
         events: userEvents.length,
         lastActive: lastSession ? new Date(lastSession.started_at).toLocaleDateString() : "—",
-        topFeature,
+        topFeature: FEATURE_LABELS[topFeature] || topFeature,
       };
     })
     .sort((a, b) => b.sessions - a.sessions);
