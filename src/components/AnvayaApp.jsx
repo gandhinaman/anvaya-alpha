@@ -2487,7 +2487,7 @@ function CarePartnerDashboard({inPanel=false, profileId=null}) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // ROOT APP
 // ═══════════════════════════════════════════════════════════════════════════════
-export { SathiScreen, GuardianDashboard, fontStyle };
+export { LovedOneScreen, CarePartnerDashboard, fontStyle };
 
 export default function App() {
   const {w}=useWindowSize();
