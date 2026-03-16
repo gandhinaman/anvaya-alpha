@@ -383,8 +383,9 @@ export default function LovedOneChat({ open, onClose, lang = "en", userId, initi
   });
 
   const sendMessage = async (text) => {
-    if (!text.trim() || streaming) return;
+    if (!text.trim() || streaming || sendLockRef.current) return;
 
+    sendLockRef.current = true;
     const userMsg = { role: "user", content: text.trim() };
     const newMessages = [...messagesRef.current, userMsg];
     setMessages(newMessages);
