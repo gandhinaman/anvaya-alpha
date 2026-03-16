@@ -445,6 +445,7 @@ export default function LovedOneChat({ open, onClose, lang = "en", userId, initi
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
+      let receivedText = false;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -462,6 +463,7 @@ export default function LovedOneChat({ open, onClose, lang = "en", userId, initi
           try {
             const parsed = JSON.parse(data);
             if (parsed.text) {
+              receivedText = true;
               setMessages((prev) => {
                 const updated = [...prev];
                 const last = updated[updated.length - 1];
@@ -478,6 +480,10 @@ export default function LovedOneChat({ open, onClose, lang = "en", userId, initi
             // skip
           }
         }
+      }
+
+      if (!receivedText) {
+        throw new Error("Empty AI response");
       }
     } catch (err) {
       setMessages((prev) => {
