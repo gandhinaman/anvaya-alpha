@@ -319,6 +319,17 @@ export default function AdminDashboard() {
               </table>
             </div>
           </ChartCard>
+
+          {/* User Detail Drill-Down */}
+          {selectedUserId && (
+            <UserDetailPanel
+              userId={selectedUserId}
+              sessions={sessions}
+              events={events}
+              profiles={profiles}
+              onClose={() => setSelectedUserId(null)}
+            />
+          )}
         </div>
       )}
     </div>
