@@ -834,10 +834,10 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
     setQuestions(prev => prev.filter(q => q.id !== qId));
   };
 
-  // Guardian profile state
-  const [guardianProfile, setGuardianProfile] = useState({ full_name: "", phone: "", location: "" });
-  const [guardianProfileLoading, setGuardianProfileLoading] = useState(false);
-  const [guardianProfileSaved, setGuardianProfileSaved] = useState(false);
+  // Care Partner profile state
+  const [cpProfile, setCpProfile] = useState({ full_name: "", phone: "", location: "" });
+  const [cpProfileLoading, setCpProfileLoading] = useState(false);
+  const [cpProfileSaved, setCpProfileSaved] = useState(false);
   const [citySuggestions, setCitySuggestions] = useState([]);
   const [showCitySuggestions, setShowCitySuggestions] = useState(false);
   const cityRef = useRef(null);
