@@ -179,6 +179,7 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
       await supabase.from("memories").delete().eq("id", memoryId);
       setMemories((prev) => prev.filter((m) => m.id !== memoryId));
       if (expandedId === memoryId) setExpandedId(null);
+      trackEvent("memory_delete", { memory_id: memoryId });
     } catch (err) {
       console.error("Delete error:", err);
     } finally {
