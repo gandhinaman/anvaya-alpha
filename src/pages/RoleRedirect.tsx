@@ -29,5 +29,9 @@ export default function RoleRedirect() {
     return <Navigate to="/onboarding" replace />;
   }
 
+  if (profile.role === "admin") {
+    return <Navigate to="/admin" replace />;
+  }
+
   return <Navigate to={profile.role === "child" ? "/care-partner" : "/loved-one"} replace />;
 }

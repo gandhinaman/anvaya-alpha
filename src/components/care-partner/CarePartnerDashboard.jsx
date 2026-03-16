@@ -14,6 +14,7 @@ import { filterCities } from "@/lib/cities";
 import { formatPhoneInput, isValidPhone } from "@/lib/phoneFormat";
 import { buildMediaRecorder } from "@/lib/mediaRecorder";
 import ReactionRecorder from "./ReactionRecorder";
+import { trackEvent } from "@/hooks/useTelemetry";
 
 // ─── STYLES (shared with AnvayaApp) ────────────────────────────────────────────
 export const carePartnerStyles = `
@@ -694,6 +695,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
   // Mark memories as viewed when switching to memories tab
   const setNavWithMark = (id) => {
     setNav(id);
+    trackEvent("view_" + id);
     // Scroll main content to top
     if (mainContentRef.current) mainContentRef.current.scrollTop = 0;
     if (id === "memories") {

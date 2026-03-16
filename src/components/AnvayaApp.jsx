@@ -12,6 +12,7 @@ import MemoryLog from "./loved-one/MemoryLog";
 import { supabase } from "@/integrations/supabase/client";
 import { useParentData } from "@/hooks/useParentData";
 import { useStreak } from "@/hooks/useStreak";
+import { trackEvent } from "@/hooks/useTelemetry";
 
 // ─── RESPONSIVE HOOK ──────────────────────────────────────────────────────────
 function useWindowSize() {
@@ -1518,10 +1519,10 @@ Only use ONE action tag per response. Keep your spoken response brief and natura
 
       <div style={{padding:"16px 16px",display:"flex",flexDirection:"column",gap:14,flex:1,justifyContent:"flex-end"}}>
         {[
-          {icon:<Mic size={24} color="#FFF8F0"/>,label:lang==="en"?"Record a Memory":"यादें रिकॉर्ड करें",sub:lang==="en"?"Your voice, preserved forever":"आपकी आवाज़, सदा के लिए",acc:"#C68B59",fn:()=>setMemoryOpen(true)},
-          {icon:<BookOpen size={24} color="#FFF8F0"/>,label:lang==="en"?"Memory Log":"यादों की डायरी",sub:lang==="en"?"Your memories & family comments":"आपकी यादें और परिवार की टिप्पणियाँ",acc:"#C68B59",fn:()=>openMemoryLog(),badge:seniorUnreadCount,badgeHearts:seniorUnreadHearts,badgeComments:seniorUnreadComments},
-          {icon:<MessageCircle size={24} color="#FFF8F0"/>,label:lang==="en"?"Ask Ela":"एला से पूछें",sub:lang==="en"?"Stories · Conversations · Wisdom":"कहानियाँ · बातचीत · ज्ञान",acc:"#C68B59",fn:()=>setChatOpen(true)},
-          {icon:<Phone size={24} color="#FFF8F0"/>,label:lang==="en"?`Call ${linkedName||"Family"}`:`${linkedName||"परिवार"} को कॉल करें`,sub:linkedName||"Family",acc:"#C68B59",fn:()=>setCallOpen(true)},
+          {icon:<Mic size={24} color="#FFF8F0"/>,label:lang==="en"?"Record a Memory":"यादें रिकॉर्ड करें",sub:lang==="en"?"Your voice, preserved forever":"आपकी आवाज़, सदा के लिए",acc:"#C68B59",fn:()=>{setMemoryOpen(true);trackEvent("record_memory");}},
+          {icon:<BookOpen size={24} color="#FFF8F0"/>,label:lang==="en"?"Memory Log":"यादों की डायरी",sub:lang==="en"?"Your memories & family comments":"आपकी यादें और परिवार की टिप्पणियाँ",acc:"#C68B59",fn:()=>{openMemoryLog();trackEvent("open_memory_log");},badge:seniorUnreadCount,badgeHearts:seniorUnreadHearts,badgeComments:seniorUnreadComments},
+          {icon:<MessageCircle size={24} color="#FFF8F0"/>,label:lang==="en"?"Ask Ela":"एला से पूछें",sub:lang==="en"?"Stories · Conversations · Wisdom":"कहानियाँ · बातचीत · ज्ञान",acc:"#C68B59",fn:()=>{setChatOpen(true);trackEvent("open_chat");}},
+          {icon:<Phone size={24} color="#FFF8F0"/>,label:lang==="en"?`Call ${linkedName||"Family"}`:`${linkedName||"परिवार"} को कॉल करें`,sub:linkedName||"Family",acc:"#C68B59",fn:()=>{setCallOpen(true);trackEvent("call_family");}},
         ].map((c,i)=>(
           <button key={i} onClick={c.fn} className="glass" style={{
             display:"flex",alignItems:"center",gap:14,padding:"16px 18px",
