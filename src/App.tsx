@@ -60,6 +60,9 @@ return (
           <Route path="/testflight" element={<TestFlight />} />
           <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
           <Route path="/" element={<ProtectedRoute><RoleRedirect /></ProtectedRoute>} />
+          <Route path="/loved-one" element={<ProtectedRoute><ParentApp /></ProtectedRoute>} />
+          <Route path="/care-partner" element={<ProtectedRoute><ChildApp /></ProtectedRoute>} />
+          {/* Legacy route redirects */}
           <Route path="/sathi" element={<ProtectedRoute><ParentApp /></ProtectedRoute>} />
           <Route path="/guardian" element={<ProtectedRoute><ChildApp /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
