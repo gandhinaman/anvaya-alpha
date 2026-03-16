@@ -156,7 +156,8 @@ export function streamTTS(options: StreamTTSOptions): StreamTTSController {
       if (!data.audio) throw new Error("No audio in response");
 
       const bytes = base64ToBytes(data.audio);
-      const audioBuffer = await audioContext.decodeAudioData(bytes.buffer.slice(0));
+      const arrayBuffer = bytes.buffer.slice(0) as ArrayBuffer;
+      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
 
       if (stopped) return;
 
