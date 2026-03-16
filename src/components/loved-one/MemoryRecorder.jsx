@@ -108,6 +108,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
 
   useEffect(() => {
     if (open && phase === "idle" && promptReady) {
+      trackEvent("memory_recorder_open", { prompt: currentPrompt?.slice(0, 60) });
       speakPrompt(currentPrompt);
     }
   }, [open, promptReady]);
