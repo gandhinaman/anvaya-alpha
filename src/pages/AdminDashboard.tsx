@@ -286,17 +286,16 @@ export default function AdminDashboard() {
                     <th style={thStyle}>Events</th>
                     <th style={thStyle}>Last Active</th>
                     <th style={thStyle}>Top Feature</th>
+                    <th style={thStyle}></th>
                   </tr>
                 </thead>
                 <tbody>
                   {userStats.map((u, i) => (
-                    <tr key={i} onDoubleClick={() => setSelectedUserId(u.id)} style={{
+                    <tr key={i} onClick={() => setSelectedUserId(selectedUserId === u.id ? null : u.id)} style={{
                       borderBottom: "1px solid #f0e8e0", cursor: "pointer",
                       background: selectedUserId === u.id ? "#F5F0EB" : "transparent",
                       transition: "background 0.15s",
-                    }}
-                    title="Double-click to view details"
-                    >
+                    }}>
                       <td style={tdStyle}>{u.name}</td>
                       <td style={tdStyle}>
                         <span style={{
@@ -309,10 +308,15 @@ export default function AdminDashboard() {
                       <td style={tdStyle}>{u.events}</td>
                       <td style={tdStyle}>{u.lastActive}</td>
                       <td style={tdStyle}>{u.topFeature}</td>
+                      <td style={tdStyle}>
+                        <span style={{
+                          fontSize: 11, fontWeight: 600, color: selectedUserId === u.id ? "#E65100" : "#C68B59",
+                        }}>{selectedUserId === u.id ? "▲ Close" : "▼ Details"}</span>
+                      </td>
                     </tr>
                   ))}
                   {userStats.length === 0 && (
-                    <tr><td colSpan={6} style={{ ...tdStyle, textAlign: "center", color: "#A1887F" }}>No user activity yet</td></tr>
+                    <tr><td colSpan={7} style={{ ...tdStyle, textAlign: "center", color: "#A1887F" }}>No user activity yet</td></tr>
                   )}
                 </tbody>
               </table>
