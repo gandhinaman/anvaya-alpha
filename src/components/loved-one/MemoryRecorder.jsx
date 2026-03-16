@@ -188,6 +188,7 @@ export default function MemoryRecorder({ open, onClose, lang = "en", userId, lin
       setRecordingMode(mode);
       setPhase("recording");
       setSeconds(0);
+      trackEvent("memory_recorder_start", { mode });
 
       timerRef.current = setInterval(() => {
         setSeconds((s) => s + 1);
