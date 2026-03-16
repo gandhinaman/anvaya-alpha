@@ -601,119 +601,54 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
     loadVoiceHistory();
   }, [userId]);
 
-  // ─── PROACTIVE ORB GREETING ─────────────────────────────────────────────
-  const proactiveGreetedRef = useRef(false);
+  // ─── PROACTIVE CONTEXT (injected into first voice turn, NOT auto-spoken) ───
+  const proactiveContextRef = useRef(null);
 
   useEffect(() => {
-    if (!userId || proactiveGreetedRef.current || inPanel) return;
-    // Wait for profile + streak data to settle
-    const timer = setTimeout(async () => {
-      if (proactiveGreetedRef.current) return;
-      proactiveGreetedRef.current = true;
-
+    if (!userId || inPanel) return;
+    const buildContext = async () => {
       try {
-        // 1. Check last memory recording time
+        // 1. Last memory time
         const { data: lastMemory } = await supabase
-          .from("memories")
-          .select("created_at")
-          .eq("user_id", userId)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
+          .from("memories").select("created_at").eq("user_id", userId)
+          .order("created_at", { ascending: false }).limit(1).maybeSingle();
         const lastRecordedAt = lastMemory?.created_at ? new Date(lastMemory.created_at) : null;
         const hoursAgo = lastRecordedAt ? (Date.now() - lastRecordedAt.getTime()) / (1000 * 60 * 60) : 999;
-        const needsMemoryNudge = hoursAgo > 24;
 
-        // 2. Fetch unread reaction details
+        // 2. Unread reactions/comments
         const { data: prof } = await supabase.from("profiles").select("memories_last_viewed_at").eq("id", userId).maybeSingle();
         const cutoff = prof?.memories_last_viewed_at || "1970-01-01T00:00:00Z";
-
         const { data: mems } = await supabase.from("memories").select("id, title").eq("user_id", userId);
         const memIds = (mems || []).map(m => m.id);
         const memTitleMap = Object.fromEntries((mems || []).map(m => [m.id, m.title || "a story"]));
 
-        let reactionDetails = [];
-        let commentDetails = [];
-
+        let ctx = "";
         if (memIds.length > 0) {
           const [{ data: reactions }, { data: comments }] = await Promise.all([
-            supabase.from("memory_reactions").select("memory_id, reaction_type").in("memory_id", memIds).gt("created_at", cutoff),
-            supabase.from("memory_comments").select("memory_id, comment, author_name").in("memory_id", memIds).gt("created_at", cutoff),
+            supabase.from("memory_reactions").select("memory_id").in("memory_id", memIds).gt("created_at", cutoff),
+            supabase.from("memory_comments").select("memory_id, author_name").in("memory_id", memIds).gt("created_at", cutoff),
           ]);
-          reactionDetails = reactions || [];
-          commentDetails = comments || [];
-        }
-
-        const hasReactions = reactionDetails.length > 0;
-        const hasComments = commentDetails.length > 0;
-
-        // 3. Build proactive greeting
-        if (!needsMemoryNudge && !hasReactions && !hasComments) return; // Nothing to say proactively
-
-        const firstName = fullName ? fullName.split(" ")[0] : "";
-        let greeting = "";
-
-        if (lang === "hi") {
-          greeting = `नमस्ते ${firstName} जी! `;
-          if (hasReactions || hasComments) {
-            const reactedStories = [...new Set(reactionDetails.map(r => memTitleMap[r.memory_id]))].slice(0, 2);
-            const commentAuthors = [...new Set(commentDetails.map(c => c.author_name).filter(Boolean))];
-            const commenterName = commentAuthors[0] || linkedName || "आपके परिवार";
-
-            if (hasReactions && hasComments) {
-              greeting += `${commenterName} ने आपकी ${reactedStories.length > 0 ? `"${reactedStories[0]}"` : "कहानी"} पर दिल भेजा और एक संदेश भी छोड़ा! मेमोरी लॉग में देखें।`;
-            } else if (hasReactions) {
-              greeting += `${commenterName} ने आपकी ${reactedStories.length > 0 ? `"${reactedStories[0]}"` : "कहानी"} पर दिल भेजा! उन्हें आपकी कहानी बहुत पसंद आई।`;
-            } else {
-              greeting += `${commenterName} ने आपकी यादों पर एक संदेश छोड़ा है। मेमोरी लॉग में सुनें!`;
-            }
-          }
-          if (needsMemoryNudge) {
-            if (hasReactions || hasComments) greeting += " ";
-            greeting += "आपने कल कोई कहानी रिकॉर्ड नहीं की। आज एक सुनाएंगे? आपकी आवाज़ परिवार के लिए बहुत खास है।";
-          }
-        } else {
-          greeting = `Namaste ${firstName} ji! `;
-          if (hasReactions || hasComments) {
-            const reactedStories = [...new Set(reactionDetails.map(r => memTitleMap[r.memory_id]))].slice(0, 2);
-            const commentAuthors = [...new Set(commentDetails.map(c => c.author_name).filter(Boolean))];
-            const commenterName = commentAuthors[0] || linkedName || "Your family";
-
-            if (hasReactions && hasComments) {
-              greeting += `${commenterName} loved your story${reactedStories.length > 0 ? ` "${reactedStories[0]}"` : ""} and left a message for you! Check the Memory Log to hear it.`;
-            } else if (hasReactions) {
-              greeting += `${commenterName} sent a heart on your story${reactedStories.length > 0 ? ` "${reactedStories[0]}"` : ""}! They really loved hearing your voice.`;
-            } else {
-              greeting += `${commenterName} left a comment on your memories. Open the Memory Log to listen!`;
-            }
-          }
-          if (needsMemoryNudge) {
-            if (hasReactions || hasComments) greeting += " Also, ";
-            greeting += "You haven't recorded a memory in a while. Would you like to share a story today? Your family loves hearing your voice.";
+          const heartCount = reactions?.length || 0;
+          const commentCount = comments?.length || 0;
+          if (heartCount > 0 || commentCount > 0) {
+            const reactedTitles = [...new Set((reactions || []).map(r => memTitleMap[r.memory_id]))].slice(0, 2);
+            const commenterName = comments?.[0]?.author_name || linkedName || "Family";
+            ctx += `\n- Unread: ${heartCount} heart(s) and ${commentCount} comment(s) from ${commenterName}`;
+            if (reactedTitles.length) ctx += ` on "${reactedTitles.join('", "')}"`;
+            ctx += ". Warmly mention this when natural in your first reply.";
           }
         }
-
-        // 4. Show and speak the greeting
-        setVoiceResponse(greeting);
-        setVoicePhase("speaking");
-
-        // Unlock audio first
-        if (!preWarmedAudioRef.current) {
-          try {
-            const { unlockAudio } = await import("@/lib/audioUnlock");
-            preWarmedAudioRef.current = await unlockAudio();
-          } catch {}
+        if (hoursAgo > 24) {
+          const days = Math.floor(hoursAgo / 24);
+          ctx += `\n- Last memory recorded: ${days} day(s) ago. If natural, gently suggest recording a new story.`;
         }
-
-        speakResponse(greeting);
+        proactiveContextRef.current = ctx || null;
       } catch (err) {
-        console.error("Proactive greeting error:", err);
+        console.error("Proactive context error:", err);
       }
-    }, 2500); // Delay to let UI settle
-
-    return () => clearTimeout(timer);
-  }, [userId, fullName, linkedName, lang]);
+    };
+    buildContext();
+  }, [userId, linkedName]);
 
   const speechRecRef = useRef(null);
   const wavRecorderRef = useRef(null);
@@ -937,6 +872,16 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
     const userMsg = { role: "user", content: text };
     const history = [...voiceHistoryRef.current, userMsg];
 
+    // Build system prompt — inject proactive context on first turn only
+    let systemOverride = lang === "hi"
+      ? "You are Ela, a warm AI companion for elderly Indian users. Respond ONLY in Hindi. CRITICAL: Keep responses to 2-3 SHORT sentences maximum — this will be read aloud, so brevity is essential. Be warm but very concise. Never give medical diagnoses."
+      : "You are Ela, a warm AI companion for elderly Indian users. Respond ONLY in English. CRITICAL: Keep responses to 2-3 SHORT sentences maximum — this will be read aloud, so brevity is essential. Be warm but very concise. Never give medical diagnoses.";
+
+    if (voiceHistoryRef.current.length === 0 && proactiveContextRef.current) {
+      systemOverride += `\n\nCONVERSATION CONTEXT (use naturally, don't recite):${proactiveContextRef.current}`;
+      proactiveContextRef.current = null; // Only inject once
+    }
+
     try {
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -953,9 +898,7 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
           body: JSON.stringify({
             messages: history.map(m => ({ role: m.role, content: m.content })),
             userId,
-            system: lang === "hi"
-              ? "You are Ela, a warm AI companion for elderly Indian users. Respond ONLY in Hindi. CRITICAL: Keep responses to 2-3 SHORT sentences maximum — this will be read aloud, so brevity is essential. Be warm but very concise. Never give medical diagnoses."
-              : "You are Ela, a warm AI companion for elderly Indian users. Respond ONLY in English. CRITICAL: Keep responses to 2-3 SHORT sentences maximum — this will be read aloud, so brevity is essential. Be warm but very concise. Never give medical diagnoses.",
+            system: systemOverride,
           }),
         }
       );
@@ -988,12 +931,32 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
         }
       }
 
-      // Save to conversation history
+      // Parse and strip action tags
+      let pendingAction = null;
+      const actionMatch = fullResponse.match(/\[ACTION:(\w+)\]/);
+      if (actionMatch) {
+        pendingAction = actionMatch[1];
+        fullResponse = fullResponse.replace(/\[ACTION:\w+\]/g, "").trim();
+        setVoiceResponse(fullResponse);
+      }
+
+      // Save to conversation history (without action tags)
       voiceHistoryRef.current = [...history, { role: "assistant", content: fullResponse }];
 
-      // Speak the response
+      // Speak the response, then trigger action
       if (fullResponse) {
-        speakResponse(fullResponse);
+        const originalOnEnd = () => {
+          // Trigger app action after TTS finishes
+          if (pendingAction) {
+            setTimeout(() => {
+              if (pendingAction === "record_memory") setMemoryOpen(true);
+              else if (pendingAction === "open_memory_log") openMemoryLog();
+              else if (pendingAction === "open_chat") { setPendingChatMsg(null); setChatOpen(true); }
+              else if (pendingAction === "call_family") setCallOpen(true);
+            }, 500);
+          }
+        };
+        speakResponse(fullResponse, originalOnEnd);
       } else {
         setVoicePhase("idle");
       }
@@ -1008,7 +971,7 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
   const ttsAudioRef = useRef(null);
   const audioContextRef = useRef(null);
 
-  const speakResponse = async (text) => {
+  const speakResponse = async (text, onEndCallback) => {
     setVoicePhase("speaking");
 
     // Stop any previous audio
@@ -1017,6 +980,12 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
       ttsAudioRef.current = null;
     }
     window.speechSynthesis.cancel();
+
+    const handleEnd = () => {
+      setVoicePhase("idle");
+      ttsAudioRef.current = null;
+      if (onEndCallback) onEndCallback();
+    };
 
     try {
       const { streamTTS } = await import("@/lib/streamingTTS");
@@ -1028,10 +997,7 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
         lang,
         audioContext: ctx,
         onStart: () => setVoicePhase("speaking"),
-        onEnd: () => {
-          setVoicePhase("idle");
-          ttsAudioRef.current = null;
-        },
+        onEnd: handleEnd,
         onError: (err) => {
           console.error("Streaming TTS error, falling back to browser speech:", err);
           ttsAudioRef.current = null;
@@ -1040,8 +1006,8 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
           utterance.rate = 0.95;
           utterance.pitch = 1;
           synthRef.current = utterance;
-          utterance.onend = () => setVoicePhase("idle");
-          utterance.onerror = () => setVoicePhase("idle");
+          utterance.onend = handleEnd;
+          utterance.onerror = handleEnd;
           window.speechSynthesis.speak(utterance);
         },
       });
@@ -1053,8 +1019,8 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
       utterance.rate = 0.95;
       utterance.pitch = 1;
       synthRef.current = utterance;
-      utterance.onend = () => setVoicePhase("idle");
-      utterance.onerror = () => setVoicePhase("idle");
+      utterance.onend = handleEnd;
+      utterance.onerror = handleEnd;
       window.speechSynthesis.speak(utterance);
     }
   };
