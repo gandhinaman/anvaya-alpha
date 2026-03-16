@@ -386,8 +386,10 @@ export default function LovedOneChat({ open, onClose, lang = "en", userId, initi
     if (!text.trim() || streaming || sendLockRef.current) return;
 
     sendLockRef.current = true;
-    const userMsg = { role: "user", content: text.trim() };
-    const newMessages = [...messagesRef.current, userMsg];
+    const cleanedMessages = messagesRef.current.filter(
+      (m) => !(m.role === "assistant" && (!m.content || !m.content.trim()))
+    );
+    const newMessages = [...cleanedMessages, userMsg];
     setMessages(newMessages);
     setInput("");
     setStreaming(true);
