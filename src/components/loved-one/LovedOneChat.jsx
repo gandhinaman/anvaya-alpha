@@ -504,6 +504,7 @@ export default function LovedOneChat({ open, onClose, lang = "en", userId, initi
       });
       console.error("Chat error:", err);
     } finally {
+      sendLockRef.current = false;
       setStreaming(false);
     }
   };

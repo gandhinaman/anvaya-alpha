@@ -224,7 +224,9 @@ Deno.serve(async (req) => {
         };
 
         try {
-          if (contentType.includes("application/json")) {
+          if (prefetchedText) {
+            emitText(prefetchedText);
+          } else if (contentType.includes("application/json")) {
             const payload = await aiRes.json();
             const text = payload?.choices?.[0]?.message?.content?.trim()
               || payload?.choices?.[0]?.delta?.content?.trim()
