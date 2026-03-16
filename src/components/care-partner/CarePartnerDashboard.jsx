@@ -1440,17 +1440,64 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
             {parentProfile && (
               <div className="gcard" style={{ padding: 20 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a", marginBottom: 12 }}>Connected with</div>
-                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                   <div style={{ width: 44, height: 44, borderRadius: "50%", background: "linear-gradient(135deg,#5D4037,#C68B59)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                     <User size={20} color="#FFF8F0" />
+                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+                   <div style={{ width: 52, height: 52, borderRadius: "50%", overflow: "hidden", background: "linear-gradient(135deg,#5D4037,#C68B59)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                     {parentProfile.avatar_url ? (
+                       <img src={parentProfile.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                     ) : (
+                       <User size={22} color="#FFF8F0" />
+                     )}
                    </div>
                    <div>
-                     <div style={{ fontSize: 14, fontWeight: 700, color: "#3E2723" }}>{parentProfile.full_name || "Parent"}</div>
+                     <div style={{ fontSize: 15, fontWeight: 700, color: "#3E2723" }}>{parentProfile.full_name || "Parent"}</div>
                       <div style={{ fontSize: 11, color: parentOnline ? "#22C55E" : "#8D6E63", display: "flex", alignItems: "center", gap: 4 }}>
                         <span style={{ width: 6, height: 6, borderRadius: "50%", background: parentOnline ? "#22C55E" : "#8D6E63" }} />
                         {parentOnline ? "Online" : "Offline"}
                       </div>
                    </div>
+                </div>
+                {/* Demographics */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 12, color: "#5D4037" }}>
+                  {parentProfile.age && (
+                    <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", background: "rgba(93,64,55,0.04)", borderRadius: 10 }}>
+                      <span style={{ color: "#8D6E63" }}>Age</span><span style={{ fontWeight: 600 }}>{parentProfile.age}</span>
+                    </div>
+                  )}
+                  {parentProfile.location && (
+                    <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", background: "rgba(93,64,55,0.04)", borderRadius: 10 }}>
+                      <span style={{ color: "#8D6E63" }}>Location</span><span style={{ fontWeight: 600 }}>{parentProfile.location}</span>
+                    </div>
+                  )}
+                  {parentProfile.religion && (
+                    <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", background: "rgba(93,64,55,0.04)", borderRadius: 10 }}>
+                      <span style={{ color: "#8D6E63" }}>Religion</span><span style={{ fontWeight: 600 }}>{parentProfile.religion}</span>
+                    </div>
+                  )}
+                  {parentProfile.language && (
+                    <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", background: "rgba(93,64,55,0.04)", borderRadius: 10 }}>
+                      <span style={{ color: "#8D6E63" }}>Language</span><span style={{ fontWeight: 600 }}>{({en:"English",hi:"हिंदी",bn:"বাংলা",ta:"தமிழ்",te:"తెలుగు",mr:"मराठी",gu:"ગુજરાતી",kn:"ಕನ್ನಡ"})[parentProfile.language] || parentProfile.language}</span>
+                    </div>
+                  )}
+                  {parentProfile.health_issues?.length > 0 && (
+                    <div style={{ padding: "8px 12px", background: "rgba(93,64,55,0.04)", borderRadius: 10 }}>
+                      <div style={{ color: "#8D6E63", marginBottom: 6 }}>Health Conditions</div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                        {parentProfile.health_issues.map((h, i) => (
+                          <span key={i} style={{ padding: "4px 10px", borderRadius: 100, background: "rgba(198,139,89,0.12)", color: "#8D6E63", fontSize: 11, fontWeight: 600 }}>{h}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {parentProfile.interests?.length > 0 && (
+                    <div style={{ padding: "8px 12px", background: "rgba(93,64,55,0.04)", borderRadius: 10 }}>
+                      <div style={{ color: "#8D6E63", marginBottom: 6 }}>Interests</div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                        {parentProfile.interests.map((h, i) => (
+                          <span key={i} style={{ padding: "4px 10px", borderRadius: 100, background: "rgba(141,110,99,0.1)", color: "#5D4037", fontSize: 11, fontWeight: 600 }}>{h}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
