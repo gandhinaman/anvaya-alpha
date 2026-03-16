@@ -971,7 +971,7 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
   const ttsAudioRef = useRef(null);
   const audioContextRef = useRef(null);
 
-  const speakResponse = async (text) => {
+  const speakResponse = async (text, onEndCallback) => {
     setVoicePhase("speaking");
 
     // Stop any previous audio
@@ -980,6 +980,12 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
       ttsAudioRef.current = null;
     }
     window.speechSynthesis.cancel();
+
+    const handleEnd = () => {
+      setVoicePhase("idle");
+      ttsAudioRef.current = null;
+      if (onEndCallback) onEndCallback();
+    };
 
     try {
       const { streamTTS } = await import("@/lib/streamingTTS");
@@ -991,10 +997,7 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
         lang,
         audioContext: ctx,
         onStart: () => setVoicePhase("speaking"),
-        onEnd: () => {
-          setVoicePhase("idle");
-          ttsAudioRef.current = null;
-        },
+        onEnd: handleEnd,
         onError: (err) => {
           console.error("Streaming TTS error, falling back to browser speech:", err);
           ttsAudioRef.current = null;
@@ -1003,8 +1006,8 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
           utterance.rate = 0.95;
           utterance.pitch = 1;
           synthRef.current = utterance;
-          utterance.onend = () => setVoicePhase("idle");
-          utterance.onerror = () => setVoicePhase("idle");
+          utterance.onend = handleEnd;
+          utterance.onerror = handleEnd;
           window.speechSynthesis.speak(utterance);
         },
       });
