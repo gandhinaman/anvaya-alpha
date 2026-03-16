@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { flushTelemetry } from "@/hooks/useTelemetry";
 import { useProfile } from "@/hooks/useProfile";
 import { Navigate } from "react-router-dom";
 import {
