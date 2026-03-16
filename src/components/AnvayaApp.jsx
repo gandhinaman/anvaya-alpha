@@ -994,6 +994,7 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
     // ── STEP 1: Fast intent check (<10ms) ──
     const intent = matchIntent(text);
     if (intent) {
+      trackEvent("voice_intent_matched", { intent, transcript_preview: text.slice(0, 40) });
       handleIntentAction(intent, text);
       return;
     }
