@@ -387,6 +387,13 @@ export default function LovedOneChat({ open, onClose, lang = "en", userId, initi
     setInput("");
     setStreaming(true);
 
+    // Track Ela interaction (privacy-compliant: word count + category, no raw text)
+    try {
+      const { trackEvent } = await import("@/hooks/useTelemetry");
+      const wordCount = text.trim().split(/\s+/).length;
+      trackEvent("ela_chat", { word_count: wordCount, message_index: newMessages.length });
+    } catch(e) {}
+
     setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
     try {
