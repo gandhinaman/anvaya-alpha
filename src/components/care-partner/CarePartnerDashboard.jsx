@@ -934,6 +934,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
     } else {
       await supabase.from("memory_collection_items").insert({ collection_id: colId, memory_id: memId });
       setCollectionItems(prev => ({ ...prev, [colId]: [...(prev[colId] || []), memId] }));
+      trackEvent("collection_add_memory", { collection_id: colId });
     }
     setAddingToCollection(null);
   };
