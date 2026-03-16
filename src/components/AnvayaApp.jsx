@@ -749,6 +749,7 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
           if (!res.ok) throw new Error(data.error || "STT failed");
           if (data.transcript?.trim()) {
             addDebug("Sarvam transcript captured", { transcript: data.transcript.trim() });
+            trackEvent("voice_complete", { lang, method: "wav_fallback" });
             sendVoiceToLLM(data.transcript.trim());
           } else {
             addDebug("Sarvam returned empty transcript");
