@@ -1019,8 +1019,8 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
       utterance.rate = 0.95;
       utterance.pitch = 1;
       synthRef.current = utterance;
-      utterance.onend = () => setVoicePhase("idle");
-      utterance.onerror = () => setVoicePhase("idle");
+      utterance.onend = handleEnd;
+      utterance.onerror = handleEnd;
       window.speechSynthesis.speak(utterance);
     }
   };
