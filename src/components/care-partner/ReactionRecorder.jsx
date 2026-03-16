@@ -300,6 +300,7 @@ export default function ReactionRecorder({ open, onClose, memoryId, memoryTitle,
       }
 
       setPhase("sent");
+      trackEvent("reaction_send", { memory_id: memoryId });
     } catch (err) {
       console.error("Reaction send error:", err);
       alert("Something went wrong. Please try again.");
