@@ -1644,6 +1644,26 @@ Only use ONE action tag per response. Keep your spoken response brief and natura
 
           <div className="scr" style={{flex:1,overflowY:"auto",padding:"16px 20px",display:"flex",flexDirection:"column",gap:20}}>
 
+            {/* Profile Photo */}
+            <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:12}}>
+              <div onClick={()=>avatarInputRef.current?.click()} style={{
+                width:90,height:90,borderRadius:"50%",overflow:"hidden",cursor:"pointer",
+                border:"3px solid rgba(198,139,89,.4)",background:"rgba(255,248,240,.08)",
+                display:"flex",alignItems:"center",justifyContent:"center",position:"relative"
+              }}>
+                {profileData.avatar_url ? (
+                  <img src={profileData.avatar_url} alt="Profile" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+                ) : (
+                  <User size={36} color="rgba(255,248,240,.4)"/>
+                )}
+                {avatarUploading && <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center"}}><Loader2 size={24} color="#FFF8F0" style={{animation:"spin 1s linear infinite"}}/></div>}
+              </div>
+              <button onClick={()=>avatarInputRef.current?.click()} style={{
+                fontSize:13,color:"#C68B59",background:"none",border:"none",cursor:"pointer",fontWeight:600
+              }}>{lang==="en"?"Change Photo":"फ़ोटो बदलें"}</button>
+              <input ref={avatarInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} style={{display:"none"}}/>
+            </div>
+
             {/* Name */}
             <div>
               <label style={{fontSize:13,color:"rgba(255,248,240,.5)",fontWeight:600,marginBottom:6,display:"block"}}>
