@@ -53,12 +53,15 @@ export default function AdminDashboard() {
   const fetchData = async () => {
     setLoading(true);
     const [sRes, eRes, pRes] = await Promise.all([
-      supabase.from("telemetry_sessions").select("*").gte("started_at", cutoff).order("started_at", { ascending: false }),
+      supabase.from("telemetry_sessions").select("*").gte("started_at", cutoff).neq("role", "admin").order("started_at", { ascending: false }),
       supabase.from("telemetry_events").select("*").gte("created_at", cutoff).order("created_at", { ascending: false }),
-      supabase.from("profiles").select("id, full_name, role"),
+      supabase.from("profiles").select("id, full_name, role").neq("role", "admin"),
     ]);
+    // Filter events to only non-admin users
+    const nonAdminUserIds = new Set((pRes.data || []).map((p: any) => p.id));
+    const filteredEvents = (eRes.data || []).filter((e: any) => nonAdminUserIds.has(e.user_id));
     setSessions((sRes.data || []) as any);
-    setEvents((eRes.data || []) as any);
+    setEvents(filteredEvents as any);
     setProfiles((pRes.data || []) as any);
     setLoading(false);
   };
