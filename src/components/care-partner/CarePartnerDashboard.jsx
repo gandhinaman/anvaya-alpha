@@ -1152,9 +1152,13 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
       {/* Parent status */}
        <div style={{ padding: "12px 14px", margin: "12px 10px", background: "rgba(93,64,55,0.05)", borderRadius: 14, border: "1px solid rgba(93,64,55,0.12)" }}>
          <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-           <div style={{ width: 34, height: 34, borderRadius: "50%", background: "linear-gradient(135deg,#5D4037,#C68B59)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-             <User size={15} color="#FFF8F0" />
-           </div>
+            <div style={{ width: 34, height: 34, borderRadius: "50%", overflow: "hidden", background: "linear-gradient(135deg,#5D4037,#C68B59)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              {parentProfile?.avatar_url ? (
+                <img src={parentProfile.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              ) : (
+                <User size={15} color="#FFF8F0" />
+              )}
+            </div>
            <div>
              <div style={{ fontSize: 12, fontWeight: 700, color: "#3E2723" }}>{parentProfile?.full_name || "Parent"}</div>
               <div style={{ fontSize: 10, color: parentOnline ? "#22C55E" : "#8D6E63", display: "flex", alignItems: "center", gap: 4 }}>
