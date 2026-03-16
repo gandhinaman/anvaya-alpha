@@ -6,9 +6,16 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line,
 } from "recharts";
-import { Users, Activity, Clock, MousePointerClick, LogOut, RefreshCw } from "lucide-react";
+import { Users, Activity, Clock, MousePointerClick, LogOut, RefreshCw, ArrowLeft, MessageCircle } from "lucide-react";
 
 const COLORS = ["#8D6E63", "#C68B59", "#059669", "#5D4037", "#A1887F", "#2C1810"];
+const ROLE_LABELS: Record<string, string> = { parent: "Loved One", child: "Care Partner" };
+const FEATURE_LABELS: Record<string, string> = {
+  record_memory: "Record Memory", open_memory_log: "Memory Log", open_chat: "Ask Ela",
+  call_family: "Call Family", ela_chat: "Ela Message", view_memories: "View Memories",
+  view_overview: "Overview", view_settings: "Settings", view_alerts: "Alerts",
+  view_health: "Health", view_rhythm: "Daily Rhythm",
+};
 
 interface SessionRow {
   id: string;
@@ -43,6 +50,7 @@ export default function AdminDashboard() {
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [days, setDays] = useState(30);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   const cutoff = useMemo(() => {
     const d = new Date();
@@ -101,7 +109,6 @@ export default function AdminDashboard() {
     .slice(0, 8)
     .map(([name, count]) => ({ name, count }));
 
-  const ROLE_LABELS: Record<string, string> = { parent: "Loved One", child: "Care Partner" };
   const roleMap: Record<string, number> = {};
   profiles.forEach(p => { const label = ROLE_LABELS[p.role] || p.role; roleMap[label] = (roleMap[label] || 0) + 1; });
   const roleData = Object.entries(roleMap).map(([name, value]) => ({ name, value }));
@@ -120,12 +127,13 @@ export default function AdminDashboard() {
         return sorted[0]?.[0] || "—";
       })();
       return {
+        id: p.id,
         name: p.full_name || "Unknown",
         role: p.role,
         sessions: userSessions.length,
         events: userEvents.length,
         lastActive: lastSession ? new Date(lastSession.started_at).toLocaleDateString() : "—",
-        topFeature,
+        topFeature: FEATURE_LABELS[topFeature] || topFeature,
       };
     })
     .sort((a, b) => b.sessions - a.sessions);
@@ -282,14 +290,20 @@ export default function AdminDashboard() {
                 </thead>
                 <tbody>
                   {userStats.map((u, i) => (
-                    <tr key={i} style={{ borderBottom: "1px solid #f0e8e0" }}>
+                    <tr key={i} onDoubleClick={() => setSelectedUserId(u.id)} style={{
+                      borderBottom: "1px solid #f0e8e0", cursor: "pointer",
+                      background: selectedUserId === u.id ? "#F5F0EB" : "transparent",
+                      transition: "background 0.15s",
+                    }}
+                    title="Double-click to view details"
+                    >
                       <td style={tdStyle}>{u.name}</td>
                       <td style={tdStyle}>
                         <span style={{
                           display: "inline-block", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 600,
                           background: u.role === "parent" ? "#FFF3E0" : "#E8F5E9",
                           color: u.role === "parent" ? "#E65100" : "#2E7D32",
-                        }}>{u.role === "parent" ? "Loved One" : "Care Partner"}</span>
+                        }}>{ROLE_LABELS[u.role] || u.role}</span>
                       </td>
                       <td style={tdStyle}>{u.sessions}</td>
                       <td style={tdStyle}>{u.events}</td>
@@ -304,6 +318,17 @@ export default function AdminDashboard() {
               </table>
             </div>
           </ChartCard>
+
+          {/* User Detail Drill-Down */}
+          {selectedUserId && (
+            <UserDetailPanel
+              userId={selectedUserId}
+              sessions={sessions}
+              events={events}
+              profiles={profiles}
+              onClose={() => setSelectedUserId(null)}
+            />
+          )}
         </div>
       )}
     </div>
@@ -352,6 +377,199 @@ function LoadingScreen() {
       minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
       background: "#F5F0EB", fontFamily: "'DM Sans', sans-serif", color: "#8D6E63",
     }}>Loading…</div>
+  );
+}
+
+function UserDetailPanel({ userId, sessions, events, profiles, onClose }: {
+  userId: string;
+  sessions: SessionRow[];
+  events: EventRow[];
+  profiles: ProfileRow[];
+  onClose: () => void;
+}) {
+  const user = profiles.find(p => p.id === userId);
+  const userSessions = sessions.filter(s => s.user_id === userId).sort((a, b) => b.started_at.localeCompare(a.started_at));
+  const userEvents = events.filter(e => e.user_id === userId);
+  const featureEvents = userEvents.filter(e => e.event_type === "feature_use");
+  const elaEvents = featureEvents.filter(e => e.event_name === "ela_chat");
+
+  // Feature usage breakdown
+  const featureCounts: Record<string, number> = {};
+  featureEvents.forEach(e => {
+    const label = FEATURE_LABELS[e.event_name] || e.event_name;
+    featureCounts[label] = (featureCounts[label] || 0) + 1;
+  });
+  const featureData = Object.entries(featureCounts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, count]) => ({ name, count }));
+
+  // Ela interaction summary (privacy-compliant)
+  const totalElaMessages = elaEvents.length;
+  const avgWordCount = elaEvents.length > 0
+    ? Math.round(elaEvents.reduce((a, e) => a + (e.metadata?.word_count || 0), 0) / elaEvents.length)
+    : 0;
+  const maxConversationDepth = elaEvents.length > 0
+    ? Math.max(...elaEvents.map(e => e.metadata?.message_index || 0))
+    : 0;
+
+  // Ela usage over time (by day)
+  const elaByDay: Record<string, number> = {};
+  elaEvents.forEach(e => {
+    const day = e.created_at.slice(0, 10);
+    elaByDay[day] = (elaByDay[day] || 0) + 1;
+  });
+  const elaTimeData = Object.entries(elaByDay)
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([date, count]) => ({ date: date.slice(5), count }));
+
+  return (
+    <div style={{ marginTop: 20 }}>
+      <ChartCard title="">
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+          <button onClick={onClose} style={{
+            background: "#F5F0EB", border: "none", borderRadius: 8, padding: "6px 8px",
+            cursor: "pointer", display: "flex", alignItems: "center",
+          }}>
+            <ArrowLeft size={16} color="#5D4037" />
+          </button>
+          <div>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: "#2C1810", margin: 0 }}>{user?.full_name || "Unknown"}</h2>
+            <span style={{
+              display: "inline-block", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 600, marginTop: 4,
+              background: user?.role === "parent" ? "#FFF3E0" : "#E8F5E9",
+              color: user?.role === "parent" ? "#E65100" : "#2E7D32",
+            }}>{ROLE_LABELS[user?.role || ""] || user?.role}</span>
+          </div>
+          <div style={{ marginLeft: "auto", fontSize: 12, color: "#8D6E63" }}>
+            {userSessions.length} sessions · {featureEvents.length} events
+          </div>
+        </div>
+
+        {/* Summary Row */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: 20 }}>
+          <MiniStat label="Total Sessions" value={userSessions.length} />
+          <MiniStat label="Feature Events" value={featureEvents.length} />
+          <MiniStat label="Ela Messages" value={totalElaMessages} />
+          <MiniStat label="Avg Words/Message" value={avgWordCount} />
+          <MiniStat label="Max Conv. Depth" value={maxConversationDepth} />
+        </div>
+
+        {/* Two-column: Features + Ela */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
+          {/* Feature breakdown */}
+          <div>
+            <h4 style={{ fontSize: 13, fontWeight: 600, color: "#5D4037", marginBottom: 10 }}>Feature Usage</h4>
+            {featureData.length > 0 ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {featureData.map((f, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{
+                      flex: 1, height: 22, background: "#F5F0EB", borderRadius: 6, overflow: "hidden", position: "relative",
+                    }}>
+                      <div style={{
+                        height: "100%", borderRadius: 6,
+                        width: `${Math.max(8, (f.count / featureData[0].count) * 100)}%`,
+                        background: `linear-gradient(90deg, #C68B59, #8D6E63)`,
+                        transition: "width 0.3s",
+                      }} />
+                      <span style={{
+                        position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)",
+                        fontSize: 11, fontWeight: 500, color: "#2C1810", zIndex: 1,
+                      }}>{f.name}</span>
+                    </div>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: "#5D4037", minWidth: 28, textAlign: "right" }}>{f.count}</span>
+                  </div>
+                ))}
+              </div>
+            ) : <div style={{ color: "#A1887F", fontSize: 12 }}>No feature usage yet</div>}
+          </div>
+
+          {/* Ela interaction summary */}
+          <div>
+            <h4 style={{ fontSize: 13, fontWeight: 600, color: "#5D4037", marginBottom: 10 }}>
+              <MessageCircle size={14} style={{ verticalAlign: "middle", marginRight: 4 }} />
+              Ela Interaction Summary
+            </h4>
+            {totalElaMessages > 0 ? (
+              <>
+                <div style={{ fontSize: 12, color: "#5D4037", lineHeight: 1.8, marginBottom: 12 }}>
+                  <div>• Sent <strong>{totalElaMessages}</strong> messages to Ela</div>
+                  <div>• Average <strong>{avgWordCount} words</strong> per message</div>
+                  <div>• Deepest conversation: <strong>{maxConversationDepth} messages</strong> deep</div>
+                  <div>• Active across <strong>{Object.keys(elaByDay).length} days</strong></div>
+                </div>
+                {elaTimeData.length > 1 && (
+                  <ResponsiveContainer width="100%" height={100}>
+                    <BarChart data={elaTimeData}>
+                      <XAxis dataKey="date" fontSize={10} stroke="#A1887F" />
+                      <Tooltip />
+                      <Bar dataKey="count" fill="#C68B59" radius={[3, 3, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </>
+            ) : <div style={{ color: "#A1887F", fontSize: 12 }}>No Ela interactions yet</div>}
+          </div>
+        </div>
+
+        {/* Session Timeline */}
+        <h4 style={{ fontSize: 13, fontWeight: 600, color: "#5D4037", marginBottom: 10 }}>Session Timeline</h4>
+        <div style={{ maxHeight: 300, overflowY: "auto" }}>
+          {userSessions.map((s, i) => {
+            const sessionEvents = userEvents
+              .filter(e => e.session_id === s.id)
+              .sort((a, b) => a.created_at.localeCompare(b.created_at));
+            const started = new Date(s.started_at);
+            return (
+              <div key={s.id} style={{
+                padding: "10px 14px", borderRadius: 12, marginBottom: 8,
+                background: i % 2 === 0 ? "#FAFAF8" : "#fff",
+                border: "1px solid #f0e8e0",
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: "#2C1810" }}>
+                    {started.toLocaleDateString()} · {started.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                  <span style={{ fontSize: 11, color: "#8D6E63" }}>
+                    {sessionEvents.length} events
+                  </span>
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                  {sessionEvents.map((e, j) => (
+                    <span key={j} style={{
+                      fontSize: 10, padding: "2px 7px", borderRadius: 6, fontWeight: 500,
+                      background: e.event_type === "page_view" ? "#E3F2FD" : e.event_name === "ela_chat" ? "#F3E5F5" : "#FFF3E0",
+                      color: e.event_type === "page_view" ? "#1565C0" : e.event_name === "ela_chat" ? "#7B1FA2" : "#E65100",
+                    }}>
+                      {e.event_type === "page_view" ? e.event_name : (FEATURE_LABELS[e.event_name] || e.event_name)}
+                    </span>
+                  ))}
+                  {sessionEvents.length === 0 && (
+                    <span style={{ fontSize: 11, color: "#A1887F" }}>No events recorded</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+          {userSessions.length === 0 && (
+            <div style={{ color: "#A1887F", fontSize: 12, textAlign: "center", padding: 20 }}>No sessions yet</div>
+          )}
+        </div>
+      </ChartCard>
+    </div>
+  );
+}
+
+function MiniStat({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div style={{
+      background: "#FAFAF8", borderRadius: 10, padding: "10px 14px",
+      border: "1px solid #f0e8e0",
+    }}>
+      <div style={{ fontSize: 18, fontWeight: 700, color: "#2C1810" }}>{value}</div>
+      <div style={{ fontSize: 11, color: "#8D6E63" }}>{label}</div>
+    </div>
   );
 }
 
