@@ -12,6 +12,7 @@ import MemoryLog from "./loved-one/MemoryLog";
 import { supabase } from "@/integrations/supabase/client";
 import { useParentData } from "@/hooks/useParentData";
 import { useStreak } from "@/hooks/useStreak";
+import { trackEvent } from "@/hooks/useTelemetry";
 
 // ─── RESPONSIVE HOOK ──────────────────────────────────────────────────────────
 function useWindowSize() {
