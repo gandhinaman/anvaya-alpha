@@ -469,7 +469,7 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
     setAvatarUploading(true);
     try {
       const ext = file.name.split(".").pop();
-      const path = `avatars/${userId}.${ext}`;
+      const path = `avatars/${userId}/profile.${ext}`;
       const { error: upErr } = await supabase.storage.from("memories").upload(path, file, { upsert: true });
       if(upErr) throw upErr;
       const { data: { publicUrl } } = supabase.storage.from("memories").getPublicUrl(path);
