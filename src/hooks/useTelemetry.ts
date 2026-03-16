@@ -79,6 +79,9 @@ export function useTelemetry() {
         .eq("id", userId)
         .single();
 
+      // Skip telemetry for admin users
+      if (profile?.role === "admin") return;
+
       const { data, error } = await supabase
         .from("telemetry_sessions")
         .insert({
