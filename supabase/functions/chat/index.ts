@@ -143,7 +143,6 @@ Deno.serve(async (req) => {
             { role: "system", content: systemPrompt },
             ...trimmedMessages,
           ],
-          stream: true,
           max_tokens: 200,
         };
 
