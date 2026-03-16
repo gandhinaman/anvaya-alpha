@@ -308,7 +308,7 @@ function CallOverlay({ open, onClose, lang, userId, linkedUserId, fromName }) {
   );
 }
 
-function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLinkedUserId=null, fullName:propFullName=null, savedLang=null}) {
+function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLinkedUserId=null, fullName:propFullName=null, savedLang=null}) {
   const {w}=useWindowSize();
   const [lang,setLang]=useState(savedLang||"en");
   const [linkedName, setLinkedName]=useState(null);
