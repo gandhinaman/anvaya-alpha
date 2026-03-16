@@ -129,6 +129,9 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Trim conversation to last 20 messages to avoid context overflow
+    const trimmedMessages = messages.length > 20 ? messages.slice(-20) : messages;
+
     // Use Sarvam-30B as primary, Lovable AI as fallback
     let aiRes;
 
@@ -138,10 +141,10 @@ Deno.serve(async (req) => {
           model: "sarvam-30b",
           messages: [
             { role: "system", content: systemPrompt },
-            ...messages,
+            ...trimmedMessages,
           ],
           stream: true,
-          max_tokens: 120,
+          max_tokens: 200,
         };
 
         aiRes = await fetch("https://api.sarvam.ai/v1/chat/completions", {
@@ -166,12 +169,12 @@ Deno.serve(async (req) => {
     if (!aiRes && lovableKey) {
       const body = {
         model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...messages,
-        ],
-        stream: true,
-        max_tokens: 120,
+          messages: [
+            { role: "system", content: systemPrompt },
+            ...trimmedMessages,
+          ],
+          stream: true,
+          max_tokens: 200,
       };
 
       aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -235,8 +238,8 @@ Deno.serve(async (req) => {
           controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
           controller.close();
 
-          // Save conversation to DB after streaming completes
-          if (userId) {
+          // Save conversation to DB after streaming completes (skip if empty response)
+          if (userId && fullText.trim()) {
             try {
               const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
               const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
