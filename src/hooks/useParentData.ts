@@ -7,6 +7,12 @@ interface ParentProfile {
   full_name: string | null;
   role: string;
   language: string | null;
+  age: number | null;
+  location: string | null;
+  health_issues: string[] | null;
+  interests: string[] | null;
+  religion: string | null;
+  avatar_url: string | null;
 }
 
 interface Memory {

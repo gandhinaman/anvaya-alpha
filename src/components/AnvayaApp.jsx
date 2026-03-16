@@ -421,8 +421,59 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
   // Profile state
   const [profileData, setProfileData] = useState({
     age: null, health_issues: [], language: "en", interests: [], location: "",
-    full_name: "", linked_user_id: null
+    full_name: "", linked_user_id: null, religion: "", avatar_url: ""
   });
+  const avatarInputRef = useRef(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+
+  // Load profile data from DB
+  useEffect(()=>{
+    if(!userId) return;
+    supabase.from("profiles").select("full_name,age,language,health_issues,interests,location,linked_user_id,religion,avatar_url")
+      .eq("id",userId).maybeSingle().then(({data})=>{
+        if(data) setProfileData({
+          full_name: data.full_name||"", age: data.age, language: data.language||"en",
+          health_issues: data.health_issues||[], interests: data.interests||[],
+          location: data.location||"", linked_user_id: data.linked_user_id,
+          religion: data.religion||"", avatar_url: data.avatar_url||""
+        });
+      });
+  },[userId]);
+
+  // Save profile to DB
+  const saveProfile = async ()=>{
+    if(!userId) return;
+    setProfileSaving(true);
+    try {
+      await supabase.from("profiles").update({
+        full_name: profileData.full_name||null,
+        age: profileData.age,
+        language: profileData.language,
+        health_issues: profileData.health_issues,
+        interests: profileData.interests,
+        location: profileData.location||null,
+        religion: profileData.religion||null,
+        avatar_url: profileData.avatar_url||null,
+      }).eq("id",userId);
+    } catch(e){ console.error("Save profile error:",e); }
+    setProfileSaving(false);
+  };
+
+  // Upload avatar
+  const handleAvatarUpload = async (e)=>{
+    const file = e.target.files?.[0];
+    if(!file || !userId) return;
+    setAvatarUploading(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `avatars/${userId}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("memories").upload(path, file, { upsert: true });
+      if(upErr) throw upErr;
+      const { data: { publicUrl } } = supabase.storage.from("memories").getPublicUrl(path);
+      setProfileData(p=>({...p, avatar_url: publicUrl}));
+    } catch(err){ console.error("Avatar upload error:",err); }
+    setAvatarUploading(false);
+  };
   // Memory of the Day prompt
   const [memoryOfDay, setMemoryOfDay] = useState(null);
   useEffect(() => {
