@@ -2499,8 +2499,8 @@ export default function App() {
   },[isMobile]);
 
   const tabs=[
-    {id:"sathi",   label:"Ela"},
-    {id:"guardian",label:"Caregiver"},
+    {id:"loved-one",   label:"Loved One"},
+    {id:"care-partner",label:"Care Partner"},
     ...(!isMobile?[{id:"both",label:"Both"}]:[]),
   ];
 
