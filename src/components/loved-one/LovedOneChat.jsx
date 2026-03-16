@@ -257,6 +257,7 @@ export default function LovedOneChat({ open, onClose, lang = "en", userId, initi
 
         recognition.start();
         setIsListening(true);
+        trackEvent("ela_chat_voice", { lang });
         return;
       } catch {
         // Fall through to WAV fallback
