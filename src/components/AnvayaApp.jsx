@@ -857,6 +857,7 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
             return;
           }
           if (finalTranscript.trim()) {
+            trackEvent("voice_complete", { lang, duration_ms: elapsed, method: "web_speech" });
             sendVoiceToLLM(finalTranscript.trim());
           } else {
             addDebug("No transcript captured");
