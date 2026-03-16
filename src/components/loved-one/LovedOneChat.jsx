@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { X, Mic, MicOff, Send, MessageCircle, Volume2, Check, BookOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { trackEvent } from "@/hooks/useTelemetry";
 
 // ─── Culturally-aware suggested prompts ───
 const ALL_SUGGESTED_EN = [
