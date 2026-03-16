@@ -291,14 +291,20 @@ export default function AdminDashboard() {
                 </thead>
                 <tbody>
                   {userStats.map((u, i) => (
-                    <tr key={i} style={{ borderBottom: "1px solid #f0e8e0" }}>
+                    <tr key={i} onDoubleClick={() => setSelectedUserId(u.id)} style={{
+                      borderBottom: "1px solid #f0e8e0", cursor: "pointer",
+                      background: selectedUserId === u.id ? "#F5F0EB" : "transparent",
+                      transition: "background 0.15s",
+                    }}
+                    title="Double-click to view details"
+                    >
                       <td style={tdStyle}>{u.name}</td>
                       <td style={tdStyle}>
                         <span style={{
                           display: "inline-block", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 600,
                           background: u.role === "parent" ? "#FFF3E0" : "#E8F5E9",
                           color: u.role === "parent" ? "#E65100" : "#2E7D32",
-                        }}>{u.role === "parent" ? "Loved One" : "Care Partner"}</span>
+                        }}>{ROLE_LABELS[u.role] || u.role}</span>
                       </td>
                       <td style={tdStyle}>{u.sessions}</td>
                       <td style={tdStyle}>{u.events}</td>
