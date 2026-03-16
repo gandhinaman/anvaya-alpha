@@ -601,6 +601,120 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
     loadVoiceHistory();
   }, [userId]);
 
+  // ─── PROACTIVE ORB GREETING ─────────────────────────────────────────────
+  const proactiveGreetedRef = useRef(false);
+
+  useEffect(() => {
+    if (!userId || proactiveGreetedRef.current || inPanel) return;
+    // Wait for profile + streak data to settle
+    const timer = setTimeout(async () => {
+      if (proactiveGreetedRef.current) return;
+      proactiveGreetedRef.current = true;
+
+      try {
+        // 1. Check last memory recording time
+        const { data: lastMemory } = await supabase
+          .from("memories")
+          .select("created_at")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        const lastRecordedAt = lastMemory?.created_at ? new Date(lastMemory.created_at) : null;
+        const hoursAgo = lastRecordedAt ? (Date.now() - lastRecordedAt.getTime()) / (1000 * 60 * 60) : 999;
+        const needsMemoryNudge = hoursAgo > 24;
+
+        // 2. Fetch unread reaction details
+        const { data: prof } = await supabase.from("profiles").select("memories_last_viewed_at").eq("id", userId).maybeSingle();
+        const cutoff = prof?.memories_last_viewed_at || "1970-01-01T00:00:00Z";
+
+        const { data: mems } = await supabase.from("memories").select("id, title").eq("user_id", userId);
+        const memIds = (mems || []).map(m => m.id);
+        const memTitleMap = Object.fromEntries((mems || []).map(m => [m.id, m.title || "a story"]));
+
+        let reactionDetails = [];
+        let commentDetails = [];
+
+        if (memIds.length > 0) {
+          const [{ data: reactions }, { data: comments }] = await Promise.all([
+            supabase.from("memory_reactions").select("memory_id, reaction_type").in("memory_id", memIds).gt("created_at", cutoff),
+            supabase.from("memory_comments").select("memory_id, comment, author_name").in("memory_id", memIds).gt("created_at", cutoff),
+          ]);
+          reactionDetails = reactions || [];
+          commentDetails = comments || [];
+        }
+
+        const hasReactions = reactionDetails.length > 0;
+        const hasComments = commentDetails.length > 0;
+
+        // 3. Build proactive greeting
+        if (!needsMemoryNudge && !hasReactions && !hasComments) return; // Nothing to say proactively
+
+        const firstName = fullName ? fullName.split(" ")[0] : "";
+        let greeting = "";
+
+        if (lang === "hi") {
+          greeting = `नमस्ते ${firstName} जी! `;
+          if (hasReactions || hasComments) {
+            const reactedStories = [...new Set(reactionDetails.map(r => memTitleMap[r.memory_id]))].slice(0, 2);
+            const commentAuthors = [...new Set(commentDetails.map(c => c.author_name).filter(Boolean))];
+            const commenterName = commentAuthors[0] || linkedName || "आपके परिवार";
+
+            if (hasReactions && hasComments) {
+              greeting += `${commenterName} ने आपकी ${reactedStories.length > 0 ? `"${reactedStories[0]}"` : "कहानी"} पर दिल भेजा और एक संदेश भी छोड़ा! मेमोरी लॉग में देखें।`;
+            } else if (hasReactions) {
+              greeting += `${commenterName} ने आपकी ${reactedStories.length > 0 ? `"${reactedStories[0]}"` : "कहानी"} पर दिल भेजा! उन्हें आपकी कहानी बहुत पसंद आई।`;
+            } else {
+              greeting += `${commenterName} ने आपकी यादों पर एक संदेश छोड़ा है। मेमोरी लॉग में सुनें!`;
+            }
+          }
+          if (needsMemoryNudge) {
+            if (hasReactions || hasComments) greeting += " ";
+            greeting += "आपने कल कोई कहानी रिकॉर्ड नहीं की। आज एक सुनाएंगे? आपकी आवाज़ परिवार के लिए बहुत खास है।";
+          }
+        } else {
+          greeting = `Namaste ${firstName} ji! `;
+          if (hasReactions || hasComments) {
+            const reactedStories = [...new Set(reactionDetails.map(r => memTitleMap[r.memory_id]))].slice(0, 2);
+            const commentAuthors = [...new Set(commentDetails.map(c => c.author_name).filter(Boolean))];
+            const commenterName = commentAuthors[0] || linkedName || "Your family";
+
+            if (hasReactions && hasComments) {
+              greeting += `${commenterName} loved your story${reactedStories.length > 0 ? ` "${reactedStories[0]}"` : ""} and left a message for you! Check the Memory Log to hear it.`;
+            } else if (hasReactions) {
+              greeting += `${commenterName} sent a heart on your story${reactedStories.length > 0 ? ` "${reactedStories[0]}"` : ""}! They really loved hearing your voice.`;
+            } else {
+              greeting += `${commenterName} left a comment on your memories. Open the Memory Log to listen!`;
+            }
+          }
+          if (needsMemoryNudge) {
+            if (hasReactions || hasComments) greeting += " Also, ";
+            greeting += "You haven't recorded a memory in a while. Would you like to share a story today? Your family loves hearing your voice.";
+          }
+        }
+
+        // 4. Show and speak the greeting
+        setVoiceResponse(greeting);
+        setVoicePhase("speaking");
+
+        // Unlock audio first
+        if (!preWarmedAudioRef.current) {
+          try {
+            const { unlockAudio } = await import("@/lib/audioUnlock");
+            preWarmedAudioRef.current = await unlockAudio();
+          } catch {}
+        }
+
+        speakResponse(greeting);
+      } catch (err) {
+        console.error("Proactive greeting error:", err);
+      }
+    }, 2500); // Delay to let UI settle
+
+    return () => clearTimeout(timer);
+  }, [userId, fullName, linkedName, lang]);
+
   const speechRecRef = useRef(null);
   const wavRecorderRef = useRef(null);
   const lastTapRef = useRef(0);
