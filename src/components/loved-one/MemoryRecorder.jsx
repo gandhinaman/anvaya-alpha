@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Mic, Video, Square, Check, X, Loader, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { MEMORY_PROMPTS, getNextPromptIndex } from "@/lib/memoryPrompts";
+import { trackEvent } from "@/hooks/useTelemetry";
 
 export default function MemoryRecorder({ open, onClose, lang = "en", userId, linkedName }) {
   const [phase, setPhase] = useState("idle"); // idle | recording | processing | success | error
