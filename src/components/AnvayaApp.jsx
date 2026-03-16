@@ -2492,10 +2492,10 @@ export { LovedOneScreen, CarePartnerDashboard, fontStyle };
 export default function App() {
   const {w}=useWindowSize();
   const isMobile=w<768;
-  const [view,setView]=useState(isMobile?"sathi":"both");
+  const [view,setView]=useState(isMobile?"loved-one":"both");
 
   useEffect(()=>{
-    if(isMobile&&view==="both") setView("sathi");
+    if(isMobile&&view==="both") setView("loved-one");
   },[isMobile]);
 
   const tabs=[
