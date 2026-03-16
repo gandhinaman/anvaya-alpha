@@ -955,6 +955,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
     }).eq("id", profileId);
     setCpProfileLoading(false);
     setCpProfileSaved(true);
+    trackEvent("profile_save", {});
     setTimeout(() => setCpProfileSaved(false), 2000);
   };
 
