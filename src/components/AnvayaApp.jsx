@@ -1282,6 +1282,7 @@ Only use ONE action tag per response. Keep your spoken response brief and natura
 
   const handleEmergencyCall = async () => {
     setOverlayPhase("alerting");
+    trackEvent("emergency_trigger", { lang });
     if (linkedUserId) {
       const ch = supabase.channel(`user:${linkedUserId}`);
       ch.subscribe((status) => {
