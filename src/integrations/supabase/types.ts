@@ -335,6 +335,7 @@ export type Database = {
       profiles: {
         Row: {
           age: number | null
+          avatar_url: string | null
           created_at: string | null
           full_name: string | null
           has_accepted_terms: boolean
@@ -347,10 +348,12 @@ export type Database = {
           memories_last_viewed_at: string | null
           onboarding_completed: boolean | null
           phone: string | null
+          religion: string | null
           role: string
         }
         Insert: {
           age?: number | null
+          avatar_url?: string | null
           created_at?: string | null
           full_name?: string | null
           has_accepted_terms?: boolean
@@ -363,10 +366,12 @@ export type Database = {
           memories_last_viewed_at?: string | null
           onboarding_completed?: boolean | null
           phone?: string | null
+          religion?: string | null
           role: string
         }
         Update: {
           age?: number | null
+          avatar_url?: string | null
           created_at?: string | null
           full_name?: string | null
           has_accepted_terms?: boolean
@@ -379,6 +384,7 @@ export type Database = {
           memories_last_viewed_at?: string | null
           onboarding_completed?: boolean | null
           phone?: string | null
+          religion?: string | null
           role?: string
         }
         Relationships: [
