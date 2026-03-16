@@ -865,7 +865,72 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
     }
   };
 
+  // ─── CLIENT-SIDE INTENT ROUTER ──────────────────────────────────────
+  // Fast regex matcher — skips LLM round-trip for clear app-action intents
+  const matchIntent = (transcript) => {
+    const t = transcript.toLowerCase().trim();
+    const patterns = {
+      record_memory: [
+        /record\s*(a\s*)?memory/i, /record\s*(a\s*)?story/i, /save\s*(a\s*)?(memory|story)/i,
+        /मेमोरी\s*रिकॉर्ड/i, /कहानी\s*रिकॉर्ड/i, /याद\s*रिकॉर्ड/i, /रिकॉर्ड\s*कर/i,
+        /i\s*want\s*to\s*record/i, /let\s*me\s*record/i, /start\s*record/i,
+      ],
+      open_memory_log: [
+        /show\s*(me\s*)?(my\s*)?(stories|memories|recordings)/i, /memory\s*log/i, /my\s*stories/i,
+        /मेरी\s*कहानि/i, /मेरी\s*यादें/i, /कहानियाँ\s*दिखा/i, /मेमोरी\s*लॉग/i,
+      ],
+      open_chat: [
+        /open\s*chat/i, /text\s*chat/i, /type\s*(instead|to\s*ela)/i,
+        /चैट\s*खोल/i, /टाइप\s*कर/i,
+      ],
+      call_family: [
+        /call\s*(my\s*)?(family|daughter|son|child|beta|beti)/i, /phone\s*(my\s*)?family/i,
+        /फ़?ोन\s*कर/i, /कॉल\s*कर/i, /परिवार\s*को\s*(फ़?ोन|कॉल)/i,
+      ],
+    };
+    for (const [action, regexes] of Object.entries(patterns)) {
+      if (regexes.some(r => r.test(t))) return action;
+    }
+    return null;
+  };
+
+  const handleIntentAction = async (action, transcript) => {
+    // Brief confirmation + trigger UI
+    const confirmations = {
+      record_memory: { en: "Sure, opening the recorder!", hi: "ज़रूर, रिकॉर्डर खोल रही हूँ!" },
+      open_memory_log: { en: "Here are your stories!", hi: "आपकी कहानियाँ दिखा रही हूँ!" },
+      open_chat: { en: "Opening the chat for you!", hi: "चैट खोल रही हूँ!" },
+      call_family: { en: "Calling your family now!", hi: "परिवार को कॉल कर रही हूँ!" },
+    };
+    const msg = confirmations[action]?.[lang] || confirmations[action]?.en || "Sure!";
+    setVoiceResponse(msg);
+
+    // Save to history
+    voiceHistoryRef.current = [
+      ...voiceHistoryRef.current,
+      { role: "user", content: transcript },
+      { role: "assistant", content: msg },
+    ];
+
+    // Speak confirmation, then trigger action after TTS
+    speakResponse(msg, () => {
+      setTimeout(() => {
+        if (action === "record_memory") setMemoryOpen(true);
+        else if (action === "open_memory_log") openMemoryLog();
+        else if (action === "open_chat") { setPendingChatMsg(null); setChatOpen(true); }
+        else if (action === "call_family") setCallOpen(true);
+      }, 300);
+    });
+  };
+
   const sendVoiceToLLM = async (text) => {
+    // ── STEP 1: Fast intent check (<10ms) ──
+    const intent = matchIntent(text);
+    if (intent) {
+      handleIntentAction(intent, text);
+      return;
+    }
+
     setVoicePhase("thinking");
     setVoiceText(text);
 
