@@ -934,7 +934,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
     if (!profileId) return;
     supabase.from("profiles").select("full_name, phone, location").eq("id", profileId).maybeSingle()
       .then(({ data }) => {
-        if (data) setGuardianProfile({ full_name: data.full_name || "", phone: data.phone || "", location: data.location || "" });
+        if (data) setCpProfile({ full_name: data.full_name || "", phone: data.phone || "", location: data.location || "" });
       });
   }, [profileId]);
 
