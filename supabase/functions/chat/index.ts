@@ -6,7 +6,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SATHI_SYSTEM = `You are Ela, a respectful, warm, and intuitive companion for Indian parents. Respond in the user's chosen language (Hindi or English).
+const ELA_SYSTEM = `You are Ela, a respectful, warm, and intuitive companion for Indian parents. Respond in the user's chosen language (Hindi or English).
 
 TONE & STYLE:
 - Use "Ji" respectfully (e.g., "Namaste Ji", "[Name] Ji"). Speak like a respectful family friend or a devoted assistant.
