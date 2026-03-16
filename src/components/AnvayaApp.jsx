@@ -1251,7 +1251,11 @@ function SathiScreen({inPanel=false, userId:propUserId=null, linkedUserId:propLi
         )}
         {voicePhase==="idle"&&(
           <p style={{color:"rgba(255,248,240,.6)",fontSize:16,lineHeight:1.5,fontWeight:500}}>
-            {lang==="en"?"Tap the orb to talk to Ela":"एला से बात करने के लिए ऑर्ब टैप करें"}
+            {seniorUnreadCount > 0
+              ? (lang==="en"
+                ? `💛 You have ${seniorUnreadCount} new reaction${seniorUnreadCount>1?"s":""} from family!`
+                : `💛 परिवार से ${seniorUnreadCount} नई प्रतिक्रिया${seniorUnreadCount>1?"एँ":""}!`)
+              : (lang==="en"?"Tap the orb to talk to Ela":"एला से बात करने के लिए ऑर्ब टैप करें")}
           </p>
         )}
       </div>
