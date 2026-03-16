@@ -16,7 +16,7 @@ import { buildMediaRecorder } from "@/lib/mediaRecorder";
 import ReactionRecorder from "./ReactionRecorder";
 
 // ─── STYLES (shared with AnvayaApp) ────────────────────────────────────────────
-export const guardianStyles = `
+export const carePartnerStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { font-family: 'DM Sans', sans-serif; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
