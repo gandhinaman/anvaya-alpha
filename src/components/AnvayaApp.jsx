@@ -530,7 +530,7 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
           entries,
           userId,
           linkedUserId,
-          route: typeof window !== "undefined" ? window.location.pathname : "/sathi",
+          route: typeof window !== "undefined" ? window.location.pathname : "/loved-one",
         },
       });
 
