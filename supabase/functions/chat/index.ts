@@ -119,28 +119,33 @@ Deno.serve(async (req) => {
     let aiRes;
 
     if (sarvamKey) {
-      const body = {
-        model: "sarvam-30b",
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...messages,
-        ],
-        stream: true,
-        max_tokens: 120,
-      };
+      try {
+        const body = {
+          model: "sarvam-30b",
+          messages: [
+            { role: "system", content: systemPrompt },
+            ...messages,
+          ],
+          stream: true,
+          max_tokens: 120,
+        };
 
-      aiRes = await fetch("https://api.sarvam.ai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "api-subscription-key": sarvamKey,
-        },
-        body: JSON.stringify(body),
-      });
+        aiRes = await fetch("https://api.sarvam.ai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "api-subscription-key": sarvamKey,
+          },
+          body: JSON.stringify(body),
+        });
 
-      if (!aiRes.ok) {
-        console.error("Sarvam chat error:", aiRes.status, await aiRes.text());
-        aiRes = null; // fall through to Lovable
+        if (!aiRes.ok) {
+          console.error("Sarvam chat error:", aiRes.status, await aiRes.text());
+          aiRes = null; // fall through to Lovable
+        }
+      } catch (sarvamErr) {
+        console.error("Sarvam fetch failed, falling back:", sarvamErr);
+        aiRes = null;
       }
     }
 
