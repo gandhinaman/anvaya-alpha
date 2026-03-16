@@ -1339,7 +1339,7 @@ Only use ONE action tag per response. Keep your spoken response brief and natura
             <User size={20} color="rgba(255,248,240,.6)"/>
           </button>
           {!inPanel && (
-            <button onClick={async()=>{await supabase.auth.signOut();window.location.href="/login";}} style={{
+            <button onClick={async()=>{await flushTelemetry();await supabase.auth.signOut();window.location.href="/login";}} style={{
               width:48,height:48,borderRadius:14,border:"1.5px solid rgba(255,248,240,.18)",
               background:"rgba(255,248,240,.08)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0
             }} title="Sign out">
