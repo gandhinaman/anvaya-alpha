@@ -314,11 +314,11 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
   const [linkedName, setLinkedName]=useState(null);
   const [autoUserId, setAutoUserId]=useState(null);
   const [autoLinkedUserId, setAutoLinkedUserId]=useState(null);
-  const [autoFullName, setAutoFullName]=useState(null);
+  const [autoFullName, setAutoFullName]=useState(propFullName || null);
 
   const userId = propUserId || autoUserId;
   const linkedUserId = propLinkedUserId || autoLinkedUserId;
-  const fullName = propFullName || autoFullName;
+  const fullName = autoFullName || propFullName;
 
   // Auto-fetch profile from auth when no props provided
   useEffect(()=>{
