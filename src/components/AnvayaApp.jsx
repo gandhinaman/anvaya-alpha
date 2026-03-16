@@ -6,9 +6,9 @@ import {
   TrendingUp, Zap, BarChart2, PhoneOff, AlertTriangle, ShieldCheck,
   Loader2, Link2, BellRing, Copy, Send, Sparkles
 } from "lucide-react";
-import SathiChat from "./sathi/SathiChat";
-import MemoryRecorder from "./sathi/MemoryRecorder";
-import MemoryLog from "./sathi/MemoryLog";
+import LovedOneChat from "./loved-one/LovedOneChat";
+import MemoryRecorder from "./loved-one/MemoryRecorder";
+import MemoryLog from "./loved-one/MemoryLog";
 import { supabase } from "@/integrations/supabase/client";
 import { useParentData } from "@/hooks/useParentData";
 import { useStreak } from "@/hooks/useStreak";
