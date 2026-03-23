@@ -179,11 +179,8 @@ export default function ReactionRecorder({ open, onClose, memoryId, memoryTitle,
       stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
 
-      // Video preview
-      if (mode === "video" && videoPreviewRef.current) {
-        videoPreviewRef.current.srcObject = stream;
-        videoPreviewRef.current.play().catch(() => {});
-      }
+      // Video preview — will be attached via effect
+      // Stream is stored in streamRef, effect binds to video element
 
       // Audio analyser for waveform (optional)
       const AC = window.AudioContext || window.webkitAudioContext;
