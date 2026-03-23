@@ -3751,6 +3751,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
         profileId={profileId}
         parentName={parentProfile?.full_name?.split(" ")[0] || "Amma"}
         initialMode={reactionInitialMode}
+        skipModeSelect={true}
       />
     </div>
   );
