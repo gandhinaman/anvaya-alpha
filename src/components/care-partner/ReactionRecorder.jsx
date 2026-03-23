@@ -142,6 +142,14 @@ export default function ReactionRecorder({ open, onClose, memoryId, memoryTitle,
     }
   }, [open, initialMode, skipModeSelect]);
 
+  // Bind stream to video preview element whenever it changes
+  useEffect(() => {
+    if (mode === "video" && streamRef.current && videoPreviewRef.current) {
+      videoPreviewRef.current.srcObject = streamRef.current;
+      videoPreviewRef.current.play().catch(() => {});
+    }
+  });
+
   // Timer
   useEffect(() => {
     if (phase !== "recording") return;
