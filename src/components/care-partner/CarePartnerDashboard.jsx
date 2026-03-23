@@ -567,12 +567,14 @@ function OverviewCommentBox({ memoryId, memoryTitle, profileId, parentName, onOp
 }
 
 // ─── MEMORY CARD ──────────────────────────────────────────────────────────────
-function MemoryCard({ title, transcript, aiSummary, audioUrl, category, emotionalTone, vocalEnergy, createdAt, memoryId, comments = [], reactions = [], profileId, onDelete, deleting, onReact, onToggleHeart, index, date, duration, summary, promptQuestion, visualAnalysis }) {
+function MemoryCard({ title, transcript, aiSummary, audioUrl, category, emotionalTone, vocalEnergy, createdAt, memoryId, comments = [], reactions = [], profileId, onDelete, deleting, onReact, onToggleHeart, index, date, duration, summary, promptQuestion, visualAnalysis, autoExpand = false }) {
   const toneColors = { joyful: "#C68B59", nostalgic: "#8D6E63", peaceful: "#5D4037", concerned: "#6B8A9E" };
   const tone = emotionalTone || "positive";
   const toneColor = toneColors[tone.toLowerCase()] || "#C68B59";
   const isVideo = audioUrl?.includes("/video_");
-  const [showComments, setShowComments] = useState(false);
+  const [showComments, setShowComments] = useState(autoExpand);
+  const cardRef = useRef(null);
+  useEffect(() => { if (autoExpand && cardRef.current) { setTimeout(() => cardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 200); } }, [autoExpand]);
   const [commentText, setCommentText] = useState("");
   const [sending, setSending] = useState(false);
 
@@ -735,7 +737,7 @@ function MemoryCard({ title, transcript, aiSummary, audioUrl, category, emotiona
   };
 
   return (
-    <div className="gcard" style={{ padding: 18, animation: `fadeUp .5s ease ${.6 + index * .1}s both` }}>
+    <div ref={cardRef} className="gcard" style={{ padding: 18, animation: `fadeUp .5s ease ${.6 + index * .1}s both` }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: "#3E2723", marginBottom: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{title || "Untitled Memory"}</div>
@@ -949,6 +951,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
   const isMobile = !inPanel && w < 768;
   const [nav, setNav] = useState("home");
   const [drawer, setDrawer] = useState(false);
+  const [focusMemoryId, setFocusMemoryId] = useState(null);
 
   const mainContentRef = useRef(null);
 
@@ -958,6 +961,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
     trackEvent("view_" + id);
     // Scroll main content to top
     if (mainContentRef.current) mainContentRef.current.scrollTop = 0;
+    if (id !== "memories") setFocusMemoryId(null);
     if (id === "memories") {
       // delay slightly so data renders first
       setTimeout(() => markMemoriesViewed(), 300);
@@ -2330,6 +2334,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
                             deleting={deletingMemId === m.id}
                             onToggleHeart={handleToggleHeart}
                             onReact={handleOpenReaction}
+                            autoExpand={focusMemoryId === m.id}
                           />
                           {/* Add to collection button */}
                           {m.id && collections.length > 0 && (
@@ -3478,10 +3483,13 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
                           <Heart size={16} fill={(m.reactions || []).some(r => r.user_id === profileId) ? "#E53935" : "none"} />
                           {(m.reactions || []).length > 0 && <span>{(m.reactions || []).length}</span>}
                         </button>
-                        {(m.comments || []).length > 0 && (
-                          <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#8D6E63" }}>
+                         {(m.comments || []).length > 0 && (
+                          <button onClick={() => { setFocusMemoryId(m.memoryId); setNavWithMark("memories"); }} style={{
+                            display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#8D6E63",
+                            background: "none", border: "none", cursor: "pointer", padding: "4px 0"
+                          }}>
                             <MessageCircle size={14} /> {m.comments.length} {m.comments.length === 1 ? "reply" : "replies"}
-                          </span>
+                          </button>
                         )}
                       </div>
 
