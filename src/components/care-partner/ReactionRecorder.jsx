@@ -133,14 +133,14 @@ export default function ReactionRecorder({ open, onClose, memoryId, memoryTitle,
   // Reset state when opening
   useEffect(() => {
     if (open) {
-      setPhase("idle");
+      setPhase(skipModeSelect ? "countdown" : "idle");
       setTimer(0);
       setBlob(null);
       setPreviewUrl(null);
       setMode(initialMode || "audio");
       setPlaying(false);
     }
-  }, [open, initialMode]);
+  }, [open, initialMode, skipModeSelect]);
 
   // Timer
   useEffect(() => {
