@@ -142,6 +142,14 @@ export default function ReactionRecorder({ open, onClose, memoryId, memoryTitle,
     }
   }, [open, initialMode, skipModeSelect]);
 
+  // Bind stream to video preview element whenever it changes
+  useEffect(() => {
+    if (mode === "video" && streamRef.current && videoPreviewRef.current) {
+      videoPreviewRef.current.srcObject = streamRef.current;
+      videoPreviewRef.current.play().catch(() => {});
+    }
+  });
+
   // Timer
   useEffect(() => {
     if (phase !== "recording") return;
@@ -179,11 +187,8 @@ export default function ReactionRecorder({ open, onClose, memoryId, memoryTitle,
       stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
 
-      // Video preview
-      if (mode === "video" && videoPreviewRef.current) {
-        videoPreviewRef.current.srcObject = stream;
-        videoPreviewRef.current.play().catch(() => {});
-      }
+      // Video preview — will be attached via effect
+      // Stream is stored in streamRef, effect binds to video element
 
       // Audio analyser for waveform (optional)
       const AC = window.AudioContext || window.webkitAudioContext;
@@ -439,40 +444,34 @@ export default function ReactionRecorder({ open, onClose, memoryId, memoryTitle,
             </div>
           )}
 
-          {/* Countdown */}
-          {phase === "countdown" && (
+          {/* Persistent video preview for countdown + recording */}
+          {mode === "video" && (phase === "countdown" || phase === "recording") && (
+            <div style={{ position: "relative", marginBottom: phase === "countdown" ? 0 : 16 }}>
+              <video
+                ref={videoPreviewRef}
+                muted
+                playsInline
+                style={{
+                  width: "100%", height: 220, objectFit: "cover",
+                  borderRadius: 16, background: "#1a0f0a",
+                  border: phase === "recording" ? "2px solid rgba(220,38,38,0.3)" : "none",
+                }}
+              />
+              {phase === "countdown" && <Countdown onDone={beginRecording} />}
+            </div>
+          )}
+
+          {/* Countdown — audio only */}
+          {phase === "countdown" && mode !== "video" && (
             <div style={{ position: "relative", minHeight: 200 }}>
-              {mode === "video" && (
-                <video
-                  ref={videoPreviewRef}
-                  muted
-                  playsInline
-                  style={{
-                    width: "100%", height: 200, objectFit: "cover",
-                    borderRadius: 16, background: "#1a0f0a",
-                  }}
-                />
-              )}
               <Countdown onDone={beginRecording} />
             </div>
           )}
 
-          {/* Recording */}
+          {/* Recording controls */}
           {phase === "recording" && (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-              {mode === "video" ? (
-                <video
-                  ref={videoPreviewRef}
-                  muted
-                  playsInline
-                  style={{
-                    width: "100%", height: 220, objectFit: "cover",
-                    borderRadius: 16, border: "2px solid rgba(220,38,38,0.3)",
-                  }}
-                />
-              ) : (
-                <LiveWaveform analyserRef={analyserRef} />
-              )}
+              {mode !== "video" && <LiveWaveform analyserRef={analyserRef} />}
 
               {/* Timer + recording indicator */}
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
