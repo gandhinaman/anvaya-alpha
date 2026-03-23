@@ -3482,10 +3482,13 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
                           <Heart size={16} fill={(m.reactions || []).some(r => r.user_id === profileId) ? "#E53935" : "none"} />
                           {(m.reactions || []).length > 0 && <span>{(m.reactions || []).length}</span>}
                         </button>
-                        {(m.comments || []).length > 0 && (
-                          <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#8D6E63" }}>
+                         {(m.comments || []).length > 0 && (
+                          <button onClick={() => { setFocusMemoryId(m.memoryId); setNavWithMark("memories"); }} style={{
+                            display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#8D6E63",
+                            background: "none", border: "none", cursor: "pointer", padding: "4px 0"
+                          }}>
                             <MessageCircle size={14} /> {m.comments.length} {m.comments.length === 1 ? "reply" : "replies"}
-                          </span>
+                          </button>
                         )}
                       </div>
 
