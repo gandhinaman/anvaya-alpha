@@ -15,7 +15,7 @@ import { filterCities } from "@/lib/cities";
 import { formatPhoneInput, isValidPhone } from "@/lib/phoneFormat";
 
 import ReactionRecorder from "./ReactionRecorder";
-import { trackEvent } from "@/hooks/useTelemetry";
+import { trackEvent, flushTelemetry } from "@/hooks/useTelemetry";
 
 // ─── STYLES (shared with AnvayaApp) ────────────────────────────────────────────
 export const carePartnerStyles = `
