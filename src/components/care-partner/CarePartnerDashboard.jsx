@@ -483,9 +483,23 @@ function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
               {comments.map(c => (
                 <div key={c.id} style={{ padding: "8px 12px", borderRadius: 10, background: "rgba(198,139,89,0.06)", border: "1px solid rgba(198,139,89,0.1)" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
                     <span style={{ fontSize: 10, fontWeight: 700, color: "#5D4037" }}>{c.author_name || "Family"}</span>
-                    <span style={{ fontSize: 9, color: "#9CA3AF" }}>{new Date(c.created_at).toLocaleDateString()}</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ fontSize: 9, color: "#9CA3AF" }}>{new Date(c.created_at).toLocaleDateString()}</span>
+                      {c.user_id === profileId && (
+                        <button onClick={async () => {
+                          if (!window.confirm("Delete this comment?")) return;
+                          const { error } = await supabase.from("memory_comments").delete().eq("id", c.id);
+                          if (error) { console.error("Delete comment error:", error); alert("Could not delete comment."); }
+                        }} style={{
+                          width: 20, height: 20, borderRadius: 6, border: "none", cursor: "pointer",
+                          background: "rgba(220,38,38,0.08)", display: "flex", alignItems: "center", justifyContent: "center",
+                        }} title="Delete comment">
+                          <Trash2 size={10} color="#DC2626" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                   {c.media_url && c.media_type === "audio" && (
                     <div style={{ marginBottom: 4 }}><AudioPlayer color="#8D6E63" audioUrl={c.media_url} /></div>
