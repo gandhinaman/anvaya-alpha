@@ -9,13 +9,13 @@ import {
   Sparkles
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { flushTelemetry } from "@/hooks/useTelemetry";
+import { buildMediaRecorder } from "@/lib/mediaRecorder";
 import { useParentData } from "@/hooks/useParentData";
 import { filterCities } from "@/lib/cities";
 import { formatPhoneInput, isValidPhone } from "@/lib/phoneFormat";
 
 import ReactionRecorder from "./ReactionRecorder";
-import { trackEvent } from "@/hooks/useTelemetry";
+import { trackEvent, flushTelemetry } from "@/hooks/useTelemetry";
 
 // ─── STYLES (shared with AnvayaApp) ────────────────────────────────────────────
 export const carePartnerStyles = `
@@ -316,6 +316,43 @@ function WeeklyTrendChart({ healthEvents = [] }) {
 }
 
 // ─── MEMORY CARD ──────────────────────────────────────────────────────────────
+function InlineAudioWaveform({ analyserRef }) {
+  const canvasRef = useRef(null);
+  const rafRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width, H = canvas.height;
+    const draw = () => {
+      rafRef.current = requestAnimationFrame(draw);
+      ctx.clearRect(0, 0, W, H);
+      if (!analyserRef.current) return;
+      const bufLen = analyserRef.current.frequencyBinCount;
+      const data = new Uint8Array(bufLen);
+      analyserRef.current.getByteTimeDomainData(data);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "#C68B59";
+      ctx.beginPath();
+      const sliceW = W / bufLen;
+      for (let i = 0; i < bufLen; i++) {
+        const v = data[i] / 128.0;
+        const y = (v * H) / 2;
+        if (i === 0) ctx.moveTo(0, y); else ctx.lineTo(i * sliceW, y);
+      }
+      ctx.stroke();
+    };
+    draw();
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, [analyserRef]);
+
+  return (
+    <canvas ref={canvasRef} width={280} height={32}
+      style={{ width: "100%", height: 32, borderRadius: 8, background: "rgba(93,64,55,0.06)" }} />
+  );
+}
+
 function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null, emotionalTone = null, promptQuestion = null, onDelete = null, deleting = false, comments = [], memoryId = null, profileId = null, visualAnalysis = null, reactions = [], onToggleHeart = null, onReact = null }) {
   const toneColors = { joyful: "#C68B59", nostalgic: "#8D6E63", peaceful: "#5D4037", concerned: "#6B8A9E" };
   const tone = emotionalTone || "positive";
@@ -324,6 +361,134 @@ function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [sending, setSending] = useState(false);
+
+  // Inline audio recording state
+  const [inlineRecording, setInlineRecording] = useState(false);
+  const [inlineTimer, setInlineTimer] = useState(0);
+  const [inlineBlob, setInlineBlob] = useState(null);
+  const [inlinePreviewUrl, setInlinePreviewUrl] = useState(null);
+  const [inlineSending, setInlineSending] = useState(false);
+  const inlineRecorderRef = useRef(null);
+  const inlineStreamRef = useRef(null);
+  const inlineChunksRef = useRef([]);
+  const inlineAnalyserRef = useRef(null);
+  const inlineAudioCtxRef = useRef(null);
+  const inlineFormatRef = useRef({ extension: "webm", contentType: "audio/webm" });
+
+  // Timer for inline recording
+  useEffect(() => {
+    if (!inlineRecording) return;
+    const t = setInterval(() => setInlineTimer(s => s + 1), 1000);
+    return () => clearInterval(t);
+  }, [inlineRecording]);
+
+  // Auto-stop at 60s
+  useEffect(() => {
+    if (inlineRecording && inlineTimer >= 60) stopInlineRecording();
+  }, [inlineTimer, inlineRecording]);
+
+  const startInlineRecording = async () => {
+    try {
+      if (typeof MediaRecorder === "undefined") { alert("Recording not supported."); return; }
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      inlineStreamRef.current = stream;
+
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) {
+        const audioCtx = new AC();
+        inlineAudioCtxRef.current = audioCtx;
+        const source = audioCtx.createMediaStreamSource(stream);
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
+        inlineAnalyserRef.current = analyser;
+      }
+
+      const { recorder, format } = buildMediaRecorder(stream, "audio");
+      inlineFormatRef.current = format;
+      inlineChunksRef.current = [];
+      recorder.ondataavailable = (e) => { if (e.data?.size > 0) inlineChunksRef.current.push(e.data); };
+      recorder.onstop = () => {
+        const b = new Blob(inlineChunksRef.current, { type: inlineFormatRef.current.contentType });
+        setInlineBlob(b);
+        setInlinePreviewUrl(URL.createObjectURL(b));
+        setInlineRecording(false);
+        stream.getTracks().forEach(t => t.stop());
+        if (inlineAudioCtxRef.current) { inlineAudioCtxRef.current.close(); inlineAudioCtxRef.current = null; }
+        inlineAnalyserRef.current = null;
+      };
+      inlineRecorderRef.current = recorder;
+      recorder.start(250);
+      setInlineRecording(true);
+      setInlineTimer(0);
+      setInlineBlob(null);
+      setInlinePreviewUrl(null);
+      trackEvent("reaction_recorder_start", { mode: "audio" });
+    } catch (err) {
+      console.error("Inline audio recording error:", err);
+      alert("Could not access microphone.");
+    }
+  };
+
+  const stopInlineRecording = () => {
+    if (inlineRecorderRef.current && inlineRecorderRef.current.state === "recording") {
+      inlineRecorderRef.current.stop();
+    }
+  };
+
+  const cancelInlineRecording = () => {
+    if (inlineRecording) stopInlineRecording();
+    if (inlineStreamRef.current) inlineStreamRef.current.getTracks().forEach(t => t.stop());
+    if (inlineAudioCtxRef.current) { inlineAudioCtxRef.current.close(); inlineAudioCtxRef.current = null; }
+    setInlineBlob(null);
+    if (inlinePreviewUrl) URL.revokeObjectURL(inlinePreviewUrl);
+    setInlinePreviewUrl(null);
+    setInlineRecording(false);
+    setInlineTimer(0);
+    trackEvent("reaction_recorder_cancel", {});
+  };
+
+  const sendInlineAudio = async () => {
+    if (!inlineBlob || !memoryId) return;
+    setInlineSending(true);
+    try {
+      let actorId = profileId;
+      if (!actorId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        actorId = user?.id || null;
+      }
+      if (!actorId) { alert("Please sign in again."); setInlineSending(false); return; }
+
+      const { extension, contentType } = inlineFormatRef.current;
+      const path = `${actorId}/reaction_audio_${Date.now()}.${extension}`;
+      const { data, error: uploadError } = await supabase.storage.from("memories").upload(path, inlineBlob, { contentType });
+      if (uploadError) { console.error("Upload error:", uploadError); alert("Upload failed."); setInlineSending(false); return; }
+
+      const { data: urlData } = supabase.storage.from("memories").getPublicUrl(data.path);
+      const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", actorId).maybeSingle();
+
+      const { error: insertError } = await supabase.from("memory_comments").insert({
+        memory_id: memoryId, user_id: actorId,
+        comment: `🎤 Voice reaction to "${title || "your story"}"`,
+        media_url: urlData.publicUrl, media_type: "audio",
+        author_name: prof?.full_name || "Care Partner",
+      });
+      if (insertError) { console.error("Insert error:", insertError); alert("Could not send."); setInlineSending(false); return; }
+
+      setInlineBlob(null);
+      if (inlinePreviewUrl) URL.revokeObjectURL(inlinePreviewUrl);
+      setInlinePreviewUrl(null);
+      setInlineTimer(0);
+      trackEvent("reaction_send", { memory_id: memoryId });
+    } catch (err) {
+      console.error("Send error:", err);
+      alert("Something went wrong.");
+    } finally {
+      setInlineSending(false);
+    }
+  };
+
+  const fmtTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
   const resolveActorId = async () => {
     if (profileId) return profileId;
@@ -337,25 +502,15 @@ function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null
     setSending(true);
     try {
       const actorId = actorIdOverride || await resolveActorId();
-      if (!actorId) {
-        alert("Please sign in again to send your reaction.");
-        return;
-      }
-
+      if (!actorId) { alert("Please sign in again to send your reaction."); return; }
       const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", actorId).maybeSingle();
       const { error } = await supabase.from("memory_comments").insert({
-        memory_id: memoryId,
-        user_id: actorId,
+        memory_id: memoryId, user_id: actorId,
         comment: commentText.trim() || (mediaType === "audio" ? "🎤 Voice reply" : "🎥 Video reply"),
-        media_url: mediaUrl,
-        media_type: mediaType,
+        media_url: mediaUrl, media_type: mediaType,
         author_name: prof?.full_name || "Care Partner",
       }).select();
-      if (error) {
-        console.error("Comment insert failed:", error);
-        alert("Could not send comment. Please try again.");
-        return;
-      }
+      if (error) { console.error("Comment insert failed:", error); alert("Could not send comment."); return; }
       setCommentText("");
     } catch (err) {
       console.error("Comment error:", err);
@@ -364,7 +519,6 @@ function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null
       setSending(false);
     }
   };
-
 
   return (
     <div className="gcard" style={{ padding: 18, animation: `fadeUp .5s ease ${.6 + index * .1}s both` }}>
@@ -457,25 +611,6 @@ function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null
         </div>
       </div>
 
-      {/* React to this Story button */}
-      {memoryId && onReact && (
-        <button onClick={() => onReact(memoryId, title)} style={{
-          width: "100%", marginTop: 12, padding: "11px 16px", borderRadius: 14,
-          background: "linear-gradient(135deg, rgba(198,139,89,0.08), rgba(93,64,55,0.04))",
-          border: "1.5px solid rgba(198,139,89,0.2)",
-          color: "#5D4037", fontSize: 12, fontWeight: 700, cursor: "pointer",
-          display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-          transition: "all .2s",
-        }}
-        onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(198,139,89,0.15), rgba(93,64,55,0.08))"; e.currentTarget.style.borderColor = "rgba(198,139,89,0.35)"; }}
-        onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(198,139,89,0.08), rgba(93,64,55,0.04))"; e.currentTarget.style.borderColor = "rgba(198,139,89,0.2)"; }}
-        >
-          <Sparkles size={14} color="#C68B59" />
-          React to this Story
-          <span style={{ fontSize: 10, color: "#9CA3AF", fontWeight: 500 }}>🎤 🎥</span>
-        </button>
-      )}
-
       {/* Collapsible Comments Section */}
       {showComments && (
         <div style={{ marginTop: 12, borderTop: "1px solid rgba(93,64,55,0.08)", paddingTop: 12 }}>
@@ -514,40 +649,80 @@ function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null
               ))}
             </div>
           )}
-          {/* Comment input */}
-          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-            <input
-              value={commentText}
-              onChange={e => setCommentText(e.target.value)}
-              placeholder="Write a comment…"
-              onKeyDown={e => e.key === "Enter" && sendComment()}
-              style={{
-                flex: 1, padding: "8px 12px", borderRadius: 10,
-                border: "1px solid rgba(93,64,55,0.12)", background: "rgba(255,255,255,0.8)",
-                fontSize: 12, color: "#3E2723", outline: "none",
-                fontFamily: "'DM Sans',sans-serif",
-              }}
-            />
-            <button onClick={() => onReact && onReact(memoryId, title, "audio")} style={{
-              width: 32, height: 32, borderRadius: "50%", border: "none", cursor: "pointer",
-              background: "rgba(93,64,55,0.1)", display: "flex", alignItems: "center", justifyContent: "center",
-            }} title="Record audio reply">
-              <Mic size={14} color="#5D4037" />
-            </button>
-            <button onClick={() => onReact && onReact(memoryId, title, "video")} style={{
-              width: 32, height: 32, borderRadius: "50%", border: "none", cursor: "pointer",
-              background: "rgba(93,64,55,0.1)", display: "flex", alignItems: "center", justifyContent: "center",
-            }} title="Record video reply">
-              <Video size={14} color="#5D4037" />
-            </button>
-            <button onClick={() => sendComment()} disabled={sending || !commentText.trim()} style={{
-              padding: "8px 14px", borderRadius: 10, border: "none", cursor: "pointer",
-              background: "#5D4037", color: "#FFF8F0", fontSize: 11, fontWeight: 600,
-              opacity: sending || !commentText.trim() ? 0.5 : 1,
-            }}>
-              {sending ? "…" : "Send"}
-            </button>
-          </div>
+
+          {/* Comment input — transforms into waveform when recording audio */}
+          {inlineRecording ? (
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", borderRadius: 10, border: "1px solid rgba(198,139,89,0.3)", background: "rgba(198,139,89,0.06)" }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#DC2626", animation: "callPulse 1.5s ease infinite", flexShrink: 0 }} />
+                <InlineAudioWaveform analyserRef={inlineAnalyserRef} />
+                <span style={{ fontSize: 11, fontWeight: 600, color: "#3E2723", flexShrink: 0 }}>{fmtTime(inlineTimer)}</span>
+              </div>
+              <button onClick={stopInlineRecording} style={{
+                width: 32, height: 32, borderRadius: "50%", border: "none", cursor: "pointer",
+                background: "#DC2626", display: "flex", alignItems: "center", justifyContent: "center",
+              }} title="Stop recording">
+                <div style={{ width: 12, height: 12, borderRadius: 2, background: "#FFF8F0" }} />
+              </button>
+            </div>
+          ) : inlineBlob ? (
+            /* Review inline audio */
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", borderRadius: 10, border: "1px solid rgba(198,139,89,0.2)", background: "rgba(198,139,89,0.04)" }}>
+                <Mic size={14} color="#C68B59" />
+                <span style={{ fontSize: 12, color: "#5D4037", fontWeight: 500 }}>Voice reaction • {fmtTime(inlineTimer)}</span>
+              </div>
+              <button onClick={cancelInlineRecording} style={{
+                width: 32, height: 32, borderRadius: "50%", border: "none", cursor: "pointer",
+                background: "rgba(220,38,38,0.08)", display: "flex", alignItems: "center", justifyContent: "center",
+              }} title="Cancel">
+                <X size={14} color="#DC2626" />
+              </button>
+              <button onClick={sendInlineAudio} disabled={inlineSending} style={{
+                padding: "8px 14px", borderRadius: 10, border: "none", cursor: "pointer",
+                background: "linear-gradient(135deg, #C68B59, #8D6E63)", color: "#FFF8F0",
+                fontSize: 11, fontWeight: 600, display: "flex", alignItems: "center", gap: 4,
+                opacity: inlineSending ? 0.6 : 1,
+              }}>
+                {inlineSending ? <Loader2 size={12} style={{ animation: "spin 1s linear infinite" }} /> : <Send size={12} />}
+                {inlineSending ? "…" : "Send"}
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <input
+                value={commentText}
+                onChange={e => setCommentText(e.target.value)}
+                placeholder="Write a comment…"
+                onKeyDown={e => e.key === "Enter" && sendComment()}
+                style={{
+                  flex: 1, padding: "8px 12px", borderRadius: 10,
+                  border: "1px solid rgba(93,64,55,0.12)", background: "rgba(255,255,255,0.8)",
+                  fontSize: 12, color: "#3E2723", outline: "none",
+                  fontFamily: "'DM Sans',sans-serif",
+                }}
+              />
+              <button onClick={startInlineRecording} style={{
+                width: 32, height: 32, borderRadius: "50%", border: "none", cursor: "pointer",
+                background: "rgba(93,64,55,0.1)", display: "flex", alignItems: "center", justifyContent: "center",
+              }} title="Record audio reply">
+                <Mic size={14} color="#5D4037" />
+              </button>
+              <button onClick={() => onReact && onReact(memoryId, title, "video")} style={{
+                width: 32, height: 32, borderRadius: "50%", border: "none", cursor: "pointer",
+                background: "rgba(93,64,55,0.1)", display: "flex", alignItems: "center", justifyContent: "center",
+              }} title="Record video reply">
+                <Video size={14} color="#5D4037" />
+              </button>
+              <button onClick={() => sendComment()} disabled={sending || !commentText.trim()} style={{
+                padding: "8px 14px", borderRadius: 10, border: "none", cursor: "pointer",
+                background: "#5D4037", color: "#FFF8F0", fontSize: 11, fontWeight: 600,
+                opacity: sending || !commentText.trim() ? 0.5 : 1,
+              }}>
+                {sending ? "…" : "Send"}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -3576,6 +3751,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
         profileId={profileId}
         parentName={parentProfile?.full_name?.split(" ")[0] || "Amma"}
         initialMode={reactionInitialMode}
+        skipModeSelect={true}
       />
     </div>
   );

@@ -113,7 +113,7 @@ function SentAnimation({ onDone }) {
 }
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
-export default function ReactionRecorder({ open, onClose, memoryId, memoryTitle, profileId, parentName, initialMode = "audio" }) {
+export default function ReactionRecorder({ open, onClose, memoryId, memoryTitle, profileId, parentName, initialMode = "audio", skipModeSelect = false }) {
   const [mode, setMode] = useState(initialMode || "audio"); // audio | video
   const [phase, setPhase] = useState("idle"); // idle | countdown | recording | review | sending | sent
   const [timer, setTimer] = useState(0);
@@ -133,14 +133,14 @@ export default function ReactionRecorder({ open, onClose, memoryId, memoryTitle,
   // Reset state when opening
   useEffect(() => {
     if (open) {
-      setPhase("idle");
+      setPhase(skipModeSelect ? "countdown" : "idle");
       setTimer(0);
       setBlob(null);
       setPreviewUrl(null);
       setMode(initialMode || "audio");
       setPlaying(false);
     }
-  }, [open, initialMode]);
+  }, [open, initialMode, skipModeSelect]);
 
   // Timer
   useEffect(() => {
