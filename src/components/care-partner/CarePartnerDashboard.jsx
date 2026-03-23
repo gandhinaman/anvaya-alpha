@@ -13,7 +13,7 @@ import { flushTelemetry } from "@/hooks/useTelemetry";
 import { useParentData } from "@/hooks/useParentData";
 import { filterCities } from "@/lib/cities";
 import { formatPhoneInput, isValidPhone } from "@/lib/phoneFormat";
-import { buildMediaRecorder } from "@/lib/mediaRecorder";
+
 import ReactionRecorder from "./ReactionRecorder";
 import { trackEvent } from "@/hooks/useTelemetry";
 
