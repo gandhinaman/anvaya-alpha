@@ -2333,6 +2333,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
                             deleting={deletingMemId === m.id}
                             onToggleHeart={handleToggleHeart}
                             onReact={handleOpenReaction}
+                            autoExpand={focusMemoryId === m.id}
                           />
                           {/* Add to collection button */}
                           {m.id && collections.length > 0 && (
