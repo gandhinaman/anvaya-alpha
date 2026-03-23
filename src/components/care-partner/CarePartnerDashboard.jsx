@@ -949,6 +949,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
   const isMobile = !inPanel && w < 768;
   const [nav, setNav] = useState("home");
   const [drawer, setDrawer] = useState(false);
+  const [focusMemoryId, setFocusMemoryId] = useState(null);
 
   const mainContentRef = useRef(null);
 
