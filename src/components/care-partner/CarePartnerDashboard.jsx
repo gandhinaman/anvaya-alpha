@@ -961,6 +961,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
     trackEvent("view_" + id);
     // Scroll main content to top
     if (mainContentRef.current) mainContentRef.current.scrollTop = 0;
+    if (id !== "memories") setFocusMemoryId(null);
     if (id === "memories") {
       // delay slightly so data renders first
       setTimeout(() => markMemoriesViewed(), 300);
