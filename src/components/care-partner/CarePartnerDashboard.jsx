@@ -737,7 +737,7 @@ function MemoryCard({ title, transcript, aiSummary, audioUrl, category, emotiona
   };
 
   return (
-    <div className="gcard" style={{ padding: 18, animation: `fadeUp .5s ease ${.6 + index * .1}s both` }}>
+    <div ref={cardRef} className="gcard" style={{ padding: 18, animation: `fadeUp .5s ease ${.6 + index * .1}s both` }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: "#3E2723", marginBottom: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{title || "Untitled Memory"}</div>
