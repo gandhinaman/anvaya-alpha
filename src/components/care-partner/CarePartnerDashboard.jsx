@@ -652,11 +652,14 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
   const [reactionMemoryId, setReactionMemoryId] = useState(null);
   const [reactionMemoryTitle, setReactionMemoryTitle] = useState("");
 
-  const handleOpenReaction = (memId, memTitle) => {
+  const [reactionInitialMode, setReactionInitialMode] = useState("audio");
+
+  const handleOpenReaction = (memId, memTitle, initialMode = "audio") => {
     setReactionMemoryId(memId);
     setReactionMemoryTitle(memTitle || "A shared memory");
+    setReactionInitialMode(initialMode);
     setReactionOpen(true);
-    trackEvent("reaction_record", { memory_id: memId, mode: "modal_open" });
+    trackEvent("reaction_record", { memory_id: memId, mode: initialMode });
   };
 
   // Caregiver questions state
