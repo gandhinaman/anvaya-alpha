@@ -566,7 +566,8 @@ function OverviewCommentBox({ memoryId, memoryTitle, profileId, parentName, onOp
   );
 }
 
-
+// ─── MEMORY CARD ──────────────────────────────────────────────────────────────
+function MemoryCard({ title, transcript, aiSummary, audioUrl, category, emotionalTone, vocalEnergy, createdAt, memoryId, comments = [], reactions = [], profileId, onDelete, deleting, onReact, index }) {
   const toneColors = { joyful: "#C68B59", nostalgic: "#8D6E63", peaceful: "#5D4037", concerned: "#6B8A9E" };
   const tone = emotionalTone || "positive";
   const toneColor = toneColors[tone.toLowerCase()] || "#C68B59";
