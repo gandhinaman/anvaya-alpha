@@ -128,7 +128,7 @@ function AudioPlayer({ color = "#5D4037", audioUrl = null }) {
       <div style={{ flex: 1, height: 4, background: "#E5E7EB", borderRadius: 4, cursor: "pointer" }} onClick={seek}>
         <div style={{ height: "100%", width: `${progress}%`, background: color, borderRadius: 4, transition: "width .1s" }} />
       </div>
-      <span style={{ fontSize: 11, color: "#6b6b6b", flexShrink: 0 }}>{duration ? fmt(duration) : "—"}</span>
+      <span style={{ fontSize: 11, color: "#6b6b6b", flexShrink: 0 }}>{isFinite(duration) && duration > 0 ? fmt(duration) : "—"}</span>
     </div>
   );
 }
