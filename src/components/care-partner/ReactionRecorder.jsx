@@ -137,10 +137,10 @@ export default function ReactionRecorder({ open, onClose, memoryId, memoryTitle,
       setTimer(0);
       setBlob(null);
       setPreviewUrl(null);
-      setMode("audio");
+      setMode(initialMode || "audio");
       setPlaying(false);
     }
-  }, [open]);
+  }, [open, initialMode]);
 
   // Timer
   useEffect(() => {
