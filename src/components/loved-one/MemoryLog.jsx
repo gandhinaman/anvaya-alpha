@@ -486,7 +486,21 @@ export default function MemoryLog({ open, onClose, lang = "en", userId }) {
                                 )}
                                 {!isReaction && <p style={{ color: "rgba(255,248,240,.75)", fontSize: 13, lineHeight: 1.5, margin: 0 }}>{c.comment}</p>}
                                 {isReaction && <p style={{ color: "rgba(255,248,240,.6)", fontSize: 11, lineHeight: 1.4, margin: 0, fontStyle: "italic" }}>{c.comment}</p>}
-                                <div style={{ fontSize: 10, color: "rgba(255,248,240,.3)", marginTop: 5 }}>{formatDate(c.created_at)}</div>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 5 }}>
+                                  <span style={{ fontSize: 10, color: "rgba(255,248,240,.3)" }}>{formatDate(c.created_at)}</span>
+                                  {c.user_id === userId && (
+                                    <button onClick={async () => {
+                                      if (!window.confirm(lang === "en" ? "Delete this comment?" : "क्या आप यह टिप्पणी हटाना चाहते हैं?")) return;
+                                      const { error } = await supabase.from("memory_comments").delete().eq("id", c.id);
+                                      if (error) { console.error("Delete comment error:", error); alert("Could not delete comment."); }
+                                    }} style={{
+                                      width: 22, height: 22, borderRadius: 6, border: "none", cursor: "pointer",
+                                      background: "rgba(220,38,38,0.15)", display: "flex", alignItems: "center", justifyContent: "center",
+                                    }} title={lang === "en" ? "Delete" : "हटाएं"}>
+                                      <Trash2 size={10} color="#fca5a5" />
+                                    </button>
+                                  )}
+                                </div>
                               </div>
                               );
                             })}
