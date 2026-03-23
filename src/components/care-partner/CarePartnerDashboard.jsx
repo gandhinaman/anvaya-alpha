@@ -324,9 +324,6 @@ function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [sending, setSending] = useState(false);
-  const [recording, setRecording] = useState(false);
-  const [videoRecording, setVideoRecording] = useState(false);
-  const recorderRef = useRef(null);
 
   const resolveActorId = async () => {
     if (profileId) return profileId;
