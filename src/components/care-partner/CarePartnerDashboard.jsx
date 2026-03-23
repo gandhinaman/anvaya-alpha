@@ -572,7 +572,9 @@ function MemoryCard({ title, transcript, aiSummary, audioUrl, category, emotiona
   const tone = emotionalTone || "positive";
   const toneColor = toneColors[tone.toLowerCase()] || "#C68B59";
   const isVideo = audioUrl?.includes("/video_");
-  const [showComments, setShowComments] = useState(false);
+  const [showComments, setShowComments] = useState(autoExpand);
+  const cardRef = useRef(null);
+  useEffect(() => { if (autoExpand && cardRef.current) { setTimeout(() => cardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 200); } }, [autoExpand]);
   const [commentText, setCommentText] = useState("");
   const [sending, setSending] = useState(false);
 
