@@ -3561,6 +3561,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
         memoryTitle={reactionMemoryTitle}
         profileId={profileId}
         parentName={parentProfile?.full_name?.split(" ")[0] || "Amma"}
+        initialMode={reactionInitialMode}
       />
     </div>
   );
