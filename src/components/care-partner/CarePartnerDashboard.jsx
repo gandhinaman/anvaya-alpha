@@ -13,7 +13,7 @@ import { flushTelemetry } from "@/hooks/useTelemetry";
 import { useParentData } from "@/hooks/useParentData";
 import { filterCities } from "@/lib/cities";
 import { formatPhoneInput, isValidPhone } from "@/lib/phoneFormat";
-import { buildMediaRecorder } from "@/lib/mediaRecorder";
+
 import ReactionRecorder from "./ReactionRecorder";
 import { trackEvent } from "@/hooks/useTelemetry";
 
@@ -128,7 +128,7 @@ function AudioPlayer({ color = "#5D4037", audioUrl = null }) {
       <div style={{ flex: 1, height: 4, background: "#E5E7EB", borderRadius: 4, cursor: "pointer" }} onClick={seek}>
         <div style={{ height: "100%", width: `${progress}%`, background: color, borderRadius: 4, transition: "width .1s" }} />
       </div>
-      <span style={{ fontSize: 11, color: "#6b6b6b", flexShrink: 0 }}>{duration ? fmt(duration) : "—"}</span>
+      <span style={{ fontSize: 11, color: "#6b6b6b", flexShrink: 0 }}>{isFinite(duration) && duration > 0 ? fmt(duration) : "—"}</span>
     </div>
   );
 }
@@ -324,9 +324,6 @@ function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [sending, setSending] = useState(false);
-  const [recording, setRecording] = useState(false);
-  const [videoRecording, setVideoRecording] = useState(false);
-  const recorderRef = useRef(null);
 
   const resolveActorId = async () => {
     if (profileId) return profileId;
@@ -368,127 +365,6 @@ function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null
     }
   };
 
-  const startAudioReply = async () => {
-    let stream = null;
-    try {
-      const actorId = await resolveActorId();
-      if (!actorId) {
-        alert("Please sign in again to record a reaction.");
-        return;
-      }
-
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const { recorder, format } = buildMediaRecorder(stream, "audio");
-      const chunks = [];
-
-      recorder.ondataavailable = (e) => {
-        if (e.data?.size > 0) chunks.push(e.data);
-      };
-
-      recorder.onstop = async () => {
-        try {
-          stream.getTracks().forEach((t) => t.stop());
-          const blob = new Blob(chunks, { type: format.contentType });
-          const path = `${actorId}/comment_audio_${Date.now()}.${format.extension}`;
-          const { data, error: uploadError } = await supabase.storage
-            .from("memories")
-            .upload(path, blob, { contentType: format.contentType });
-
-          if (uploadError) {
-            console.error("Audio upload error:", uploadError);
-            alert("Could not upload audio reaction. Please try again.");
-            return;
-          }
-
-          if (data) {
-            const { data: urlData } = supabase.storage.from("memories").getPublicUrl(data.path);
-            await sendComment(urlData.publicUrl, "audio", actorId);
-          }
-        } catch (err) {
-          console.error("Audio reaction error:", err);
-          alert("Could not process audio reaction. Please try again.");
-        } finally {
-          setRecording(false);
-        }
-      };
-
-      recorderRef.current = recorder;
-      recorder.start(250);
-      setRecording(true);
-    } catch (err) {
-      console.error("Audio record error:", err);
-      if (stream) stream.getTracks().forEach((t) => t.stop());
-      alert("Could not start audio recording. Please allow microphone access.");
-      setRecording(false);
-    }
-  };
-
-  const stopAudioReply = () => {
-    if (recorderRef.current && recorderRef.current.state === "recording") {
-      recorderRef.current.stop();
-    }
-  };
-
-  const startVideoReply = async () => {
-    let stream = null;
-    try {
-      const actorId = await resolveActorId();
-      if (!actorId) {
-        alert("Please sign in again to record a reaction.");
-        return;
-      }
-
-      stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      const { recorder, format } = buildMediaRecorder(stream, "video");
-      const chunks = [];
-
-      recorder.ondataavailable = (e) => {
-        if (e.data?.size > 0) chunks.push(e.data);
-      };
-
-      recorder.onstop = async () => {
-        try {
-          stream.getTracks().forEach((t) => t.stop());
-          const blob = new Blob(chunks, { type: format.contentType });
-          const path = `${actorId}/comment_video_${Date.now()}.${format.extension}`;
-          const { data, error: uploadError } = await supabase.storage
-            .from("memories")
-            .upload(path, blob, { contentType: format.contentType });
-
-          if (uploadError) {
-            console.error("Video upload error:", uploadError);
-            alert("Could not upload video reaction. Please try again.");
-            return;
-          }
-
-          if (data) {
-            const { data: urlData } = supabase.storage.from("memories").getPublicUrl(data.path);
-            await sendComment(urlData.publicUrl, "video", actorId);
-          }
-        } catch (err) {
-          console.error("Video reaction error:", err);
-          alert("Could not process video reaction. Please try again.");
-        } finally {
-          setVideoRecording(false);
-        }
-      };
-
-      recorderRef.current = recorder;
-      recorder.start(250);
-      setVideoRecording(true);
-    } catch (err) {
-      console.error("Video record error:", err);
-      if (stream) stream.getTracks().forEach((t) => t.stop());
-      alert("Could not start video recording. Please allow camera and microphone access.");
-      setVideoRecording(false);
-    }
-  };
-
-  const stopVideoReply = () => {
-    if (recorderRef.current && recorderRef.current.state === "recording") {
-      recorderRef.current.stop();
-    }
-  };
 
   return (
     <div className="gcard" style={{ padding: 18, animation: `fadeUp .5s ease ${.6 + index * .1}s both` }}>
@@ -638,38 +514,18 @@ function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null
                 fontFamily: "'DM Sans',sans-serif",
               }}
             />
-            {recording ? (
-              <button onClick={stopAudioReply} style={{
-                width: 32, height: 32, borderRadius: "50%", border: "none", cursor: "pointer",
-                background: "#DC2626", display: "flex", alignItems: "center", justifyContent: "center",
-                animation: "callPulse 1.5s ease infinite",
-              }}>
-                <Pause size={14} color="#FFF8F0" />
-              </button>
-            ) : (
-              <button onClick={startAudioReply} style={{
-                width: 32, height: 32, borderRadius: "50%", border: "none", cursor: "pointer",
-                background: "rgba(93,64,55,0.1)", display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                <Mic size={14} color="#5D4037" />
-              </button>
-            )}
-            {videoRecording ? (
-              <button onClick={stopVideoReply} style={{
-                width: 32, height: 32, borderRadius: "50%", border: "none", cursor: "pointer",
-                background: "#DC2626", display: "flex", alignItems: "center", justifyContent: "center",
-                animation: "callPulse 1.5s ease infinite",
-              }}>
-                <Pause size={14} color="#FFF8F0" />
-              </button>
-            ) : (
-              <button onClick={startVideoReply} style={{
-                width: 32, height: 32, borderRadius: "50%", border: "none", cursor: "pointer",
-                background: "rgba(93,64,55,0.1)", display: "flex", alignItems: "center", justifyContent: "center",
-              }} title="Record video reply">
-                <Video size={14} color="#5D4037" />
-              </button>
-            )}
+            <button onClick={() => onReact && onReact(memoryId, title, "audio")} style={{
+              width: 32, height: 32, borderRadius: "50%", border: "none", cursor: "pointer",
+              background: "rgba(93,64,55,0.1)", display: "flex", alignItems: "center", justifyContent: "center",
+            }} title="Record audio reply">
+              <Mic size={14} color="#5D4037" />
+            </button>
+            <button onClick={() => onReact && onReact(memoryId, title, "video")} style={{
+              width: 32, height: 32, borderRadius: "50%", border: "none", cursor: "pointer",
+              background: "rgba(93,64,55,0.1)", display: "flex", alignItems: "center", justifyContent: "center",
+            }} title="Record video reply">
+              <Video size={14} color="#5D4037" />
+            </button>
             <button onClick={() => sendComment()} disabled={sending || !commentText.trim()} style={{
               padding: "8px 14px", borderRadius: 10, border: "none", cursor: "pointer",
               background: "#5D4037", color: "#FFF8F0", fontSize: 11, fontWeight: 600,
@@ -796,11 +652,14 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
   const [reactionMemoryId, setReactionMemoryId] = useState(null);
   const [reactionMemoryTitle, setReactionMemoryTitle] = useState("");
 
-  const handleOpenReaction = (memId, memTitle) => {
+  const [reactionInitialMode, setReactionInitialMode] = useState("audio");
+
+  const handleOpenReaction = (memId, memTitle, initialMode = "audio") => {
     setReactionMemoryId(memId);
     setReactionMemoryTitle(memTitle || "A shared memory");
+    setReactionInitialMode(initialMode);
     setReactionOpen(true);
-    trackEvent("reaction_record", { memory_id: memId, mode: "modal_open" });
+    trackEvent("reaction_record", { memory_id: memId, mode: initialMode });
   };
 
   // Caregiver questions state
@@ -3702,6 +3561,7 @@ export default function CarePartnerDashboard({ inPanel = false, profileId = null
         memoryTitle={reactionMemoryTitle}
         profileId={profileId}
         parentName={parentProfile?.full_name?.split(" ")[0] || "Amma"}
+        initialMode={reactionInitialMode}
       />
     </div>
   );
