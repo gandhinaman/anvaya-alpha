@@ -352,8 +352,221 @@ function InlineAudioWaveform({ analyserRef }) {
       style={{ width: "100%", height: 32, borderRadius: 8, background: "rgba(93,64,55,0.06)" }} />
   );
 }
+// ─── OVERVIEW COMMENT BOX (with inline audio + video modal) ───────────────────
+function OverviewCommentBox({ memoryId, memoryTitle, profileId, parentName, onOpenVideoReaction }) {
+  const [commentText, setCommentText] = useState("");
+  const [sending, setSending] = useState(false);
 
-function MemoryCard({ title, summary, duration, date, index = 0, audioUrl = null, emotionalTone = null, promptQuestion = null, onDelete = null, deleting = false, comments = [], memoryId = null, profileId = null, visualAnalysis = null, reactions = [], onToggleHeart = null, onReact = null }) {
+  // Inline audio recording
+  const [inlineRecording, setInlineRecording] = useState(false);
+  const [inlineTimer, setInlineTimer] = useState(0);
+  const [inlineBlob, setInlineBlob] = useState(null);
+  const [inlinePreviewUrl, setInlinePreviewUrl] = useState(null);
+  const [inlineSending, setInlineSending] = useState(false);
+  const inlineRecorderRef = useRef(null);
+  const inlineStreamRef = useRef(null);
+  const inlineChunksRef = useRef([]);
+  const inlineAnalyserRef = useRef(null);
+  const inlineAudioCtxRef = useRef(null);
+  const inlineFormatRef = useRef({ extension: "webm", contentType: "audio/webm" });
+
+  useEffect(() => {
+    if (!inlineRecording) return;
+    const t = setInterval(() => setInlineTimer(s => s + 1), 1000);
+    return () => clearInterval(t);
+  }, [inlineRecording]);
+
+  useEffect(() => {
+    if (inlineRecording && inlineTimer >= 60) stopInlineRecording();
+  }, [inlineTimer, inlineRecording]);
+
+  const startInlineRecording = async () => {
+    try {
+      if (typeof MediaRecorder === "undefined") { alert("Recording not supported."); return; }
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      inlineStreamRef.current = stream;
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) {
+        const audioCtx = new AC();
+        inlineAudioCtxRef.current = audioCtx;
+        const source = audioCtx.createMediaStreamSource(stream);
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
+        inlineAnalyserRef.current = analyser;
+      }
+      const { recorder, format } = buildMediaRecorder(stream, "audio");
+      inlineFormatRef.current = format;
+      inlineChunksRef.current = [];
+      recorder.ondataavailable = (e) => { if (e.data?.size > 0) inlineChunksRef.current.push(e.data); };
+      recorder.onstop = () => {
+        const b = new Blob(inlineChunksRef.current, { type: inlineFormatRef.current.contentType });
+        setInlineBlob(b);
+        setInlinePreviewUrl(URL.createObjectURL(b));
+        setInlineRecording(false);
+        stream.getTracks().forEach(t => t.stop());
+        if (inlineAudioCtxRef.current) { inlineAudioCtxRef.current.close(); inlineAudioCtxRef.current = null; }
+        inlineAnalyserRef.current = null;
+      };
+      inlineRecorderRef.current = recorder;
+      recorder.start(250);
+      setInlineRecording(true);
+      setInlineTimer(0);
+      setInlineBlob(null);
+      setInlinePreviewUrl(null);
+      trackEvent("reaction_recorder_start", { mode: "audio" });
+    } catch (err) {
+      console.error("Inline audio error:", err);
+      alert("Could not access microphone.");
+    }
+  };
+
+  const stopInlineRecording = () => {
+    if (inlineRecorderRef.current && inlineRecorderRef.current.state === "recording") inlineRecorderRef.current.stop();
+  };
+
+  const cancelInlineRecording = () => {
+    if (inlineRecording) stopInlineRecording();
+    if (inlineStreamRef.current) inlineStreamRef.current.getTracks().forEach(t => t.stop());
+    if (inlineAudioCtxRef.current) { inlineAudioCtxRef.current.close(); inlineAudioCtxRef.current = null; }
+    setInlineBlob(null);
+    if (inlinePreviewUrl) URL.revokeObjectURL(inlinePreviewUrl);
+    setInlinePreviewUrl(null);
+    setInlineRecording(false);
+    setInlineTimer(0);
+  };
+
+  const sendInlineAudio = async () => {
+    if (!inlineBlob || !memoryId) return;
+    setInlineSending(true);
+    try {
+      const { extension, contentType } = inlineFormatRef.current;
+      const path = `${profileId}/reaction_audio_${Date.now()}.${extension}`;
+      const { data, error: uploadError } = await supabase.storage.from("memories").upload(path, inlineBlob, { contentType });
+      if (uploadError) { alert("Upload failed."); setInlineSending(false); return; }
+      const { data: urlData } = supabase.storage.from("memories").getPublicUrl(data.path);
+      const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", profileId).maybeSingle();
+      await supabase.from("memory_comments").insert({
+        memory_id: memoryId, user_id: profileId,
+        comment: `🎤 Voice reaction to "${memoryTitle || "your story"}"`,
+        media_url: urlData.publicUrl, media_type: "audio",
+        author_name: prof?.full_name || "Care Partner",
+      });
+      setInlineBlob(null);
+      if (inlinePreviewUrl) URL.revokeObjectURL(inlinePreviewUrl);
+      setInlinePreviewUrl(null);
+      setInlineTimer(0);
+      trackEvent("reaction_send", { memory_id: memoryId });
+    } catch (err) {
+      console.error("Send error:", err);
+      alert("Something went wrong.");
+    } finally {
+      setInlineSending(false);
+    }
+  };
+
+  const sendTextComment = async () => {
+    if (!commentText.trim() || !memoryId) return;
+    setSending(true);
+    try {
+      const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", profileId).maybeSingle();
+      await supabase.from("memory_comments").insert({
+        memory_id: memoryId, user_id: profileId,
+        comment: commentText.trim(),
+        author_name: prof?.full_name || "Care Partner",
+      });
+      setCommentText("");
+    } catch (err) {
+      console.error("Comment error:", err);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const fmtTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+
+  return (
+    <div style={{
+      background: "rgba(198,139,89,0.04)", borderRadius: 18, padding: "16px 18px",
+      border: "1px solid rgba(198,139,89,0.12)"
+    }}>
+      <p style={{ fontSize: 11, color: "#8D6E63", marginBottom: 10, fontWeight: 500 }}>
+        💬 Send a message back to {parentName || "Amma"}
+      </p>
+      {inlineRecording ? (
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", borderRadius: 14, border: "1px solid rgba(198,139,89,0.3)", background: "rgba(198,139,89,0.06)" }}>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#DC2626", animation: "callPulse 1.5s ease infinite", flexShrink: 0 }} />
+            <InlineAudioWaveform analyserRef={inlineAnalyserRef} />
+            <span style={{ fontSize: 12, fontWeight: 600, color: "#3E2723", flexShrink: 0 }}>{fmtTime(inlineTimer)}</span>
+          </div>
+          <button onClick={stopInlineRecording} style={{
+            width: 44, height: 44, borderRadius: 14, border: "none", cursor: "pointer",
+            background: "#DC2626", display: "flex", alignItems: "center", justifyContent: "center",
+          }} title="Stop recording">
+            <div style={{ width: 14, height: 14, borderRadius: 3, background: "#FFF8F0" }} />
+          </button>
+        </div>
+      ) : inlineBlob ? (
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", borderRadius: 14, border: "1px solid rgba(198,139,89,0.2)", background: "rgba(198,139,89,0.04)" }}>
+            <Mic size={14} color="#C68B59" />
+            <span style={{ fontSize: 12, color: "#5D4037", fontWeight: 500 }}>Voice reaction • {fmtTime(inlineTimer)}</span>
+          </div>
+          <button onClick={cancelInlineRecording} style={{
+            width: 44, height: 44, borderRadius: 14, border: "none", cursor: "pointer",
+            background: "rgba(220,38,38,0.08)", display: "flex", alignItems: "center", justifyContent: "center",
+          }}><X size={16} color="#DC2626" /></button>
+          <button onClick={sendInlineAudio} disabled={inlineSending} style={{
+            padding: "11px 18px", borderRadius: 14, border: "none", cursor: "pointer",
+            background: "linear-gradient(135deg, #C68B59, #8D6E63)", color: "#FFF8F0",
+            fontSize: 12, fontWeight: 600, display: "flex", alignItems: "center", gap: 5,
+            opacity: inlineSending ? 0.6 : 1,
+          }}>
+            {inlineSending ? <Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} /> : <Send size={13} />}
+            {inlineSending ? "…" : "Send"}
+          </button>
+        </div>
+      ) : (
+        <div style={{ display: "flex", gap: 8 }}>
+          <input
+            value={commentText}
+            onChange={e => setCommentText(e.target.value)}
+            placeholder={`Reply to "${memoryTitle}"…`}
+            onKeyDown={e => e.key === "Enter" && sendTextComment()}
+            style={{
+              flex: 1, padding: "11px 16px", borderRadius: 14,
+              border: "1px solid rgba(93,64,55,0.12)", outline: "none",
+              fontSize: 13, color: "#3E2723", background: "#fff",
+              fontFamily: "'DM Sans', sans-serif"
+            }}
+          />
+          <button onClick={startInlineRecording} style={{
+            width: 44, height: 44, borderRadius: 14, border: "none", cursor: "pointer",
+            background: "linear-gradient(135deg, #C68B59, #8D6E63)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            flexShrink: 0, boxShadow: "0 2px 8px rgba(198,139,89,0.3)"
+          }} title="Record audio"><Mic size={17} color="#FFF8F0" /></button>
+          <button onClick={() => onOpenVideoReaction(memoryId, memoryTitle, "video")} style={{
+            width: 44, height: 44, borderRadius: 14, border: "none", cursor: "pointer",
+            background: "linear-gradient(135deg, #5D4037, #8D6E63)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            flexShrink: 0, boxShadow: "0 2px 8px rgba(93,64,55,0.3)"
+          }} title="Record video"><Video size={17} color="#FFF8F0" /></button>
+          {commentText.trim() && (
+            <button onClick={sendTextComment} disabled={sending} style={{
+              padding: "11px 18px", borderRadius: 14, border: "none", cursor: "pointer",
+              background: "#5D4037", color: "#FFF8F0", fontSize: 12, fontWeight: 600,
+              opacity: sending ? 0.5 : 1, flexShrink: 0,
+            }}>{sending ? "…" : "Send"}</button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
   const toneColors = { joyful: "#C68B59", nostalgic: "#8D6E63", peaceful: "#5D4037", concerned: "#6B8A9E" };
   const tone = emotionalTone || "positive";
   const toneColor = toneColors[tone.toLowerCase()] || "#C68B59";
