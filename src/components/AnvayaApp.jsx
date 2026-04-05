@@ -314,6 +314,7 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
   const {w}=useWindowSize();
   const [lang,setLang]=useState(savedLang||"en");
   const [linkedName, setLinkedName]=useState(null);
+  const [linkedAvatar, setLinkedAvatar]=useState(null);
   const [autoUserId, setAutoUserId]=useState(null);
   const [autoLinkedUserId, setAutoLinkedUserId]=useState(null);
   const [autoFullName, setAutoFullName]=useState(propFullName || null);
