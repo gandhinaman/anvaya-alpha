@@ -1402,7 +1402,85 @@ Only use ONE action tag per response. Keep your spoken response brief and natura
         </div>}
       </div>
 
-      <div style={{display:"flex",justifyContent:"center",marginTop:voicePhase!=="idle"?16:isMock?36:48,transition:"margin .5s ease",flexShrink:0}}>
+      {/* ─── NOTIFICATION CENTER ─── */}
+      {voicePhase==="idle" && (seniorUnreadCount > 0 || newQuestions.length > 0) && (
+        <div style={{margin:"8px 16px 0",animation:"fadeUp .5s ease both"}}>
+          <button onClick={()=>{setNotifOpen(!notifOpen);trackEvent("notif_center_toggle");}} style={{
+            width:"100%",padding:"10px 16px",borderRadius:16,border:"1.5px solid rgba(255,248,240,.15)",
+            background:"rgba(255,248,240,.08)",backdropFilter:"blur(12px)",cursor:"pointer",
+            display:"flex",alignItems:"center",justifyContent:"space-between",gap:8
+          }}>
+            <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <div style={{width:36,height:36,borderRadius:10,background:"linear-gradient(135deg,#C68B59,#8D6E63)",
+                display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 3px 10px rgba(198,139,89,.35)"}}>
+                <Bell size={18} color="#FFF8F0"/>
+              </div>
+              <div style={{textAlign:"left"}}>
+                <div style={{color:"#FFF8F0",fontSize:15,fontWeight:600}}>
+                  {lang==="en"?"Notifications":"सूचनाएँ"}
+                </div>
+                <div style={{color:"rgba(255,248,240,.5)",fontSize:12,marginTop:1,display:"flex",alignItems:"center",gap:6}}>
+                  {seniorUnreadHearts > 0 && <span style={{display:"flex",alignItems:"center",gap:2}}><Heart size={10} fill="#E8403F" stroke="none"/>{seniorUnreadHearts}</span>}
+                  {seniorUnreadComments > 0 && <span style={{display:"flex",alignItems:"center",gap:2}}><MessageCircle size={10} color="#C68B59"/>{seniorUnreadComments}</span>}
+                  {newQuestions.length > 0 && <span style={{display:"flex",alignItems:"center",gap:2}}>💛 {newQuestions.length} {lang==="en"?"new":"नए"}</span>}
+                </div>
+              </div>
+            </div>
+            <ChevronRight size={16} color="rgba(255,248,240,.4)" style={{transform:notifOpen?"rotate(90deg)":"rotate(0deg)",transition:"transform .2s"}}/>
+          </button>
+
+          {notifOpen && (
+            <div className="scr" style={{
+              marginTop:6,maxHeight:200,overflowY:"auto",borderRadius:14,
+              background:"rgba(255,248,240,.05)",border:"1px solid rgba(255,248,240,.1)",
+              padding:"6px 0"
+            }}>
+              {newQuestions.map(q => (
+                <button key={q.id} onClick={()=>{setMemoryOpen(true);setNotifOpen(false);}} style={{
+                  width:"100%",padding:"10px 16px",background:"none",border:"none",borderBottom:"1px solid rgba(255,248,240,.06)",
+                  cursor:"pointer",display:"flex",alignItems:"flex-start",gap:10,textAlign:"left"
+                }}>
+                  <span style={{fontSize:16,flexShrink:0,marginTop:1}}>💛</span>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{color:"#FFF8F0",fontSize:13,fontWeight:600}}>
+                      {lang==="en"?"Question from family":"परिवार का सवाल"}
+                    </div>
+                    <div style={{color:"rgba(255,248,240,.6)",fontSize:12,marginTop:2,lineHeight:1.4,
+                      overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{q.question}</div>
+                  </div>
+                </button>
+              ))}
+              {notifItems.map((n,i) => (
+                <button key={`${n.type}-${i}`} onClick={()=>{openMemoryLog();setNotifOpen(false);}} style={{
+                  width:"100%",padding:"10px 16px",background:"none",border:"none",borderBottom:"1px solid rgba(255,248,240,.06)",
+                  cursor:"pointer",display:"flex",alignItems:"flex-start",gap:10,textAlign:"left"
+                }}>
+                  <span style={{fontSize:16,flexShrink:0,marginTop:1}}>
+                    {n.type==="heart"?"❤️":n.mediaType==="video"?"🎬":n.mediaType==="audio"?"🎙️":"💬"}
+                  </span>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{color:"#FFF8F0",fontSize:13,fontWeight:600}}>
+                      {n.type==="heart"
+                        ?(lang==="en"?`Loved "${n.text}"`:`"${n.text}" पसंद किया`)
+                        :(lang==="en"?`Reply on "${n.text}"`:`"${n.text}" पर जवाब`)}
+                    </div>
+                    <div style={{color:"rgba(255,248,240,.4)",fontSize:11,marginTop:2}}>
+                      {new Date(n.time).toLocaleString(lang==="hi"?"hi-IN":"en-IN",{hour:"numeric",minute:"2-digit",day:"numeric",month:"short"})}
+                    </div>
+                  </div>
+                </button>
+              ))}
+              {notifItems.length===0 && newQuestions.length===0 && (
+                <div style={{padding:"16px",textAlign:"center",color:"rgba(255,248,240,.4)",fontSize:13}}>
+                  {lang==="en"?"No new notifications":"कोई नई सूचना नहीं"}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      <div style={{display:"flex",justifyContent:"center",marginTop:voicePhase!=="idle"?16:isMock?36:(seniorUnreadCount>0||newQuestions.length>0?16:48),transition:"margin .5s ease",flexShrink:0}}>
         <div style={{position:"relative"}} className="pring">
           <div
             onClick={() => { const now=Date.now(); if(now-lastTapRef.current<400)return; lastTapRef.current=now; startVoiceConversation(); }}
