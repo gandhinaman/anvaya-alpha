@@ -357,8 +357,8 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
   // Fetch linked user's name
   useEffect(()=>{
     if(!linkedUserId) return;
-    supabase.from("profiles").select("full_name").eq("id",linkedUserId).maybeSingle()
-      .then(({data})=>{ if(data?.full_name) setLinkedName(data.full_name); });
+    supabase.from("profiles").select("full_name,avatar_url").eq("id",linkedUserId).maybeSingle()
+      .then(({data})=>{ if(data?.full_name) setLinkedName(data.full_name); if(data?.avatar_url) setLinkedAvatar(data.avatar_url); });
   },[linkedUserId]);
   const { current: streakDays, longest: longestStreak, recordedToday: streakRecordedToday } = useStreak(userId);
   const [rec,setRec]=useState(false);
