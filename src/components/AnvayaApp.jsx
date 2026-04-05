@@ -382,24 +382,38 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
   const [seniorUnreadHearts, setSeniorUnreadHearts]=useState(0);
   const [seniorUnreadComments, setSeniorUnreadComments]=useState(0);
   const seniorUnreadCount = seniorUnreadHearts + seniorUnreadComments;
+  const [notifItems, setNotifItems]=useState([]);  // {type:'heart'|'comment'|'question', text, time, memoryTitle?}
+  const [notifOpen, setNotifOpen]=useState(false);
+  const [newQuestions, setNewQuestions]=useState([]);
 
-  // Fetch unread comment/reaction count for senior
+  // Fetch unread comment/reaction count + detail items for senior
   useEffect(()=>{
     if(!userId) return;
     const fetchUnread = async ()=>{
       const { data: prof } = await supabase.from("profiles").select("memories_last_viewed_at").eq("id",userId).maybeSingle();
       const cutoff = prof?.memories_last_viewed_at || "1970-01-01T00:00:00Z";
       
-      const { data: mems } = await supabase.from("memories").select("id").eq("user_id",userId);
-      if(!mems?.length){ setSeniorUnreadHearts(0); setSeniorUnreadComments(0); return; }
+      const { data: mems } = await supabase.from("memories").select("id,title").eq("user_id",userId);
+      if(!mems?.length){ setSeniorUnreadHearts(0); setSeniorUnreadComments(0); setNotifItems([]); return; }
       const ids = mems.map(m=>m.id);
+      const memMap = {};
+      mems.forEach(m => { memMap[m.id] = m.title || "Memory"; });
       
-      const [{ count: cmtCount },{ count: rxnCount }] = await Promise.all([
-        supabase.from("memory_comments").select("*",{count:"exact",head:true}).in("memory_id",ids).gt("created_at",cutoff),
-        supabase.from("memory_reactions").select("*",{count:"exact",head:true}).in("memory_id",ids).gt("created_at",cutoff),
+      const [{ data: cmts },{ data: rxns }] = await Promise.all([
+        supabase.from("memory_comments").select("*").in("memory_id",ids).gt("created_at",cutoff).order("created_at",{ascending:false}).limit(20),
+        supabase.from("memory_reactions").select("*").in("memory_id",ids).gt("created_at",cutoff).order("created_at",{ascending:false}).limit(20),
       ]);
-      setSeniorUnreadComments(cmtCount||0);
-      setSeniorUnreadHearts(rxnCount||0);
+      setSeniorUnreadComments((cmts||[]).length);
+      setSeniorUnreadHearts((rxns||[]).length);
+
+      const items = [];
+      (rxns||[]).forEach(r => items.push({type:"heart",text: memMap[r.memory_id]||"Memory",time:r.created_at,memoryId:r.memory_id}));
+      (cmts||[]).forEach(c => {
+        const isMedia = c.media_type === "audio" || c.media_type === "video";
+        items.push({type:"comment",text: isMedia ? `${c.media_type} reply on "${memMap[c.memory_id]||"Memory"}"` : (c.comment||"").slice(0,60),time:c.created_at,memoryId:c.memory_id,mediaType:c.media_type});
+      });
+      items.sort((a,b) => new Date(b.time) - new Date(a.time));
+      setNotifItems(items);
     };
     fetchUnread();
 
@@ -408,6 +422,20 @@ function LovedOneScreen({inPanel=false, userId:propUserId=null, linkedUserId:pro
       .on("postgres_changes",{event:"*",schema:"public",table:"memory_reactions"},()=>fetchUnread())
       .subscribe();
     return ()=>supabase.removeChannel(ch);
+  },[userId]);
+
+  // Fetch new caregiver questions for senior
+  useEffect(()=>{
+    if(!userId) return;
+    const fetchQ = async ()=>{
+      const { data } = await supabase.from("caregiver_questions").select("*").eq("parent_id",userId).eq("used",false).order("created_at",{ascending:false}).limit(10);
+      setNewQuestions(data||[]);
+    };
+    fetchQ();
+    const ch2 = supabase.channel("senior-questions-rt")
+      .on("postgres_changes",{event:"*",schema:"public",table:"caregiver_questions"},()=>fetchQ())
+      .subscribe();
+    return ()=>supabase.removeChannel(ch2);
   },[userId]);
 
   // Mark memories viewed when senior opens Memory Log
