@@ -1403,108 +1403,73 @@ Only use ONE action tag per response. Keep your spoken response brief and natura
         </div>}
       </div>
 
-      {/* ─── NOTIFICATION CENTER ─── */}
+      {/* ─── NOTIFICATION CENTER (stories-style) ─── */}
       {voicePhase==="idle" && (seniorUnreadCount > 0 || newQuestions.length > 0) && (
-        <div style={{margin:"8px 16px 0",animation:"fadeUp .5s ease both"}}>
-          {/* Warm header with caregiver avatar */}
-          <button onClick={()=>{setNotifOpen(!notifOpen);trackEvent("notif_center_toggle");}} style={{
-            width:"100%",padding:"12px 16px",borderRadius:20,
-            background:"linear-gradient(135deg,rgba(198,139,89,.18),rgba(141,110,99,.12))",
-            border:"1.5px solid rgba(198,139,89,.25)",backdropFilter:"blur(12px)",cursor:"pointer",
-            display:"flex",alignItems:"center",gap:12
-          }}>
-            {/* Caregiver avatar */}
-            <div style={{width:44,height:44,borderRadius:"50%",overflow:"hidden",flexShrink:0,
-              border:"2.5px solid rgba(198,139,89,.45)",boxShadow:"0 3px 12px rgba(198,139,89,.25)"}}>
-              {linkedAvatar
-                ? <img src={linkedAvatar} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
-                : <div style={{width:"100%",height:"100%",background:"linear-gradient(135deg,#C68B59,#8D6E63)",
-                    display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,color:"#FFF8F0",fontWeight:600}}>
-                    {(linkedName||"F").charAt(0).toUpperCase()}
-                  </div>}
-            </div>
-            <div style={{flex:1,textAlign:"left"}}>
-              <div style={{color:"#FFF8F0",fontSize:15,fontWeight:600,lineHeight:1.3}}>
-                {linkedName
-                  ? (lang==="en"?`${linkedName} sent you love 💛`:`${linkedName} ने प्यार भेजा 💛`)
-                  : (lang==="en"?"Family sent you love 💛":"परिवार ने प्यार भेजा 💛")}
-              </div>
-              <div style={{color:"rgba(255,248,240,.55)",fontSize:12,marginTop:3,display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
-                {seniorUnreadHearts > 0 && <span style={{display:"flex",alignItems:"center",gap:3,background:"rgba(232,64,63,.12)",padding:"2px 8px",borderRadius:10}}>
-                  <Heart size={11} fill="#E8403F" stroke="none"/><span style={{color:"#f0a0a0"}}>{seniorUnreadHearts}</span>
-                </span>}
-                {seniorUnreadComments > 0 && <span style={{display:"flex",alignItems:"center",gap:3,background:"rgba(198,139,89,.12)",padding:"2px 8px",borderRadius:10}}>
-                  <MessageCircle size={11} color="#C68B59"/><span style={{color:"#d4a574"}}>{seniorUnreadComments}</span>
-                </span>}
-                {newQuestions.length > 0 && <span style={{display:"flex",alignItems:"center",gap:3,background:"rgba(255,215,0,.1)",padding:"2px 8px",borderRadius:10}}>
-                  💛 <span style={{color:"#e8c96a"}}>{newQuestions.length}</span>
-                </span>}
-              </div>
-            </div>
-            <ChevronRight size={18} color="rgba(255,248,240,.4)" style={{transform:notifOpen?"rotate(90deg)":"rotate(0deg)",transition:"transform .25s ease",flexShrink:0}}/>
-          </button>
-
-          {notifOpen && (
-            <div className="scr" style={{
-              marginTop:8,maxHeight:220,overflowY:"auto",borderRadius:16,
-              background:"rgba(255,248,240,.04)",border:"1px solid rgba(198,139,89,.12)",
-              padding:"4px 0"
-            }}>
-              {newQuestions.map(q => (
-                <button key={q.id} onClick={()=>{setMemoryOpen(true);setNotifOpen(false);}} style={{
-                  width:"100%",padding:"12px 16px",background:"none",border:"none",borderBottom:"1px solid rgba(255,248,240,.06)",
-                  cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"left"
-                }}>
-                  <div style={{width:32,height:32,borderRadius:"50%",overflow:"hidden",flexShrink:0,
-                    border:"2px solid rgba(255,215,0,.25)"}}>
-                    {linkedAvatar
-                      ? <img src={linkedAvatar} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
-                      : <div style={{width:"100%",height:"100%",background:"linear-gradient(135deg,#C68B59,#8D6E63)",
-                          display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,color:"#FFF8F0",fontWeight:600}}>
-                          {(linkedName||"F").charAt(0).toUpperCase()}
-                        </div>}
-                  </div>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{color:"#FFF8F0",fontSize:13,fontWeight:600}}>
-                      {linkedName||(lang==="en"?"Family":"परिवार")} {lang==="en"?"asked you":"ने पूछा"} 💛
-                    </div>
-                    <div style={{color:"rgba(255,248,240,.55)",fontSize:12,marginTop:2,lineHeight:1.4,
-                      overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontStyle:"italic"}}>"{q.question}"</div>
-                  </div>
-                </button>
-              ))}
-              {notifItems.map((n,i) => (
-                <button key={`${n.type}-${i}`} onClick={()=>{openMemoryLog();setNotifOpen(false);}} style={{
-                  width:"100%",padding:"12px 16px",background:"none",border:"none",borderBottom:"1px solid rgba(255,248,240,.06)",
-                  cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"left"
-                }}>
-                  <div style={{width:32,height:32,borderRadius:"50%",overflow:"hidden",flexShrink:0,position:"relative",
-                    border:`2px solid ${n.type==="heart"?"rgba(232,64,63,.25)":"rgba(198,139,89,.25)"}`}}>
-                    {linkedAvatar
-                      ? <img src={linkedAvatar} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
-                      : <div style={{width:"100%",height:"100%",background:"linear-gradient(135deg,#C68B59,#8D6E63)",
-                          display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,color:"#FFF8F0",fontWeight:600}}>
-                          {(linkedName||"F").charAt(0).toUpperCase()}
-                        </div>}
-                    <span style={{position:"absolute",bottom:-2,right:-2,fontSize:11,
-                      background:"rgba(26,15,10,.9)",borderRadius:"50%",width:18,height:18,
-                      display:"flex",alignItems:"center",justifyContent:"center"}}>
-                      {n.type==="heart"?"❤️":n.mediaType==="video"?"🎬":n.mediaType==="audio"?"🎙️":"💬"}
-                    </span>
-                  </div>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{color:"#FFF8F0",fontSize:13,fontWeight:500}}>
-                      <span style={{fontWeight:700}}>{linkedName||"Family"}</span>{" "}
-                      {n.type==="heart"
-                        ?(lang==="en"?`loved "${n.text}"`:`"${n.text}" पसंद किया`)
-                        :(lang==="en"?`replied to "${n.text}"`:`"${n.text}" पर जवाब दिया`)}
-                    </div>
-                    <div style={{color:"rgba(255,248,240,.4)",fontSize:11,marginTop:3}}>
-                      {new Date(n.time).toLocaleString(lang==="hi"?"hi-IN":"en-IN",{hour:"numeric",minute:"2-digit",day:"numeric",month:"short"})}
-                    </div>
-                  </div>
-                </button>
-              ))}
+        <div style={{margin:"8px 12px 0",animation:"fadeUp .5s ease both"}}>
+          <div style={{display:"flex",gap:14,overflowX:"auto",padding:"6px 4px 2px",WebkitOverflowScrolling:"touch"}} className="scr">
+            {/* Questions first */}
+            {newQuestions.map(q => (
+              <button key={q.id} onClick={()=>{setMemoryOpen(true);trackEvent("notif_question_tap");}} style={{
+                display:"flex",flexDirection:"column",alignItems:"center",gap:5,background:"none",border:"none",
+                cursor:"pointer",minWidth:64,maxWidth:72,flexShrink:0
+              }}>
+                <div style={{width:52,height:52,borderRadius:"50%",overflow:"hidden",
+                  border:"2.5px solid #e8c96a",boxShadow:"0 2px 10px rgba(232,201,106,.3)",position:"relative"}}>
+                  {linkedAvatar
+                    ? <img src={linkedAvatar} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+                    : <div style={{width:"100%",height:"100%",background:"linear-gradient(135deg,#C68B59,#8D6E63)",
+                        display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,color:"#FFF8F0",fontWeight:600}}>
+                        {(linkedName||"F").charAt(0).toUpperCase()}
+                      </div>}
+                  <span style={{position:"absolute",bottom:-3,right:-3,fontSize:13,
+                    background:"rgba(26,15,10,.95)",borderRadius:"50%",width:20,height:20,
+                    display:"flex",alignItems:"center",justifyContent:"center",border:"1.5px solid #e8c96a"}}>💛</span>
+                </div>
+                <div style={{color:"rgba(255,248,240,.7)",fontSize:10,lineHeight:1.2,textAlign:"center",
+                  overflow:"hidden",textOverflow:"ellipsis",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",
+                  maxWidth:72,fontWeight:500}}>
+                  {lang==="en"?"Asked a question":"सवाल पूछा"}
+                </div>
+              </button>
+            ))}
+            {/* Hearts and comments */}
+            {notifItems.map((n,i) => (
+              <button key={`${n.type}-${i}`} onClick={()=>{openMemoryLog();trackEvent("notif_item_tap");}} style={{
+                display:"flex",flexDirection:"column",alignItems:"center",gap:5,background:"none",border:"none",
+                cursor:"pointer",minWidth:64,maxWidth:72,flexShrink:0
+              }}>
+                <div style={{width:52,height:52,borderRadius:"50%",overflow:"hidden",position:"relative",
+                  border:`2.5px solid ${n.type==="heart"?"#E8403F":"#C68B59"}`,
+                  boxShadow:`0 2px 10px ${n.type==="heart"?"rgba(232,64,63,.25)":"rgba(198,139,89,.25)"}`}}>
+                  {linkedAvatar
+                    ? <img src={linkedAvatar} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+                    : <div style={{width:"100%",height:"100%",background:"linear-gradient(135deg,#C68B59,#8D6E63)",
+                        display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,color:"#FFF8F0",fontWeight:600}}>
+                        {(linkedName||"F").charAt(0).toUpperCase()}
+                      </div>}
+                  <span style={{position:"absolute",bottom:-3,right:-3,fontSize:13,
+                    background:"rgba(26,15,10,.95)",borderRadius:"50%",width:20,height:20,
+                    display:"flex",alignItems:"center",justifyContent:"center",
+                    border:`1.5px solid ${n.type==="heart"?"#E8403F":"#C68B59"}`}}>
+                    {n.type==="heart"?"❤️":n.mediaType==="video"?"🎬":n.mediaType==="audio"?"🎙️":"💬"}
+                  </span>
+                </div>
+                <div style={{color:"rgba(255,248,240,.6)",fontSize:10,lineHeight:1.2,textAlign:"center",
+                  overflow:"hidden",textOverflow:"ellipsis",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",
+                  maxWidth:72,fontWeight:500}}>
+                  {n.type==="heart"
+                    ? (lang==="en"?"Loved it":"पसंद किया")
+                    : (n.mediaType==="video"?(lang==="en"?"Video":"वीडियो")
+                      :n.mediaType==="audio"?(lang==="en"?"Voice":"आवाज़")
+                      :(lang==="en"?"Reply":"जवाब"))}
+                </div>
+              </button>
+            ))}
+          </div>
+          {/* Subtle label */}
+          {(seniorUnreadCount > 0 || newQuestions.length > 0) && (
+            <div style={{textAlign:"center",marginTop:4,color:"rgba(255,248,240,.35)",fontSize:11,fontWeight:500}}>
+              {linkedName||(lang==="en"?"Family":"परिवार")}{lang==="en"?"'s reactions":" की प्रतिक्रियाएँ"}
             </div>
           )}
         </div>
